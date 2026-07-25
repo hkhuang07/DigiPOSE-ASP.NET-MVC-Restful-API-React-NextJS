@@ -1,9 +1,10 @@
 # ============================================================================
-# DigiPOSE Enterprise ERP & PoS System (.NET 10 / SQL Server / React / Next.js)
-# Official .gitignore Blueprint
+# DigiPOSE Enterprise B2B/Retail ERP & Cyber HUD Platform
+# Tech Stack: .NET 10 (ASP.NET Core API / MVC CMS) + SQL Server + Next.JS (React)
+# Official Monorepo Security & Clean Workspace .gitignore Blueprint
 # ============================================================================
 
-# ── Build & Compilation Artifacts ──
+# ── Build & Compilation Artifacts (.NET Engine) ──
 [Bb]in/
 [Oo]bj/
 [Dd]ebug/
@@ -15,32 +16,41 @@ bld/
 [Pp]ublish/
 publish/
 
-# ── Database Files ──
+# ── Database Files & Snapshots & EF Core Migrations ──
 *.mdf
 *.ldf
 *.ndf
 *.db
 *.sqlite
 *.sqlite3
+*.db-shm
+*.db-wal
+[Mm]igrations/
+**/Migrations/
 
-# ── User File Uploads & Local Media ──
-source/DigiPOSE/wwwroot/uploads/*
-!source/DigiPOSE/wwwroot/uploads/.gitkeep
+# ── User File Uploads & Runtime Media Isolation ──
+backend/DigiPOSE/wwwroot/uploads/*
+!backend/DigiPOSE/wwwroot/uploads/.gitkeep
+demo/tmp/*
 
-# ── Environment & Secret Isolation ──
+# ── Zero-Trust Secret Isolation & Credentials ──
 *.env
 *.env.*
 !*.env.example
 !.env.example
-appsettings.Local.json
-appsettings.Production.json
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+backend/DigiPOSE/appsettings.json
+backend/DigiPOSE/appsettings.*.json
+backend/DigiPOSE/gg-app-password.jpg
+!backend/DigiPOSE/appsettings.example.json
 appsettings.Development.Secret.json
+gg-app-password.jpg
 ModelBuilderExtensions.cs
-appsettings.json
-appsettings.Development.json
-!appsettings.example.json
 
-# ── Secrets & Certificates ──
+# ── Cryptographic Secrets & SSL Certificates ──
 *.pfx
 *.p12
 *.key
@@ -48,15 +58,20 @@ appsettings.Development.json
 *.cer
 *.crt
 
-# ── Client-Side Libraries & Node Dependencies ──
-**/wwwroot/lib/*
-!**/wwwroot/lib/.gitkeep
-node_modules/
-.next/
-out/
-dist/
+# ── Frontend SPA & Next.JS Build Environments ──
+**/node_modules/
+**/.next/
+**/out/
+**/dist/
+**/.vercel/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+tsconfig.tsbuildinfo
 
-# ── NuGet Packages ──
+# ── NuGet Packages & Lock Files ──
 *.nupkg
 *.snupkg
 **/packages/
@@ -64,9 +79,13 @@ project.lock.json
 project.fragment.lock.json
 artifacts/
 
-# ── Visual Studio / VS Code / JetBrains Rider ──
+# ── IDE & Editor Configuration (VS / VS Code / JetBrains / WebStorm) ──
 .vs/
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 .idea/
 *.user
 *.suo
@@ -76,27 +95,30 @@ artifacts/
 *.DotSettings.user
 launchSettings.json
 
-# ── MSBuild & Logs ──
+# ── MSBuild & Terminal Telemetry Logs ──
 *.log
 msbuild*.wrn
 msbuild*.err
 msbuild*.svclog
+*.debug-0.log
 
 # ── Test Results & Code Coverage ──
 [Tt]est[Rr]esult*/
 [Dd]ebug[Pp]ublic/
 TestResults/
+coverage*/
 coverage*.xml
 coverage*.json
 *.coverage
 *.coveragexml
 
-# ── OS Generated Files ──
+# ── OS Generated Trash & Caches ──
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
 Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
-
-# Ignore EF Core Migrations
-source/DigiPOSE/Migrations/

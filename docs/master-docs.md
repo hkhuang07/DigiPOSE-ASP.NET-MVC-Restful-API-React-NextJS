@@ -1,27 +1,33 @@
 DIGIPOSE - MASTER ARCHITECTURE & FUNCTIONAL BLUEPRINT
-I. TẦM NHÌN VÀ ĐỊNH VỊ DỰ ÁN (PROJECT VISION)
-DigiPOSE (Digital Point of Sale Enterprise) không phải là một website thương mại điện tử (B2C) đơn thuần. Đây là một hệ thống Phần mềm Quản trị Nguồn lực & Điểm bán hàng tập trung (ERP/PoS - B2B). Hệ thống được thiết kế để giải quyết bài toán vận hành của các chuỗi bán lẻ, siêu thị hoặc hệ thống phân phối đa chi nhánh.
+I. TẦM NHÌN VÀ ĐỊNH VỊ DỰ ÁN (PROJECT VISION & B2B/RETAIL POSITIONING)
+DigiPOSE (Digital Point of Sale Enterprise) là hệ thống Quản trị Nguồn lực & Điểm bán hàng song nghị trục (ERP/PoS & E-Commerce Storefront - B2B/B2C). Hệ thống được thiết kế đa năng để giải quyết toàn diện hai phương thức kinh doanh cốt lõi:
+1. Giao dịch trực tiếp tại quầy bán lẻ (In-Store High-Frequency POS Terminal).
+2. Giao dịch đặt hàng & thuê bao dịch vụ trực tuyến qua Website Cổng thông tin (Online E-Commerce & SaaS Storefront Portal).
 
-Mục tiêu cốt lõi: Tốc độ giao dịch tại quầy đạt mức mili-giây (O(1) lookup), toàn vẹn dữ liệu lịch sử tuyệt đối, bảo mật đa tầng và sẵn sàng mở rộng theo chiều ngang (Scale-out).
+Mục tiêu cốt lõi: Tốc độ giao dịch tại quầy đạt mức mili-giây (O(1) lookup), tích hợp chuẩn SEO và bộ tra cứu động đa trường trên cổng web trực tuyến, hiển thị 100% nội dung giao diện web bằng tiếng Anh (English Standard), toàn vẹn dữ liệu lịch sử tuyệt đối, bảo mật đa tầng và sẵn sàng mở rộng theo chiều ngang (Scale-out).
 
-II. KIẾN TRÚC HỆ THỐNG HYBRID (DECOUPLED ARCHITECTURE)
-Dự án ứng dụng kiến trúc kết hợp, chia cắt rõ ràng ranh giới giữa Quản trị viên và Vận hành viên.
+II. KIẾN TRÚC HỆ THỐNG HYBRID SONG NGHỊ TRỤC (DECOUPLED DUAL-SALES ARCHITECTURE)
+Dự án ứng dụng kiến trúc kết hợp (Hybrid Decoupled), chia cắt rõ ràng ranh giới giữa Quản trị viên CMS và hai tập người dùng vận hành/khách mua bán hàng:
 
-Khu vực Admin CMS (Server-Side Rendering):
+1. Khu vực Admin CMS (Server-Side Rendering - Backoffice ERP):
+- Công nghệ: ASP.NET Core MVC 8.0/10.0 (Razor Views + Cyber-Cinematic Military HUD Design System).
+- Mục đích: Xây dựng giao diện quản lý siêu tốc cho Quản lý / Admin bằng Scaffolding. Xử lý các tác vụ quản trị danh mục (CRUD Master Data - 26 Bảng), cấu hình hệ thống, theo dõi radar doanh thu.
+- Xác thực (Auth): Sử dụng Cookie Authentication (Stateful) với vòng đời theo ca làm việc, phân tầng bảo mật tối cao qua bộ nhận dạng quyền hạn Claims & Roles.
 
-Công nghệ: ASP.NET Core MVC 8.0 (Razor Views).
+2. Hai Phân Hệ Bán Hàng Trái Tim (Dual Sales Frontend - React/Next.JS via RESTful API):
+Hệ thống bố trí 2 kênh bán hàng song song, tích hợp liên kết trực tiếp trong bộ điều hướng Sidebar (MODULE 5: LINKS & TERMINALS -> `Launch POS Machine` & `Online Storefront`):
 
-Mục đích: Xây dựng giao diện nhập liệu siêu tốc cho Quản lý / Admin bằng Scaffolding. Xử lý các tác vụ quản trị danh mục (CRUD Master Data), cấu hình hệ thống, xem báo cáo tổng quan.
+- **Kênh 1: POS Machine Terminal (Máy Thu Ngân Vận Hành Tại Quầy):**
+  + Công nghệ: Frontend React/Next.JS kết nối ASP.NET Core Web API (JSON).
+  + Đặc thù nghiệp vụ: Tần suất cực cao (High-Frequency). Ghi đè vào CSDL thông qua đơn hàng nháp trực tiếp (`Order` với `StatusId = 4` Retail Draft). Không bao giờ dùng bộ nhớ Session tạm để chống sập điện tại quầy, tích hợp máy quét mã vạch O(1) Barcode Scanner và khóa ca két tiền mặt.
+  
+- **Kênh 2: Online Storefront Web Portal (Cổng Bán Hàng & Gia Hạn SaaS Trực Tuyến):**
+  + Công nghệ: Frontend React/Next.JS (App Router SSR) kết nối ASP.NET Core Web API.
+  + Đặc thù nghiệp vụ: Phát huy toàn bộ hoa tiêu của bài học Thực hành Buổi 6 (Shopping Cart, Checkout, Custom Orders) trên một nền tảng giao diện React/Next.JS hiện đại và đẳng cấp (thay vì Razor SSR/Cartzilla truyền thống).
+  + Khác biệt cốt lõi với POS: Tránh rác nghiệp vụ vào sổ sách kế toán. Cửa hàng online sử dụng kiến trúc **Database-Backed Shopping Cart** riêng biệt (`ShoppingCartItems`), chỉ chuyển hóa thành `Order` chính thức (Trạng thái `Pending Payment / Awaiting Processing`) sau khi Khách hàng bấm chốt Checkout!
 
-Xác thực (Auth): Sử dụng Cookie Authentication (Stateful) với vòng đời theo ca làm việc.
-
-Khu vực Point of Sale & Frontend (RESTful Web API):
-
-Công nghệ: ASP.NET Core Web API, trả về chuẩn JSON. Tiền đề để tích hợp với Frontend React.js/Next.js tại quầy.
-
-Mục đích: Xử lý các tác vụ có tần suất cao và yêu cầu tốc độ như Quét mã vạch (Barcode Scanner), Lập đơn nháp, Thanh toán, Kiểm kho.
-
-Xác thực (Auth): Sử dụng JWT (JSON Web Token) (Stateless) truyền qua header Authorization: Bearer.
+3. Xác thực kép & Token Economy: 
+Khu vực API sử dụng JWT (JSON Web Token - Stateless) truyền qua header Authorization: Bearer, cho phép người dùng đăng nhập đồng nhất giữa Web Online Storefront và trạm POS, tích hợp phân quyền linh hoạt theo quy tắc tối cao (Super Admin vào được mọi trạm thu ngân của operator).
 
 III. THIẾT KẾ CƠ SỞ DỮ LIỆU ĐA TẦNG (16 TABLES - 3NF)
 Hệ thống sử dụng SQL Server và Entity Framework Core, được chuẩn hóa 3NF và chia thành 4 Bounded Contexts. Toàn bộ hệ thống bị vô hiệu hóa tính năng Cascade Delete bằng Fluent API (DeleteBehavior.Restrict) để bảo vệ dữ liệu lịch sử.
@@ -153,3 +159,41 @@ Cookie Auth cho Admin / Quản lý (Trượt phiên sau 8 tiếng).
 JWT Bearer cho Frontend PoS (Có thời hạn, cấp qua api/v1/auth/login).
 
 Transaction Nguyên khối (ACID): Quá trình thanh toán (Checkout) được gói trong IDbContextTransaction. Nếu việc trừ tồn kho thành công nhưng cộng tiền vào ca làm việc thất bại, toàn bộ quá trình sẽ Rollback, không sinh ra rác dữ liệu. Dữ liệu chuẩn bị sẵn sàng cho các hạ tầng CI/CD, GitOps sau này.
+
+VII. TIÊU CHUẨN TRUYỀN THÔNG WEB, NGÔN NGỮ & BỘ TRƯỜNG SEO (UI LANGUAGE & SEO MECHANISMS)
+Hệ thống tuân thủ nghiêm ngặt các quy chuẩn quốc tế hóa và tối ưu công cụ tìm kiếm chuẩn Enterprise B2B SaaS:
+
+1. Ngôn Ngữ Trình Diễn (English Standardized Interface):
+Toàn bộ các biểu tượng, văn bản nhãn (labels), tiêu đề cột DataTables, thông báo HUD, và tài liệu xuất ra cho người dùng trên nền tảng Web & Trạm POS đều phải hiển thị chuẩn bằng Tiếng Anh (English).
+
+2. Cơ Chế SEO Tối Ưu (Search Engine Optimization tags & REST APIs):
+- Tại tầng SSR CMS Admin & Web Layout chung (`_Layout.cshtml`), mã nguồn tích hợp sẵn các cờ SEO nguyên tử cơ sở:
+  ```html
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="DigiPOSE - Next-Generation High-Density Cyber-Cinematic B2B/Retail Point of Sale and E-Commerce Web Storefront." />
+  <meta name="keywords" content="POS, ERP, E-Commerce, Retail Portal, SaaS Subscriptions, Shopping Cart, Cyber HUD" />
+  <meta name="author" content="DigiPOSE Systems Architecture Team" />
+  ```
+- Tại tầng RESTful Web API cho Frontend React/Next.JS (App Router): Các endpoint tải chi tiết sản phẩm (`/api/v1/storefront/catalog/products/{slug}`) bắt buộc trả kèm các trường dữ liệu siêu dữ liệu (`MetaTitle`, `MetaDescription`, `MetaKeywords`, `Slug`, `ImageUrl`) để trình biên dịch Next.JS thực thi hàm SSR `generateMetadata`, đem lại khả năng lập chỉ mục (SEO indexing) xuất sắc trên Google và mạng xã hội.
+
+VIII. ĐẶC TẢ HOÀN THIỆN ĐA PHÂN HỆ BÁN HÀNG - POS VÀ ONLINE STOREFRONT (PRODUCTION ORDER & CART DOMAIN LOGIC)
+Hệ thống chính thức vận hành trên 2 trụ phân hệ kinh doanh riêng biệt, kết hợp trọn vẹn tinh hoa thực hành từ bài giảng Buổi 6 và thiết kế hệ thống có độ an toàn tuyệt đối của DigiPOSE:
+
+1. Đam Mê Phân Đỉnh (Domain Isolation: POS Draft Order vs. Web Shopping Cart):
+- **Trạm POS Thu Ngân (`PosController.cs`):** Dành cho vận hành tại chỗ có kiểm đếm tiền mặt theo ca. Dùng trực tiếp Thực thể `Orders` (với `StatusId = 4` Draft). Đơn hàng nháp của thu ngân là một sự chiếm dụng tài nguyên kho tạm thời, sẵn sàng in biên lai chớp nhoáng dưới 15ms.
+- **Cổng Bán Hàng Trực Tuyến (`StorefrontController.cs`):** Dành cho khách mua online, B2B order, hoặc thuê bao SaaS. BẮT BUỘC sử dụng bảng Giỏ hàng chuyên biệt (`ShoppingCartItems` hoặc hybrid repository), TRÁNH TUYỆT ĐỐI việc lưu giỏ hàng đang nháp vào bảng `Orders` gây bẩn số liệu kế toán hầm khổng lồ từ các xe giỏ hàng bỏ quên (Abandoned Carts).
+
+2. Danh Sách Nghiệp Vụ Chuẩn Hóa Khung Xương (Core Sales & Cart Methods Standard):
+Cả hai phân hệ POS và Online Web chia sẻ hệ quy trình định dạng phương thức động lực học, phơi bày trọn vẹn qua REST JSON API cho client React/Next.JS:
+- **Xác định định danh Người mua & Trợ lý:** `getUsername()` / `getCustomerIdentity()` (Truy xuất thông tin JWT Token hoặc `CustomerId` từ CRM, hiển thị Hạng VIP và Điểm thưởng RewardPoints).
+- **Tính toán trạng thái giỏ & Thuế tự động:** `getShoppingCart()` (Trả về cấu trúc Cart hoặc Draft Order kèm Trạng thái giỏ `Card` hoặc `CardEmpty`), `getTotalQuantity()` (Tổng số món có trong giỏ), `getTotalPrice()` (Tích hợp động: Giá bán trước thuế `Gross`, % thuế TaxRate `TaxAmount`, Chiết khấu CRM `DiscountAmount`, và tổng chốt thanh toán `TotalAmount`).
+- **Nghiệp vụ Xử lý Hàng hóa & Căn chỉnh giỏ (Line Item Manipulation):**
+  + `addItem()` / `addToCart()` (Thêm sản phẩm mới bằng `ProductId` hoặc `SKU`, tự động dồn chung dòng nếu trùng mã, kế thừa giá bán `BasePrice` từ catalog thời gian thực).
+  + `updateQuantity()` / `increaseProduct()` / `decreaseProduct()` (Tăng/giảm số lượng tự động tính lại thuế và tiền món hàng).
+  + `removeItem()` / `deleteProduct()` (Xóa từng dòng khỏi giỏ hàng/đơn nháp).
+  + `removeAllItems()` / `clearCart()` (Xóa sạch giỏ hàng khi người mua chọn Hủy hoặc làm rỗng giỏ).
+  + `updateProduct()` / `applyCustomDiscount()` (Điều chỉnh đặc Quyền giá cho các món SaaS, hoặc cập nhật lựa chọn đơn vị tính/thuế theo thẩm quyền thu ngân/quản lý).
+- **Giao dịch Chốt chốt chặn (Atomic Checkout & POS Execution):**
+  + Lệnh `checkout()` / `paid()`: Biến đổi Cart/Draft thành Hóa đơn ghi sổ chính thức (`Order` với trạng thái `Completed` hoặc `Awaiting Payment`). Mở rộng hạn thuê bao `Subscriptions` nối tiếp và trừ tồn kho vật lý qua rào cản ACID Transaction Serializable/ExecuteUpdate.
+- **Truy xuất SEO & Bộ Lọc Tốc Độ Cao (Dynamic Catalog Filter & SEO Search):**
+  + API Tìm kiếm đa trường `/api/v1/storefront/catalog/search` hỗ trợ đồng thời các bộ lọc: Tìm theo Từ khóa (Tên/SKU/Slug), Bộ lọc Nhà sản xuất (`ManufacturerId`), Bộ lọc Danh mục (`CategoryId`), Bộ lọc Loại hình hàng (`ProductTypeId`), Bản chất hàng (`ItemNatureId`), Khoảng giá và Trạng thái hàng trong kho (`StockQuantity > 0`). Output JSON đồng bộ kèm cờ SEO.

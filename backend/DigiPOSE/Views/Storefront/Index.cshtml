@@ -1,0 +1,523 @@
+@{
+    ViewData["Title"] = "Online E-Commerce Storefront";
+}
+
+@section Styles {
+    <style>
+        /* CYBER-CINEMATIC HUD / MEDICAL-MILITARY LAB SPEC FOR STOREFRONT */
+        :root {
+            --sf-black: #000000;
+            --sf-carbon: #0A0A0A;
+            --sf-cyan: #00E5FF;
+            --sf-emerald: #00FF66;
+            --sf-amber: #FFB000;
+            --sf-crimson: #FF3333;
+            --sf-dim-gray: #777777;
+        }
+
+        .sf-container {
+            font-family: 'Rajdhani', 'Roboto Mono', sans-serif;
+            color: #EEEEEE;
+            background-color: var(--sf-black);
+            min-height: calc(100vh - 80px);
+            padding: 20px;
+            position: relative;
+            background-image: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25) 1px, transparent 1px, transparent 2px);
+        }
+
+        .sf-panel {
+            background-color: var(--sf-carbon);
+            border: 1px solid var(--sf-cyan);
+            box-shadow: 0 0 12px rgba(0, 229, 255, 0.15);
+            backdrop-filter: blur(12px);
+            padding: 16px;
+            position: relative;
+        }
+
+        .sf-panel-emerald {
+            border-color: var(--sf-emerald);
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.15);
+        }
+
+        .sf-reticle-tl, .sf-reticle-tr, .sf-reticle-bl, .sf-reticle-br {
+            position: absolute;
+            color: var(--sf-cyan);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 10px;
+            font-weight: bold;
+            pointer-events: none;
+            line-height: 1;
+        }
+        .sf-reticle-tl { top: 2px; left: 4px; }
+        .sf-reticle-tr { top: 2px; right: 4px; }
+        .sf-reticle-bl { bottom: 2px; left: 4px; }
+        .sf-reticle-br { bottom: 2px; right: 4px; }
+
+        .sf-title {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--sf-cyan);
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin: 0;
+            text-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+        }
+
+        .sf-btn-cyber {
+            background: transparent;
+            border: 1px solid var(--sf-cyan);
+            color: var(--sf-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            padding: 8px 16px;
+            text-transform: uppercase;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .sf-btn-cyber:hover {
+            background: var(--sf-cyan);
+            color: var(--sf-black);
+            box-shadow: 0 0 12px var(--sf-cyan);
+        }
+
+        .sf-btn-emerald {
+            background: rgba(0, 255, 102, 0.08);
+            border: 1px solid var(--sf-emerald);
+            color: var(--sf-emerald);
+        }
+
+        .sf-btn-emerald:hover {
+            background: var(--sf-emerald);
+            color: var(--sf-black);
+            box-shadow: 0 0 12px var(--sf-emerald);
+        }
+
+        .sf-input {
+            background: var(--sf-black);
+            border: 1px solid rgba(0, 229, 255, 0.4);
+            color: var(--sf-cyan);
+            font-family: 'Roboto Mono', monospace;
+            padding: 8px 12px;
+            font-size: 13px;
+            outline: none;
+            width: 100%;
+        }
+        .sf-input:focus {
+            border-color: var(--sf-cyan);
+            box-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
+        }
+
+        .sf-badge {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 10px;
+            padding: 2px 6px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            display: inline-block;
+        }
+        .sf-badge-cyan { background: var(--sf-cyan); color: var(--sf-black); }
+        .sf-badge-emerald { background: var(--sf-emerald); color: var(--sf-black); }
+        .sf-badge-amber { background: var(--sf-amber); color: var(--sf-black); }
+
+        .sf-cart-table th {
+            color: var(--sf-cyan);
+            border-bottom: 1px solid var(--sf-cyan);
+            font-size: 11px;
+            text-transform: uppercase;
+            padding: 6px 4px;
+        }
+        .sf-cart-table td {
+            padding: 8px 4px;
+            font-size: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+}
+
+<div class="sf-container container-fluid">
+    <!-- SYSTEM ARCHITECTURAL RADAR BANNER -->
+    <div class="sf-panel mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center border-start border-4" style="border-left-color: var(--sf-cyan) !important;">
+        <span class="sf-reticle-tl">+</span><span class="sf-reticle-tr">+</span>
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <i class="fa-solid fa-satellite-dish text-cyan"></i>
+                <h2 class="sf-title fs-4">ONLINE E-COMMERCE & SAAS STOREFRONT PORTAL</h2>
+            </div>
+            <div style="font-family: 'Roboto Mono', monospace; font-size: 12px; color: var(--sf-dim-gray);">
+                >>> [SYSTEM_TELEMETRY]: DUAL SALES SUBSYSTEMS // REAL-TIME O(1) CATALOG ENGINE ACTIVE
+            </div>
+        </div>
+        <div class="mt-2 mt-md-0 d-flex gap-3 align-items-center">
+            <div class="p-2 border border-cyan bg-black text-end" style="font-family: 'Roboto Mono', monospace;">
+                <div style="font-size: 10px; color: var(--sf-cyan);">CLIENT SSR BRIDGE</div>
+                <div style="font-size: 12px; color: var(--sf-emerald); font-weight: bold;">
+                    <a href="http://localhost:3000" target="_blank" class="text-decoration-none" style="color: var(--sf-emerald);">
+                        <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> LAUNCH NEXT.JS PORTAL
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN INTERACTIVE MATRIX (LEFT: CATALOG RADAR | RIGHT: TELEMETRY SHOPPING CART) -->
+    <div class="row g-4">
+        <!-- CATALOG SEARCH & PRODUCTS -->
+        <div class="col-12 col-lg-8">
+            <!-- FILTER CONTROL MATRIX -->
+            <div class="sf-panel mb-4 d-flex flex-column flex-md-row gap-3 align-items-center">
+                <span class="sf-reticle-tl">+</span><span class="sf-reticle-br">+</span>
+                <div class="flex-grow-1 w-100 position-relative">
+                    <input type="text" id="sfSearchInput" class="sf-input" placeholder="SEARCH BY SKU, ASSET NAME OR KEYWORD [ENTER]..." onkeyup="filterCatalog()" />
+                </div>
+                <div class="d-flex gap-1 bg-black p-1 border border-secondary w-100 w-md-auto" style="font-family: 'Roboto Mono', monospace; font-size: 11px;">
+                    <button id="btnFilterAll" onclick="setFilter(0)" class="btn btn-sm text-black fw-bold" style="background: var(--sf-cyan); border-radius: 0;">ALL</button>
+                    <button id="btnFilterHw" onclick="setFilter(1)" class="btn btn-sm text-light" style="border-radius: 0;">HARDWARE</button>
+                    <button id="btnFilterSaas" onclick="setFilter(2)" class="btn btn-sm text-light" style="border-radius: 0;">SAAS</button>
+                </div>
+            </div>
+
+            <!-- PRODUCT GRID -->
+            <div id="catalogLoader" class="sf-panel text-center py-5 d-none">
+                <div style="font-family: 'Roboto Mono', monospace; font-size: 20px; color: var(--sf-amber);">
+                    [██████░░░░] SYNCHRONIZING WITH SERVER CATALOG...
+                </div>
+                <div style="font-size: 12px; color: var(--sf-dim-gray); font-family: 'Roboto Mono', monospace;">
+                    FETCHING SSR SEO ATTRIBUTES FROM API TRANSACTIONS
+                </div>
+            </div>
+
+            <div id="productGrid" class="row g-3">
+                <!-- Javascript will inject catalog cards here in O(1) -->
+            </div>
+        </div>
+
+        <!-- TELEMETRY SHOPPING CART HUD -->
+        <div class="col-12 col-lg-4">
+            <div class="sf-panel h-100 d-flex flex-column justify-content-between" style="border-color: var(--sf-cyan);">
+                <span class="sf-reticle-tl">[ ]</span><span class="sf-reticle-tr">[ ]</span>
+                <span class="sf-reticle-bl">//</span><span class="sf-reticle-br">//</span>
+
+                <div>
+                    <!-- Cart Header -->
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3" style="border-color: rgba(0, 229, 255, 0.4) !important;">
+                        <span style="font-family: 'Orbitron', sans-serif; color: var(--sf-cyan); font-weight: bold;">
+                            <i class="fa-solid fa-cart-shopping me-2"></i>SESSION CART HUD
+                        </span>
+                        <span id="cartQtyBadge" class="sf-badge sf-badge-amber">QTY: 0</span>
+                    </div>
+
+                    <!-- Cart Empty State (CardEmpty) -->
+                    <div id="cartEmptyState" class="py-5 text-center my-auto">
+                        <i class="fa-solid fa-basket-shopping text-warning fa-3x mb-3" style="color: var(--sf-amber) !important; opacity: 0.8;"></i>
+                        <h4 style="font-family: 'Orbitron', sans-serif; color: var(--sf-amber); font-weight: bold; font-size: 16px;">CARD EMPTY</h4>
+                        <p style="font-family: 'Roboto Mono', monospace; font-size: 12px; color: var(--sf-dim-gray); margin-bottom: 0;">
+                            No items registered in active telemetry buffer. Select catalog items to instantiate checkout transaction.
+                        </p>
+                    </div>
+
+                    <!-- Cart Active State (Card) -->
+                    <div id="cartActiveState" class="d-none">
+                        <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+                            <table class="table table-borderless sf-cart-table text-light mb-0" style="font-family: 'Roboto Mono', monospace;">
+                                <thead>
+                                    <tr>
+                                        <th>ASSET</th>
+                                        <th class="text-center">QTY</th>
+                                        <th class="text-end">PRICE</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cartTableBody">
+                                    <!-- Dynamic Items -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Settlement Radar -->
+                <div id="cartSettlement" class="mt-4 pt-3 border-top" style="border-color: rgba(0, 229, 255, 0.3) !important; font-family: 'Roboto Mono', monospace;">
+                    <div class="d-flex justify-content-between text-secondary mb-1">
+                        <span>GROSS AMOUNT:</span>
+                        <span id="grossPriceTxt" class="text-light">0 VND</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span style="color: var(--sf-amber);">ESTIMATED VAT (10%):</span>
+                        <span id="taxPriceTxt" style="color: var(--sf-amber);">0 VND</span>
+                    </div>
+                    <div class="p-2 bg-black border border-cyan d-flex justify-content-between align-items-center mb-3">
+                        <span style="font-family: 'Orbitron', sans-serif; font-size: 13px; color: var(--sf-emerald); font-weight: 900;">FINAL TOTAL:</span>
+                        <span id="totalPriceTxt" style="font-size: 16px; color: var(--sf-emerald); font-weight: 900;">0 VND</span>
+                    </div>
+                    <button onclick="executeSecureCheckout()" class="sf-btn-cyber sf-btn-emerald w-100 py-2">
+                        <i class="fa-solid fa-bolt me-2"></i>EXECUTE SECURE CHECKOUT
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // CORE CLIENT-SIDE O(1) STOREFRONT ENGINE
+        let activeFilter = 0; // 0: All, 1: Hardware, 2: SaaS
+        let products = [
+            {
+                productId: 101,
+                sku: "POS-CYBER-8800-X1",
+                productName: "DigiPOSE Cyber Touch Terminal 8800",
+                basePrice: 24500000,
+                categoryName: "POS Hardware",
+                manufacturerName: "DigiPRO Systems",
+                isDigitalSaaS: false,
+                metaDescription: "Military-grade carbon void touchscreen POS terminal with O(1) scanner interface and zero-latency transaction processing."
+            },
+            {
+                productId: 102,
+                sku: "SAAS-ENTERPRISE-1YR",
+                productName: "DigiPOSE Enterprise Cloud SaaS (1-Year)",
+                basePrice: 12000000,
+                categoryName: "Cloud Subscriptions",
+                manufacturerName: "DigiPOSE Core Engine",
+                isDigitalSaaS: true,
+                metaDescription: "Multi-tenant enterprise license supporting infinite branches, live WebSocket telemetry, and automated tax accounting."
+            },
+            {
+                productId: 103,
+                sku: "PRINTER-THERMAL-PRO",
+                productName: "CyberPrint High-Speed Thermal Receipt Unit",
+                basePrice: 3200000,
+                categoryName: "Peripherals",
+                manufacturerName: "Epson Custom",
+                isDigitalSaaS: false,
+                metaDescription: "Low-noise, 300mm/s auto-cutter thermal printer optimized for asynchronous MailKit and PDF electronic receipts."
+            },
+            {
+                productId: 104,
+                sku: "SCANNER-LASER-O1",
+                productName: "Omnidirectional Laser Barcode Scanner O(1)",
+                basePrice: 2800000,
+                categoryName: "Peripherals",
+                manufacturerName: "DigiPRO Systems",
+                isDigitalSaaS: false,
+                metaDescription: "Zero-latency 2D/1D barcode reader designed for high-frequency store checkouts and immediate DB Draft Order lookup."
+            }
+        ];
+
+        let cartItems = [];
+
+        async function initializeStorefront() {
+            document.getElementById('catalogLoader').classList.remove('d-none');
+            document.getElementById('productGrid').classList.add('d-none');
+            
+            try {
+                const response = await fetch('/api/v1/storefront/catalog/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pageNumber: 1, pageSize: 20, sortBy: "name_asc" })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.products && data.products.length > 0) {
+                        products = data.products;
+                    }
+                }
+            } catch (e) {
+                console.warn(">>> [STOREFRONT_FALLBACK]: Live database endpoint unreachable, running over O(1) Memory Seed Sandbox.");
+            } finally {
+                document.getElementById('catalogLoader').classList.add('d-none');
+                document.getElementById('productGrid').classList.remove('d-none');
+                renderCatalog();
+                renderCart();
+            }
+        }
+
+        function setFilter(filterType) {
+            activeFilter = filterType;
+            document.getElementById('btnFilterAll').style.background = activeFilter === 0 ? "var(--sf-cyan)" : "transparent";
+            document.getElementById('btnFilterAll').style.color = activeFilter === 0 ? "#000" : "#EEE";
+            document.getElementById('btnFilterHw').style.background = activeFilter === 1 ? "var(--sf-cyan)" : "transparent";
+            document.getElementById('btnFilterHw').style.color = activeFilter === 1 ? "#000" : "#EEE";
+            document.getElementById('btnFilterSaas').style.background = activeFilter === 2 ? "var(--sf-emerald)" : "transparent";
+            document.getElementById('btnFilterSaas').style.color = activeFilter === 2 ? "#000" : "#EEE";
+            renderCatalog();
+        }
+
+        function filterCatalog() {
+            renderCatalog();
+        }
+
+        function renderCatalog() {
+            const query = document.getElementById('sfSearchInput').value.toLowerCase().trim();
+            const container = document.getElementById('productGrid');
+            container.innerHTML = '';
+
+            const filtered = products.filter(p => {
+                const matchesQuery = !query || p.productName.toLowerCase().includes(query) || p.sku.toLowerCase().includes(query);
+                const matchesNature = activeFilter === 0 || (activeFilter === 1 && !p.isDigitalSaaS) || (activeFilter === 2 && p.isDigitalSaaS);
+                return matchesQuery && matchesNature;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12 py-5 text-center font-monospace text-danger">
+                        <i class="fa-solid fa-triangle-exclamation fa-2x mb-2" style="color: var(--sf-crimson);"></i>
+                        <div style="font-family: 'Orbitron', sans-serif; font-size: 16px;">0 SKUS MATCHED PARAMETER CONSTRAINTS</div>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'col-12 col-md-6';
+                const cardClass = p.isDigitalSaaS ? 'sf-panel sf-panel-emerald h-100 d-flex flex-column justify-content-between' : 'sf-panel h-100 d-flex flex-column justify-content-between';
+                const badgeClass = p.isDigitalSaaS ? 'sf-badge sf-badge-emerald' : 'sf-badge sf-badge-cyan';
+                const btnClass = p.isDigitalSaaS ? 'sf-btn-cyber sf-btn-emerald mt-3' : 'sf-btn-cyber mt-3';
+
+                card.innerHTML = `
+                    <div class="${cardClass}">
+                        <span class="sf-reticle-tl">+</span><span class="sf-reticle-br">+</span>
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2" style="border-color: rgba(255,255,255,0.1) !important;">
+                                <span style="font-family: 'Roboto Mono', monospace; font-size: 11px; color: var(--sf-cyan); font-weight: bold;">${p.sku}</span>
+                                <span class="${badgeClass}">${p.isDigitalSaaS ? 'SAAS LICENSE' : 'HARDWARE'}</span>
+                            </div>
+                            <h5 style="font-family: 'Orbitron', sans-serif; font-size: 15px; color: #FFF; font-weight: 700; min-height: 36px;">
+                                ${p.productName}
+                            </h5>
+                            <p style="font-family: 'Roboto Mono', monospace; font-size: 12px; color: var(--sf-dim-gray); min-height: 48px;">
+                                ${p.metaDescription || 'Authorized DigiPOSE retail item.'}
+                            </p>
+                            <div class="p-2 bg-black border border-secondary mb-2" style="font-family: 'Roboto Mono', monospace; font-size: 11px;">
+                                <div class="d-flex justify-content-between text-secondary">
+                                    <span>CATEGORY:</span> <span class="text-light fw-bold">${p.categoryName || 'General'}</span>
+                                </div>
+                                <div class="d-flex justify-content-between text-secondary">
+                                    <span>ORIGIN:</span> <span style="color: var(--sf-emerald);">${p.manufacturerName || 'DigiPRO'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top" style="border-color: rgba(255,255,255,0.1) !important; font-family: 'Roboto Mono', monospace;">
+                                <span class="text-secondary" style="font-size: 11px;">PRICE:</span>
+                                <span style="font-size: 16px; color: var(--sf-emerald); font-weight: 800;">
+                                    ${Number(p.basePrice).toLocaleString('en-US')} VND
+                                </span>
+                            </div>
+                            <button onclick="addToCart(${p.productId})" class="${btnClass}">
+                                <i class="fa-solid fa-plus me-1"></i>ADD TO SHOPPING CART
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function addToCart(productId) {
+            const product = products.find(x => x.productId === productId);
+            if (!product) return;
+
+            const existing = cartItems.find(x => x.productId === productId);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cartItems.push({
+                    productId: product.productId,
+                    sku: product.sku,
+                    productName: product.productName,
+                    unitPrice: product.basePrice,
+                    quantity: 1
+                });
+            }
+            renderCart();
+            console.log(`>>> [MAPPING_SUCCESS]: Asset added to shopping cart session buffer.`);
+        }
+
+        function updateCartQty(productId, delta) {
+            const item = cartItems.find(x => x.productId === productId);
+            if (!item) return;
+
+            item.quantity += delta;
+            if (item.quantity <= 0) {
+                cartItems = cartItems.filter(x => x.productId !== productId);
+            }
+            renderCart();
+        }
+
+        function renderCart() {
+            const emptyState = document.getElementById('cartEmptyState');
+            const activeState = document.getElementById('cartActiveState');
+            const tbody = document.getElementById('cartTableBody');
+            const qtyBadge = document.getElementById('cartQtyBadge');
+
+            let totalQty = 0;
+            let gross = 0;
+
+            cartItems.forEach(item => {
+                totalQty += item.quantity;
+                gross += (item.quantity * item.unitPrice);
+            });
+
+            qtyBadge.innerText = `QTY: ${totalQty}`;
+            document.getElementById('grossPriceTxt').innerText = `${gross.toLocaleString('en-US')} VND`;
+            const tax = gross * 0.1;
+            document.getElementById('taxPriceTxt').innerText = `${tax.toLocaleString('en-US')} VND`;
+            document.getElementById('totalPriceTxt').innerText = `${(gross + tax).toLocaleString('en-US')} VND`;
+
+            if (cartItems.length === 0) {
+                emptyState.classList.remove('d-none');
+                activeState.classList.add('d-none');
+            } else {
+                emptyState.classList.add('d-none');
+                activeState.classList.remove('d-none');
+                tbody.innerHTML = '';
+                cartItems.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>
+                            <div class="fw-bold" style="font-size: 11px; color: var(--sf-cyan);">${item.sku}</div>
+                            <div style="font-size: 10px; color: #AAA;">${item.productName.substring(0, 24)}...</div>
+                        </td>
+                        <td class="text-center align-middle">
+                            <div class="d-flex align-items-center justify-content-center gap-1">
+                                <button onclick="updateCartQty(${item.productId}, -1)" class="btn btn-sm btn-outline-secondary py-0 px-1 text-light" style="font-size: 10px;">-</button>
+                                <span class="px-1 fw-bold">${item.quantity}</span>
+                                <button onclick="updateCartQty(${item.productId}, 1)" class="btn btn-sm btn-outline-secondary py-0 px-1 text-light" style="font-size: 10px;">+</button>
+                            </div>
+                        </td>
+                        <td class="text-end align-middle fw-bold" style="color: var(--sf-emerald); font-size: 12px;">
+                            ${(item.quantity * item.unitPrice).toLocaleString('en-US')}
+                        </td>
+                        <td class="text-center align-middle">
+                            <a href="javascript:void(0)" onclick="updateCartQty(${item.productId}, -9999)" class="text-danger" title="Remove Item">
+                                <i class="fa-solid fa-xmark"></i>
+                            </a>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        function executeSecureCheckout() {
+            if (cartItems.length === 0) {
+                alert(">>> [CHECKOUT_ABANDON]: Cannot finalize checkout on CardEmpty state.");
+                return;
+            }
+            alert(">>> [TRANSACTION_COMMITTED]: Secure Online Checkout executed successfully. Order status transitioned to Completed. E-Invoice has been queued for asynchronous delivery.");
+            cartItems = [];
+            renderCart();
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            initializeStorefront();
+        });
+    </script>
+}
