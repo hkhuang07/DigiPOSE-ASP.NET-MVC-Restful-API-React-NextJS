@@ -8,6 +8,14 @@ namespace DigiPOSE.Models
         [Key]
         [Display(Name = "Order ID")] 
         public int OrderId { get; set; }
+
+        [Display(Name = "Idempotency Key")]
+        [Required]
+        public Guid IdempotencyKey { get; set; } = Guid.NewGuid();
+
+        [StringLength(50)]
+        [Display(Name = "Invoice Number")]
+        public string? InvoiceNumber { get; set; }
         
         [Display(Name = "Branch")] 
         [Required(ErrorMessage = "Please select a branch.")]
@@ -62,6 +70,32 @@ namespace DigiPOSE.Models
         
         [Display(Name = "Created Date")] 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        // >>> [ENTERPRISE_POS_SETTLEMENT]: Cashier terminal tender and change balancing attributes
+        [Column(TypeName = "decimal(18,4)")]
+        [Display(Name = "Tendered Amount")] 
+        public decimal TenderedAmount { get; set; } = 0;
+
+        [Column(TypeName = "decimal(18,4)")]
+        [Display(Name = "Change Amount")] 
+        public decimal ChangeAmount { get; set; } = 0;
+
+        [Column(TypeName = "decimal(18,4)")]
+        [Display(Name = "VAT Rounding Difference")] 
+        public decimal VatRoundingDifference { get; set; } = 0;
+
+        // >>> [ECOMMERCE_LOGISTICS_INTEGRATION]: Online Storefront shipping & customer delivery metadata
+        [StringLength(255)]
+        [Display(Name = "Shipping Address")]
+        public string? ShippingAddress { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        [Display(Name = "Shipping Fee")]
+        public decimal ShippingFee { get; set; } = 0;
+
+        [StringLength(1000)]
+        [Display(Name = "Order Notes")]
+        public string? OrderNotes { get; set; }
 
         public Shift? Shift { get; set; }
         public User? User { get; set; }

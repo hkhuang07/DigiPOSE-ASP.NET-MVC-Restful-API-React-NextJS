@@ -41,6 +41,10 @@ namespace DigiPOSE.Models
         public DbSet<InvoiceStatus> InvoiceStatuses { get; set; }
         public DbSet<InvoiceType> InvoiceTypes { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
+        public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
+        public DbSet<JobQueueItem> JobQueue { get; set; }
+        public DbSet<StorefrontCart> StorefrontCarts { get; set; }
+        public DbSet<StorefrontCartItem> StorefrontCartItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -85,6 +89,19 @@ namespace DigiPOSE.Models
             modelBuilder.Entity<InvoiceStatus>().ToTable("InvoiceStatuses");
             modelBuilder.Entity<InvoiceType>().ToTable("InvoiceTypes");
             modelBuilder.Entity<Subscription>().ToTable("Subscriptions");
+            modelBuilder.Entity<InventoryTransaction>().ToTable("InventoryTransactions");
+            modelBuilder.Entity<JobQueueItem>().ToTable("JobQueue");
+            modelBuilder.Entity<StorefrontCart>().ToTable("StorefrontCarts");
+            modelBuilder.Entity<StorefrontCartItem>().ToTable("StorefrontCartItems");
+
+            // >>> [CRITICAL_IDEMPOTENCY_INDEX]: Enforces DB-level unique constraint against double-billing
+            modelBuilder.Entity<Order>().HasIndex(o => o.IdempotencyKey).IsUnique().HasDatabaseName("IX_Orders_IdempotencyKey");
+
+            // >>> [APPEND_ONLY_OPTIMIZATION]: Indexed purely for read aggregate speed, zero lock contention
+            modelBuilder.Entity<InventoryTransaction>().HasIndex(e => new { e.ProductId, e.CreatedAt }).HasDatabaseName("IX_InventoryTx_Product_Date");
+            modelBuilder.Entity<JobQueueItem>().HasIndex(e => new { e.Status, e.CreatedAt }).HasDatabaseName("IX_JobQueue_Status");
+            modelBuilder.Entity<StorefrontCart>().HasIndex(e => e.CartGuid).IsUnique().HasDatabaseName("IX_StorefrontCarts_CartGuid");
+            modelBuilder.Entity<StorefrontCart>().HasIndex(e => e.UpdatedAt).HasDatabaseName("IX_StorefrontCarts_UpdatedAt");
 
             // 1. CHỐNG XÓA DÂY CHUYỀN (NO CASCADE DELETE) - BẢO VỆ DỮ LIỆU KẾ TOÁN
             foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))

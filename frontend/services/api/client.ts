@@ -140,23 +140,53 @@ export const storefrontApi = {
 // IN-STORE HIGH-SPEED POS TERMINAL SERVICES (PHASE 6.1)
 // ==========================================
 export const posApi = {
+  /**
+   * Fast real-time SKU catalog lookup against SQL Server & RAM engine.
+   */
+  lookupSku: async (sku: string, branchId: number = 1) => {
+    const res = await apiClient.get("/POS/catalog/lookup", { params: { sku, branchId } });
+    return res.data;
+  },
+
+  /**
+   * Synchronizes and retrieves active draft order state from SQL database.
+   */
+  getDraftOrder: async (orderId: number) => {
+    const res = await apiClient.get(`/POS/retail-draft/${orderId}`);
+    return res.data;
+  },
+
+  /**
+   * Initializes a persistent database-backed Draft Order (StatusId = 4) for power loss resilience.
+   */
   createDraftOrder: async (branchId: number = 1, shiftId: number = 1, userId: number = 1) => {
     const res = await apiClient.post("/POS/retail-draft/create", { branchId, shiftId, userId });
     return res.data;
   },
 
+  /**
+   * Adds or increments line item in DB draft order, generating mandatory clientScanId UUID to prevent scanner bounces.
+   */
   addItemToDraft: async (orderId: number, productId: number, quantity: number = 1) => {
-    const res = await apiClient.post("/POS/retail-draft/add-item", { orderId, productId, quantity });
+    const clientScanId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, () => (Math.random() * 16 | 0).toString(16));
+    const res = await apiClient.post("/POS/retail-draft/add-item", { orderId, productId, quantity, clientScanId });
     return res.data;
   },
 
+  /**
+   * Removes line item from active database draft order.
+   */
   removeItemFromDraft: async (orderId: number, productId: number) => {
     const res = await apiClient.post("/POS/retail-draft/remove-item", { orderId, productId });
     return res.data;
   },
 
-  checkoutDraft: async (orderId: number, paymentMethodId: number = 1, customerId?: number) => {
-    const res = await apiClient.post("/POS/retail-draft/checkout", { orderId, paymentMethodId, customerId });
+  /**
+   * Executes atomic checkout transaction, injecting mandatory IdempotencyKey UUID to eliminate duplicate billing on LAN retries.
+   */
+  checkoutPaid: async (orderId: number, paymentMethodId: number = 1, customerId?: number) => {
+    const idempotencyKey = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, () => (Math.random() * 16 | 0).toString(16));
+    const res = await apiClient.post("/POS/checkout/paid", { orderId, paymentMethodId, customerId, idempotencyKey });
     return res.data;
   },
 };

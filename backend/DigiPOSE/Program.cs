@@ -4,6 +4,10 @@ using DigiPOSE.Models;
 using DigiPOSE.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using DigiPOSE.Services;
+using DigiPOSE.Services.Background;
+using DigiPOSE.Hubs;
+using System.Threading.Channels;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +23,14 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.AddDbContextPool<DigiPoseDbContext>(options => 
     options.UseSqlServer(connectionString));
+
+// >>> [LEAN_LAN_ARCHITECTURE_SERVICES]: Singleton Lazy-Loading RAM Stock Engine, VAT Balancing Engine & Background Resilient Queue
+builder.Services.AddSingleton<IInventoryRAMService, InventoryRAMService>();
+builder.Services.AddSingleton<IVatBalancingEngine, VatBalancingEngine>();
+builder.Services.AddSingleton(Channel.CreateUnbounded<JobQueueItem>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = false }));
+builder.Services.AddHostedService<ResilientInvoiceWorker>();
+builder.Services.AddMemoryCache();
+builder.Services.AddSignalR();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
 {
@@ -86,5 +98,7 @@ app.MapControllerRoute(
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapHub<PosRealtimeHub>("/hubs/pos");
 
 app.Run();

@@ -176,4 +176,54 @@ document.addEventListener("DOMContentLoaded", function () {
         { text: "5 new tax invoices generated in session", icon: "fa-solid fa-file-invoice", colorClass: "text-info" }
     ];
     window.setNotificationCount(initialAlerts.length, initialAlerts);
+
+    // 7. Phase 6.1 Realtime SignalR Cyber-HUD Telemetry Bridge (Admin Monitor)
+    if (typeof signalR !== "undefined") {
+        const hudAlertsList = [...initialAlerts];
+        const telemetryConnection = new signalR.HubConnectionBuilder()
+            .withUrl("/hubs/pos")
+            .withAutomaticReconnect([0, 2000, 5000, 10000])
+            .build();
+
+        telemetryConnection.on("OnTelemetryAlert", function (payload) {
+            console.log(">>> [CYBER_TELEMETRY_RECEIVE]: Real-time transaction alert received from POS Terminal:", payload);
+            
+            // Add transaction revenue notification
+            hudAlertsList.unshift({
+                text: `Order #${payload.invoiceNumber || payload.orderId} Completed (+${(payload.revenueDelta || 0).toLocaleString()} VND)`,
+                icon: "fa-solid fa-bolt",
+                colorClass: "text-success"
+            });
+
+            // Process critical low stock notifications
+            if (payload.lowStockAlerts && Array.isArray(payload.lowStockAlerts)) {
+                payload.lowStockAlerts.forEach(alertText => {
+                    hudAlertsList.unshift({
+                        text: alertText,
+                        icon: "fa-solid fa-triangle-exclamation",
+                        colorClass: "text-danger"
+                    });
+                });
+            }
+
+            // Cap memory list at 15 items to prevent DOM bloat
+            if (hudAlertsList.length > 15) hudAlertsList.length = 15;
+            
+            window.setNotificationCount(hudAlertsList.length, hudAlertsList);
+
+            // Play Cyber micro-beep audio feedback / highlight neon badge
+            const badgeEl = document.getElementById("hudNotifBadge");
+            if (badgeEl) {
+                badgeEl.style.boxShadow = "0 0 12px #FF3333, 0 0 24px #FF3333";
+                setTimeout(() => { badgeEl.style.boxShadow = "0 0 8px #00FF66"; }, 1500);
+            }
+        });
+
+        telemetryConnection.start().then(() => {
+            console.log(">>> [RADAR_LINK_OK]: SignalR connected to /hubs/pos");
+            return telemetryConnection.invoke("JoinAdminTelemetryGroup");
+        }).catch(err => {
+            console.warn(">>> [RADAR_LINK_WARN]: SignalR offline in developer sandbox or disconnected:", err);
+        });
+    }
 });

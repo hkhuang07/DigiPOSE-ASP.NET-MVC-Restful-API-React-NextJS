@@ -2,9 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DigiPOSE.Models;
-
+using DigiPOSE.Services;
+using DigiPOSE.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using System.Linq.Dynamic.Core;
-
 
 namespace DigiPOSE.Areas.Administrator.Controllers
 {
@@ -13,7 +14,15 @@ namespace DigiPOSE.Areas.Administrator.Controllers
     public class OrdersController : Controller
     {
         private readonly DigiPoseDbContext _context;
-        public OrdersController(DigiPoseDbContext context) { _context = context; }
+        private readonly IInventoryRAMService _inventoryRam;
+        private readonly IHubContext<PosRealtimeHub> _hubContext;
+
+        public OrdersController(DigiPoseDbContext context, IInventoryRAMService inventoryRam, IHubContext<PosRealtimeHub> hubContext) 
+        { 
+            _context = context; 
+            _inventoryRam = inventoryRam;
+            _hubContext = hubContext;
+        }
 
         public async Task<IActionResult> Index()
         {
@@ -164,12 +173,58 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
-            var item = await _context.Orders.FindAsync(id);
+            var item = await _context.Orders
+                .Include(o => o.OrderDetails!)
+                .ThenInclude(d => d.Product)
+                .FirstOrDefaultAsync(m => m.OrderId == id);
+
             if (item != null)
             {
-                _context.Remove(item);
-                await _context.SaveChangesAsync();
-                return Json(new { success = true, message = "Deleted successfully." });
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    var restoredProducts = new List<int>();
+                    if (item.OrderDetails != null && item.StatusId != 4) // Only restore inventory if order was active/completed, not a raw draft
+                    {
+                        foreach (var detail in item.OrderDetails)
+                        {
+                            if (detail.NatureId == 1) // Physical good -> restore stock to shelves
+                            {
+                                var txLog = new InventoryTransaction
+                                {
+                                    ProductId = detail.ProductId,
+                                    BranchId = item.BranchId,
+                                    QuantityDelta = detail.Quantity, // Positive delta to put items back on shelves
+                                    TxType = InventoryTxType.Adjustment,
+                                    ReferenceOrderId = item.OrderId,
+                                    CreatedAt = DateTime.Now
+                                };
+                                _context.InventoryTransactions.Add(txLog);
+                                _inventoryRam.RestoreStock(item.BranchId, detail.ProductId, detail.Quantity);
+                                restoredProducts.Add(detail.ProductId);
+                            }
+                        }
+                    }
+
+                    if (item.OrderDetails != null) _context.OrderDetails.RemoveRange(item.OrderDetails);
+                    _context.Orders.Remove(item);
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    // >>> [REALTIME SIGNALR HUD BROADCAST]: Immediately notify POS terminals of restored physical inventory (<1ms)
+                    if (restoredProducts.Any())
+                    {
+                        var liveBalances = await _inventoryRam.GetBulkStockAsync(item.BranchId, restoredProducts);
+                        await _hubContext.Clients.Group($"Branch_{item.BranchId}").SendAsync("OnStockChanged", liveBalances);
+                    }
+
+                    return Json(new { success = true, message = "Order deleted and stock restored successfully." });
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return Json(new { success = false, message = "Failed to delete order: " + ex.Message });
+                }
             }
             return Json(new { success = false, message = "Not found." });
         }

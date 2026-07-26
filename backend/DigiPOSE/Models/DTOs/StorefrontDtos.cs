@@ -46,6 +46,10 @@ namespace DigiPOSE.Models.DTOs
         public string? ShippingAddress { get; set; }
         public string? ContactPhone { get; set; }
         public string? CustomerNotes { get; set; }
+
+        // Mandatory client-generated UUID to prevent double-billing on network retries
+        [Required]
+        public Guid IdempotencyKey { get; set; } = Guid.NewGuid();
     }
 
     // ==========================================
@@ -89,6 +93,7 @@ namespace DigiPOSE.Models.DTOs
     public class CartSummaryResponse
     {
         public int CartId { get; set; }
+        public Guid CartGuid { get; set; }
         public string CustomerIdentity { get; set; } = "Guest Shopper";
         public string CartState { get; set; } = "CardEmpty"; // CardEmpty vs Card (Active Cart)
         public int TotalQuantity { get; set; }

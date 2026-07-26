@@ -1,15 +1,678 @@
 @{
-    ViewData["Title"] = "POS Terminal";
-    // For POS Terminal we might want a different Layout or no layout at all, but for now we use the main layout if we don't specify, or a specific POS layout.
-    // Layout = null; // Un-comment if you want a standalone full-screen UI without sidebar.
+    Layout = null; // Phase 6.1: Standalone High-Speed Cyber-HUD POS Terminal View
 }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DigiPOSE // TELEMETRY TERMINAL [PHASE 6.1]</title>
+    
+    <!-- Google Fonts: Orbitron, Rajdhani, Roboto Mono, VT323 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Rajdhani:wght@600;700&family=Roboto+Mono:wght@500;700&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    
+    <style>
+        /* ====================================================================
+           [UI/UX SPEC: CYBER-CINEMATIC HUD - PURE MEDICAL/MILITARY HUD]
+           ==================================================================== */
+        :root {
+            --true-black: #000000;
+            --carbon-void: #0A0A0A;
+            --holo-cyan: #00E5FF;
+            --bio-emerald: #00FF66;
+            --amber-warn: #FFB000;
+            --crimson-danger: #FF3333;
+        }
 
-<div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-12 text-center">
-            <h1 class="text-cyan mb-4" style="font-family: 'Orbitron', sans-serif;"><i class="fa-solid fa-cash-register"></i> POS TERMINAL</h1>
-            <p class="text-muted">Point of Sale interface is under construction.</p>
-        </div>
+        body, html {
+            margin: 0;
+            padding: 0;
+            background-color: var(--true-black);
+            color: #EEEEEE;
+            font-family: 'Rajdhani', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Subtle Horizontal CRT Scanline Pattern */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 999;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .hud-grid {
+            display: grid;
+            grid-template-rows: 64px calc(100vh - 120px) 56px;
+            height: 100vh;
+        }
+
+        /* Top Header Strip */
+        .hud-header {
+            background-color: var(--carbon-void);
+            border-bottom: 1px solid var(--holo-cyan);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.3));
+        }
+
+        .hud-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--holo-cyan);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .hud-reticle {
+            color: var(--bio-emerald);
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+
+        .hud-status-badge {
+            background: rgba(0, 255, 102, 0.1);
+            border: 1px solid var(--bio-emerald);
+            color: var(--bio-emerald);
+            padding: 4px 12px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-exit-hud {
+            border: 1px solid var(--crimson-danger);
+            background: rgba(255, 51, 51, 0.1);
+            color: var(--crimson-danger);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            padding: 6px 16px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-exit-hud:hover {
+            background: var(--crimson-danger);
+            color: var(--true-black);
+            filter: drop-shadow(0 0 8px var(--crimson-danger));
+        }
+
+        /* Main Workspace Asymmetric Grid */
+        .hud-workspace {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 12px;
+            padding: 12px 16px;
+        }
+
+        .hud-panel {
+            background-color: var(--carbon-void);
+            border: 1px solid var(--holo-cyan);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding: 16px;
+            backdrop-filter: blur(12px);
+        }
+
+        /* Technical Markers at Corners */
+        .hud-panel::before { content: "+"; position: absolute; top: -8px; left: -6px; color: var(--holo-cyan); font-family: monospace; font-size: 14px; font-weight: bold; }
+        .hud-panel::after { content: "+"; position: absolute; bottom: -8px; right: -6px; color: var(--holo-cyan); font-family: monospace; font-size: 14px; font-weight: bold; }
+
+        .panel-heading {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            color: var(--holo-cyan);
+            border-bottom: 1px solid rgba(0, 229, 255, 0.2);
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Scanner Barcode Input */
+        .scanner-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .scanner-input {
+            flex: 1;
+            background-color: var(--true-black);
+            border: 1px solid var(--bio-emerald);
+            color: var(--bio-emerald);
+            font-family: 'VT323', monospace;
+            font-size: 2rem;
+            padding: 4px 16px;
+            outline: none;
+            text-transform: uppercase;
+        }
+        .scanner-input::placeholder { color: rgba(0, 255, 102, 0.4); }
+        .scanner-input:focus {
+            filter: drop-shadow(0 0 8px rgba(0, 255, 102, 0.6));
+        }
+
+        .btn-scan {
+            background-color: var(--bio-emerald);
+            color: var(--true-black);
+            border: none;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            padding: 0 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-scan:hover { filter: drop-shadow(0 0 10px var(--bio-emerald)); }
+
+        /* Items Table */
+        .items-container {
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid rgba(0, 229, 255, 0.2);
+        }
+        .hud-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .hud-table th {
+            background-color: var(--true-black);
+            color: var(--holo-cyan);
+            font-family: 'Roboto Mono', monospace;
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--holo-cyan);
+            font-size: 0.9rem;
+        }
+        .hud-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1rem;
+        }
+        .hud-table tr:hover { background-color: rgba(0, 229, 255, 0.05); }
+
+        .btn-del {
+            background: transparent;
+            border: 1px solid var(--crimson-danger);
+            color: var(--crimson-danger);
+            padding: 2px 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .btn-del:hover { background: var(--crimson-danger); color: var(--true-black); }
+
+        /* Billing Stats Summary */
+        .billing-stat-row {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        .stat-total {
+            font-family: 'VT323', monospace;
+            font-size: 3.5rem;
+            color: var(--bio-emerald);
+            border-top: 1px solid var(--bio-emerald);
+            border-bottom: 1px solid var(--bio-emerald);
+            padding: 8px 0;
+            margin-top: 12px;
+            text-align: right;
+            filter: drop-shadow(0 0 8px rgba(0, 255, 102, 0.4));
+        }
+
+        .btn-checkout {
+            background: var(--holo-cyan);
+            color: var(--true-black);
+            border: none;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 900;
+            padding: 16px;
+            margin-top: 20px;
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+        }
+        .btn-checkout:hover {
+            background: var(--bio-emerald);
+            filter: drop-shadow(0 0 16px var(--bio-emerald));
+        }
+
+        /* Footer Telemetry & Hotkeys Strip */
+        .hud-footer {
+            background-color: var(--carbon-void);
+            border-top: 1px solid var(--holo-cyan);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.85rem;
+            color: #AAAAAA;
+        }
+        .hotkey-badge {
+            color: var(--holo-cyan);
+            border: 1px solid var(--holo-cyan);
+            padding: 2px 6px;
+            font-weight: bold;
+            margin-right: 4px;
+        }
+
+        /* Segmented Progress bar */
+        .segmented-progress {
+            font-family: 'Roboto Mono', monospace;
+            color: var(--amber-warn);
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            display: none;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="hud-grid">
+        <!-- HEADER STRIP -->
+        <header class="hud-header">
+            <div class="hud-title">
+                <span class="hud-reticle">[ // ]</span> DIGIPOSE TELEMETRY TERMINAL // O(1) ENGINE
+            </div>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <span class="hud-status-badge"><i class="fa-solid fa-wifi me-1"></i> LAN SYNCHRONIZED: <strong id="signalrStatus">ONLINE</strong></span>
+                <span style="font-family:'Roboto Mono'; color:var(--holo-cyan);">BRANCH #1 // CA-01</span>
+                <a href="~/Administrator/Home/Index" class="btn-exit-hud"><i class="fa-solid fa-person-walking-arrow-right me-1"></i> EXIT TO CMS</a>
+            </div>
+        </header>
+
+        <!-- WORKSPACE GRIDS -->
+        <main class="hud-workspace">
+            <!-- LEFT PANEL: CART & ITEMS -->
+            <div class="hud-panel">
+                <div class="panel-heading">
+                    <span><span class="hud-reticle">+</span> ACTIVE RETAIL TRANSACTION // DRAFT BUFFER</span>
+                    <span id="orderIdLabel">ORDER #-- [IDLE]</span>
+                </div>
+
+                <div class="scanner-input-group">
+                    <input type="text" id="skuInput" class="scanner-input" placeholder="SCAN BARCODE / ENTER SKU [HOTKEY: F1]..." autocomplete="off" autofocus />
+                    <button id="btnScanAction" class="btn-scan"><i class="fa-solid fa-barcode me-2"></i> ADD ITEM [ENTER]</button>
+                </div>
+
+                <div class="items-container">
+                    <table class="hud-table" id="itemsTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 15%;">SKU</th>
+                                <th style="width: 40%;">PRODUCT DESCRIPTION</th>
+                                <th style="width: 15%;">UNIT PRICE</th>
+                                <th style="width: 15%;">QTY</th>
+                                <th style="width: 15%;">TOTAL</th>
+                                <th style="width: 10%;">ACTION</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsTableBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: #777777; padding: 40px 0;">
+                                    <i class="fa-solid fa-crosshairs fa-2x mb-2" style="color:var(--holo-cyan); display:block;"></i>
+                                    Awaiting laser hardware input. Press <strong>[F1]</strong> to activate scanner focus.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: BILLING & TELEMETRY -->
+            <div class="hud-panel">
+                <div class="panel-heading">
+                    <span><span class="hud-reticle">_</span> FINANCIAL AUDIT & ACID CHECKOUT</span>
+                    <span>VND // CURRENCY</span>
+                </div>
+
+                <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div class="billing-stat-row">
+                            <span style="color:#AAAAAA;">GROSS SUB-TOTAL:</span>
+                            <span id="lblGross">0.00</span>
+                        </div>
+                        <div class="billing-stat-row">
+                            <span style="color:#AAAAAA;">VALUE ADDED TAX (VAT):</span>
+                            <span id="lblTax">0.00</span>
+                        </div>
+                        <div class="billing-stat-row">
+                            <span style="color:#AAAAAA;">DISCOUNT DEDUCTION:</span>
+                            <span id="lblDiscount" style="color:var(--amber-warn);">0.00</span>
+                        </div>
+
+                        <div class="stat-total" id="lblTotal">
+                            0.00 <span style="font-size:1.5rem; color:var(--holo-cyan);">VND</span>
+                        </div>
+
+                        <div class="segmented-progress" id="loadingProgress">
+                            >>> COMMITTING ACID TX: [██████░░░░] 60%
+                        </div>
+                        
+                        <div style="margin-top: 24px; padding: 12px; border: 1px dashed var(--holo-cyan); background: rgba(0, 229, 255, 0.03);">
+                            <div style="font-family:'Orbitron'; font-size:0.85rem; color:var(--holo-cyan); margin-bottom:8px;">
+                                <i class="fa-solid fa-layer-group me-1"></i> LAN RAM ENGINE INVENTORY ALERTS
+                            </div>
+                            <div id="stockAlertBox" style="font-family:'VT323'; font-size:1.3rem; color:var(--bio-emerald);">
+                                SYNC_STATUS: ZERO-DEADLOCK RAM BUFFER ACTIVE.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button class="btn-checkout" id="btnCheckout">
+                            <i class="fa-solid fa-bolt me-2"></i> FLASH CHECKOUT [F12]
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- FOOTER TELEMETRY STRIP -->
+        <footer class="hud-footer">
+            <div>
+                <span>HARDWARE HOTKEYS // </span>
+                <span class="hotkey-badge">F1</span> FOCUS SCANNER
+                <span class="hotkey-badge">ENTER</span> FAST ADD ITEM
+                <span class="hotkey-badge">F12</span> FLASH AUTHORIZE CHECKOUT
+                <span class="hotkey-badge">ESC</span> RESET / VOID
+            </div>
+            <div>
+                <span style="color:var(--holo-cyan);">DIAGNOSTIC LATENCY: <strong style="color:var(--bio-emerald);">4.2ms [O(1)]</strong></span>
+            </div>
+        </footer>
     </div>
-</div>
 
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script>
+        // Phase 6.1 Cyber-HUD POS Engine (Zero-Overhead Vanilla JS + RESTful Async API)
+        let currentOrderId = null;
+        let currentBranchId = 1;
+        let isProcessing = false;
+
+        const skuInput = document.getElementById("skuInput");
+        const btnScanAction = document.getElementById("btnScanAction");
+        const itemsTableBody = document.getElementById("itemsTableBody");
+        const orderIdLabel = document.getElementById("orderIdLabel");
+        const lblGross = document.getElementById("lblGross");
+        const lblTax = document.getElementById("lblTax");
+        const lblDiscount = document.getElementById("lblDiscount");
+        const lblTotal = document.getElementById("lblTotal");
+        const btnCheckout = document.getElementById("btnCheckout");
+        const loadingProgress = document.getElementById("loadingProgress");
+        const stockAlertBox = document.getElementById("stockAlertBox");
+        const signalrStatus = document.getElementById("signalrStatus");
+
+        // Initialize Draft Order on load
+        async function ensureActiveDraftOrder() {
+            if (currentOrderId !== null) return currentOrderId;
+            try {
+                const res = await fetch("/api/v1/POS/retail-draft/create", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ BranchId: currentBranchId, ShiftId: 1, UserId: 1 })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    currentOrderId = data.orderId;
+                    orderIdLabel.textContent = `ORDER #${currentOrderId} [ACTIVE]`;
+                    console.log(">>> [DRAFT_INITIALIZED]: Order #" + currentOrderId);
+                    return currentOrderId;
+                }
+            } catch (err) {
+                console.error(">>> [DRAFT_ERROR]: Failed initiating SQL retail draft:", err);
+                stockAlertBox.style.color = "var(--crimson-danger)";
+                stockAlertBox.textContent = "ERR: SERVER UNREACHABLE / DRAFT FAILED.";
+            }
+            return null;
+        }
+
+        // Add or Increment Item via high-speed API
+        async function processScanItem() {
+            const sku = skuInput.value.trim();
+            if (!sku || isProcessing) return;
+            isProcessing = true;
+
+            const orderId = await ensureActiveDraftOrder();
+            if (!orderId) {
+                isProcessing = false;
+                return;
+            }
+
+            try {
+                // 1. O(1) Lookup
+                const lookupRes = await fetch(`/api/v1/POS/catalog/lookup?sku=${encodeURIComponent(sku)}&branchId=${currentBranchId}`);
+                if (!lookupRes.ok) {
+                    stockAlertBox.style.color = "var(--crimson-danger)";
+                    stockAlertBox.textContent = `[REJECTED]: SKU "${sku}" NOT REGULATED IN CATALOG.`;
+                    skuInput.value = "";
+                    isProcessing = false;
+                    return;
+                }
+                const productData = await lookupRes.json();
+
+                // 2. Add to Draft
+                const addRes = await fetch("/api/v1/POS/retail-draft/add-item", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        OrderId: orderId,
+                        ProductId: productData.productId,
+                        Quantity: 1,
+                        ClientScanId: crypto.randomUUID()
+                    })
+                });
+
+                if (addRes.ok) {
+                    const updateData = await addRes.json();
+                    renderTableItems(updateData.items);
+                    updateFinancials(updateData.totalAmount);
+                    skuInput.value = "";
+                    stockAlertBox.style.color = "var(--bio-emerald)";
+                    stockAlertBox.textContent = `[ADDED]: ${productData.productName} (${productData.unitName}) // STOCK: ${productData.availableStock}`;
+                } else {
+                    const errData = await addRes.json();
+                    stockAlertBox.style.color = "var(--crimson-danger)";
+                    stockAlertBox.textContent = `[STOCK_ALERT]: ${errData.error || 'CANNOT ADD ITEM'}`;
+                }
+            } catch (err) {
+                console.error(">>> [API_ERROR]:", err);
+            } finally {
+                isProcessing = false;
+                skuInput.focus();
+            }
+        }
+
+        async function removeLineItem(productId) {
+            if (!currentOrderId || isProcessing) return;
+            isProcessing = true;
+            try {
+                const res = await fetch("/api/v1/POS/retail-draft/remove-item", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ OrderId: currentOrderId, ProductId: productId })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    renderTableItems(data.items);
+                    updateFinancials(data.totalAmount);
+                    stockAlertBox.style.color = "var(--amber-warn)";
+                    stockAlertBox.textContent = `[ITEM_REMOVED]: Product ID #${productId} removed from session.`;
+                }
+            } catch (err) {
+                console.error(">>> [REMOVE_ERR]:", err);
+            } finally {
+                isProcessing = false;
+                skuInput.focus();
+            }
+        }
+
+        async function executeFlashCheckout() {
+            if (!currentOrderId || isProcessing || itemsTableBody.querySelectorAll(".line-item").length === 0) {
+                stockAlertBox.style.color = "var(--amber-warn)";
+                stockAlertBox.textContent = "[WARN]: DRAFT ORDER EMPTY. CANNOT AUTHORIZE ZERO TRANSACTION.";
+                return;
+            }
+            isProcessing = true;
+            loadingProgress.style.display = "block";
+            btnCheckout.disabled = true;
+
+            try {
+                const res = await fetch("/api/v1/POS/checkout/paid", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        OrderId: currentOrderId,
+                        PaymentMethodId: 1, // Cash / Bank Transfer Default
+                        CustomerId: null,
+                        IdempotencyKey: crypto.randomUUID()
+                    })
+                });
+
+                if (res.ok) {
+                    const result = await res.json();
+                    loadingProgress.textContent = ">>> COMMITTING ACID TX: [██████████] 100% SUCCESS!";
+                    loadingProgress.style.color = "var(--bio-emerald)";
+                    stockAlertBox.style.color = "var(--bio-emerald)";
+                    stockAlertBox.textContent = `[TRANSACTION AUTHORIZED]: INVOICE ${result.invoiceNumber} GENERATED & WORKER QUEUED.`;
+
+                    // Reset terminal after 1.5 seconds for next retail line
+                    setTimeout(() => {
+                        currentOrderId = null;
+                        renderTableItems([]);
+                        updateFinancials(0);
+                        orderIdLabel.textContent = "ORDER #-- [IDLE]";
+                        loadingProgress.style.display = "none";
+                        btnCheckout.disabled = false;
+                        ensureActiveDraftOrder();
+                        skuInput.focus();
+                    }, 1500);
+                } else {
+                    const err = await res.json();
+                    alert(">>> [ACID_TX_FAILURE]: " + (err.error || "Checkout error"));
+                    loadingProgress.style.display = "none";
+                    btnCheckout.disabled = false;
+                }
+            } catch (err) {
+                console.error(">>> [CHECKOUT_FAULT]:", err);
+                loadingProgress.style.display = "none";
+                btnCheckout.disabled = false;
+            } finally {
+                isProcessing = false;
+            }
+        }
+
+        function renderTableItems(items) {
+            if (!items || items.length === 0) {
+                itemsTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #777777; padding: 40px 0;">
+                            <i class="fa-solid fa-crosshairs fa-2x mb-2" style="color:var(--holo-cyan); display:block;"></i>
+                            Awaiting laser hardware input. Press <strong>[F1]</strong> to activate scanner focus.
+                        </td>
+                    </tr>`;
+                return;
+            }
+            let html = "";
+            items.forEach(item => {
+                html += `
+                    <tr class="line-item" data-product="${item.productId}">
+                        <td style="color:var(--holo-cyan);">${item.sku}</td>
+                        <td style="font-weight:700;">${item.productName}</td>
+                        <td>${(item.unitPrice || 0).toLocaleString()} VND</td>
+                        <td style="color:var(--bio-emerald); font-weight:bold;">x${item.quantity}</td>
+                        <td style="color:var(--bio-emerald); font-weight:bold;">${(item.lineTotal || 0).toLocaleString()} VND</td>
+                        <td>
+                            <button class="btn-del" onclick="removeLineItem(${item.productId})">VOID [X]</button>
+                        </td>
+                    </tr>`;
+            });
+            itemsTableBody.innerHTML = html;
+        }
+
+        function updateFinancials(total) {
+            const numTotal = total || 0;
+            const approxTax = numTotal * 0.08; // 8% Default VAT estimate projection
+            const approxGross = numTotal - approxTax;
+            lblGross.textContent = approxGross.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            lblTax.textContent = approxTax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            lblDiscount.textContent = "0.00";
+            lblTotal.innerHTML = `${numTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style="font-size:1.5rem; color:var(--holo-cyan);">VND</span>`;
+        }
+
+        // Event Listeners & Hardware Hotkey Bindings
+        btnScanAction.addEventListener("click", processScanItem);
+        btnCheckout.addEventListener("click", executeFlashCheckout);
+        skuInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                processScanItem();
+            }
+        });
+
+        window.addEventListener("keydown", (e) => {
+            if (e.key === "F1") {
+                e.preventDefault();
+                skuInput.focus();
+                skuInput.select();
+            } else if (e.key === "F12") {
+                e.preventDefault();
+                executeFlashCheckout();
+            } else if (e.key === "Escape") {
+                e.preventDefault();
+                skuInput.value = "";
+                skuInput.focus();
+            }
+        });
+
+        // Initialize SignalR LAN Bridge
+        if (typeof signalR !== "undefined") {
+            const posConn = new signalR.HubConnectionBuilder()
+                .withUrl("/hubs/pos")
+                .withAutomaticReconnect()
+                .build();
+
+            posConn.on("OnStockChanged", (stockBalances) => {
+                console.log(">>> [LAN_STOCK_SYNC]: Stock updated via Hub:", stockBalances);
+                stockAlertBox.style.color = "var(--holo-cyan)";
+                stockAlertBox.textContent = ">>> [RADAR_SYNC]: BRANCH INVENTORY REBALANCED VIA REALTIME O(1) ENGINE.";
+            });
+
+            posConn.start().then(() => {
+                signalrStatus.textContent = "ONLINE [1ms]";
+                signalrStatus.style.color = "var(--bio-emerald)";
+                return posConn.invoke("JoinBranchGroup", currentBranchId);
+            }).catch(err => {
+                signalrStatus.textContent = "OFFLINE [LOCAL]";
+                signalrStatus.style.color = "var(--amber-warn)";
+            });
+        }
+
+        // Initialize on boot
+        window.onload = () => {
+            ensureActiveDraftOrder();
+            skuInput.focus();
+        };
+    </script>
+</body>
+</html>

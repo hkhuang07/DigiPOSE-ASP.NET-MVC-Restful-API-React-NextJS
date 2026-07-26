@@ -144,7 +144,7 @@ export default function StorefrontPage() {
             </h1>
           </div>
           <p className="font-mono text-sm text-[#777777]">
-            [SYSTEM_OK]: MULTI-DIMENSIONAL CATALOG SEARCH // AUTOMATED SEO SSR METADATA READY
+            [CATALOG_STATUS]: B2B SAAS & HARDWARE CATALOG // ENTERPRISE MULTI-TENANT READY
           </p>
         </div>
 
@@ -152,8 +152,8 @@ export default function StorefrontPage() {
         <div className="flex items-center gap-4 bg-[#000000] border border-[#00E5FF]/40 px-4 py-2 font-mono">
           <Cpu className="text-[#00FF66]" size={20} />
           <div className="flex flex-col">
-            <span className="text-xs text-[#00E5FF]">INDEXED CATALOG SKUs</span>
-            <span className="text-lg font-bold text-[#00FF66]">{products.length} AVAILABLE ASSETS</span>
+            <span className="text-xs text-[#00E5FF]">AVAILABLE CATALOG SKUs</span>
+            <span className="text-lg font-bold text-[#00FF66]">{products.length} REGISTERED ASSETS</span>
           </div>
         </div>
       </div>
@@ -167,7 +167,7 @@ export default function StorefrontPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            placeholder="SEARCH BY SKU, PRODUCT NAME, OR METADATA KEYWORD..."
+            placeholder="SEARCH BY SKU, PRODUCT NAME, OR DESCRIPTION KEYWORD..."
             className="cyber-input !pl-10 !py-2.5 text-sm uppercase"
           />
           <Search className="absolute left-3 top-3 text-[#00E5FF]" size={18} />
@@ -198,21 +198,21 @@ export default function StorefrontPage() {
         {/* Action button */}
         <button onClick={handleSearch} className="btn-cyber w-full !py-2.5">
           <Filter size={16} />
-          <span>EXECUTE O(1) FILTER</span>
+          <span>APPLY CATALOG FILTER</span>
         </button>
       </div>
 
       {/* PRODUCT MATRIX GRID */}
       {loading ? (
         <div className="cyber-panel p-12 text-center font-mono text-[#FFB000] space-y-3">
-          <div className="font-digital text-3xl">PROCESSING CATALOG QUERY... [██████░░░░]</div>
-          <p className="text-sm">RETRIEVING SEO SSR ATTRIBUTES FROM DATABASE CONTEXT...</p>
+          <div className="font-digital text-3xl">RETRIEVING CATALOG ASSETS... [██████░░░░]</div>
+          <p className="text-sm">SYNCHRONIZING WITH LIVE INVENTORY REPOSITORY...</p>
         </div>
       ) : products.length === 0 ? (
         <div className="cyber-panel-danger p-12 text-center font-mono text-[#FF3333] space-y-2">
           <AlertTriangle size={36} className="mx-auto text-[#FF3333]" />
-          <div className="font-orbitron font-bold text-xl">0 SKUS MATCHED QUERY PARAMETERS</div>
-          <p className="text-sm text-[#777777]">Please relax filter constraints or try searching another keyword.</p>
+          <div className="font-orbitron font-bold text-xl">0 PRODUCTS FOUND MATCHING FILTER CRITERIA</div>
+          <p className="text-sm text-[#777777]">Please adjust filter settings or enter a different search keyword.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -260,7 +260,7 @@ export default function StorefrontPage() {
                 </div>
               </div>
 
-              {/* Price & Instant O(1) Action Button */}
+              {/* Price & Instant Action Button */}
               <div className="pt-3 border-t border-[#00E5FF]/30 flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-xs text-[#777777]">BASE PRICE:</span>
@@ -283,7 +283,7 @@ export default function StorefrontPage() {
                   {addedNotify === product.productId ? (
                     <>
                       <CheckCircle2 size={16} className="animate-bounce" />
-                      <span>ADDED TO CART [OK]</span>
+                      <span>ITEM ADDED TO CART</span>
                     </>
                   ) : (
                     <>

@@ -4,22 +4,45 @@ using Microsoft.EntityFrameworkCore;
 using DigiPOSE.Models;
 using DigiPOSE.Models.DTOs;
 using System.Data;
+using DigiPOSE.Services;
+using System.Threading.Channels;
+using Microsoft.Data.SqlClient;
+using System.Text.Json;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.AspNetCore.SignalR;
+using DigiPOSE.Hubs;
 
 namespace DigiPOSE.Controllers.Api
 {
     /// <summary>
     /// Phase 6.2 - RESTful Web API for Dual Sales Subsystems (Online E-Commerce Storefront & React/Next.JS Client).
-    /// Provides low-latency O(1) filtering, SEO Meta generation, and database-backed Shopping Cart management.
+    /// Provides low-latency O(1) filtering, SEO Meta generation, and non-accounting protected shopping cart management.
     /// </summary>
     [Route("api/v1/[controller]")]
     [ApiController]
     public class StorefrontController : ControllerBase
     {
         private readonly DigiPoseDbContext _context;
+        private readonly IInventoryRAMService _inventoryRam;
+        private readonly Channel<JobQueueItem> _jobChannel;
+        private readonly IMemoryCache _cache;
+        private readonly IHubContext<PosRealtimeHub> _hubContext;
+        private readonly IVatBalancingEngine _vatBalancingEngine;
 
-        public StorefrontController(DigiPoseDbContext context)
+        public StorefrontController(
+            DigiPoseDbContext context,
+            IInventoryRAMService inventoryRam,
+            Channel<JobQueueItem> jobChannel,
+            IMemoryCache cache,
+            IHubContext<PosRealtimeHub> hubContext,
+            IVatBalancingEngine vatBalancingEngine)
         {
             _context = context;
+            _inventoryRam = inventoryRam;
+            _jobChannel = jobChannel;
+            _cache = cache;
+            _hubContext = hubContext;
+            _vatBalancingEngine = vatBalancingEngine;
         }
 
         #region 1. CUSTOMER IDENTITY & PROFILE
@@ -155,25 +178,26 @@ namespace DigiPOSE.Controllers.Api
         #region 3. SHOPPING CART OPERATIONS (getShoppingCart, getTotalPrice, getTotalQuantity)
 
         /// <summary>
-        /// Retrieves active shopping cart summary, total items, calculated VAT tax, and state (Card vs CardEmpty).
-        /// In production hybrid design, CartId maps to online session buffer or Order with StatusId = 4 (Draft/Cart).
+        /// Retrieves active shopping cart summary from designated StorefrontCarts table.
+        /// Strictly protected from accounting Orders ledger (0% Abandoned Cart Pollution).
         /// </summary>
         [HttpGet("cart/{cartId}")]
         public async Task<IActionResult> GetShoppingCart(int cartId)
         {
-            var cartOrder = await _context.Orders
-                .Include(o => o.OrderDetails!)
-                .ThenInclude(od => od.Product!)
+            var cart = await _context.StorefrontCarts
+                .Include(c => c.Items)
+                .ThenInclude(i => i.Product!)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(o => o.OrderId == cartId && (o.StatusId == 4 || o.StatusId == 5)); // Draft or Web Cart
+                .FirstOrDefaultAsync(c => c.CartId == cartId);
 
-            if (cartOrder == null || cartOrder.OrderDetails == null || !cartOrder.OrderDetails.Any())
+            if (cart == null || cart.Items == null || !cart.Items.Any())
             {
                 return Ok(new CartSummaryResponse
                 {
                     CartId = cartId,
-                    CustomerIdentity = "Guest Shopper",
-                    CartState = "CardEmpty", // Empty cart state indicator
+                    CartGuid = cart?.CartGuid ?? Guid.Empty,
+                    CustomerIdentity = cart?.CustomerIdentity ?? "Guest Shopper",
+                    CartState = "CardEmpty",
                     TotalQuantity = 0,
                     GrossPrice = 0,
                     TotalTaxAmount = 0,
@@ -183,20 +207,19 @@ namespace DigiPOSE.Controllers.Api
                 });
             }
 
-            int totalQty = cartOrder.OrderDetails.Sum(i => i.Quantity);
-            decimal gross = cartOrder.OrderDetails.Sum(i => i.Quantity * i.UnitPrice);
-            
+            int totalQty = cart.Items.Sum(i => i.Quantity);
             var response = new CartSummaryResponse
             {
-                CartId = cartOrder.OrderId,
-                CustomerIdentity = cartOrder.SnapshotCustomerName ?? "Authenticated Online Customer",
-                CartState = totalQty > 0 ? "Card" : "CardEmpty", // Active Cart indicator
+                CartId = cart.CartId,
+                CartGuid = cart.CartGuid,
+                CustomerIdentity = cart.SnapshotCustomerName ?? cart.CustomerIdentity,
+                CartState = totalQty > 0 ? "Card" : "CardEmpty",
                 TotalQuantity = totalQty,
-                GrossPrice = gross,
-                TotalTaxAmount = cartOrder.TaxAmount,
-                TotalDiscountAmount = cartOrder.DiscountAmount,
-                TotalPrice = gross + cartOrder.TaxAmount - cartOrder.DiscountAmount,
-                Items = cartOrder.OrderDetails.Select(d => new CartDetailItem
+                GrossPrice = cart.GrossAmount,
+                TotalTaxAmount = cart.TaxAmount,
+                TotalDiscountAmount = cart.DiscountAmount,
+                TotalPrice = cart.TotalAmount,
+                Items = cart.Items.Select(d => new CartDetailItem
                 {
                     ProductId = d.ProductId,
                     SKU = d.Product?.SKU ?? "SKU-N/A",
@@ -205,7 +228,7 @@ namespace DigiPOSE.Controllers.Api
                     Quantity = d.Quantity,
                     UnitPrice = d.UnitPrice,
                     LineTotal = d.Quantity * d.UnitPrice,
-                    LineTax = 0, // Individual VAT computed at engine level
+                    LineTax = 0,
                     ImageUrl = d.Product?.ImageUrl ?? "/demo/products/default_cyber_product.png"
                 }).ToList()
             };
@@ -218,13 +241,14 @@ namespace DigiPOSE.Controllers.Api
         #region 4. CART MUTATIONS (addItem, addToCart, removeItem, removeAllItems, updateQuantity)
 
         /// <summary>
-        /// Adds product to shopping cart (addItem / addToCart). Creates new cart container if cartId == 0.
-        /// Automatically copies real-time catalog price and merges quantities for duplicate SKUs.
+        /// Adds product to dedicated online shopping cart (addItem / addToCart). Creates new StorefrontCart if cartId == 0.
+        /// Features O(1) early RAM stock verification to protect shoppers from out-of-stock items.
         /// </summary>
         [HttpPost("cart/add")]
         public async Task<IActionResult> AddToCart([FromBody] CartItemRequest request)
         {
             var product = await _context.Products
+                .AsNoTracking()
                 .Include(p => p.Unit)
                 .Include(p => p.TaxType)
                 .FirstOrDefaultAsync(p => p.ProductId == request.ProductId && p.IsActive);
@@ -232,78 +256,101 @@ namespace DigiPOSE.Controllers.Api
             if (product == null)
                 return NotFound(new { Error = "Product not found or inactive in catalog." });
 
-            Order? cart;
+            StorefrontCart? cart;
             if (request.CartId <= 0)
             {
-                // Create new hybrid shopping cart container
-                cart = new Order
+                cart = new StorefrontCart
                 {
-                    BranchId = 1, // Default HQ fulfillment branch for Online Web Orders
-                    ShiftId = 1, // Storefront carts bind to general online web fulfillment shift (ID = 1)
-                    UserId = 1, // Default system worker
-                    StatusId = 4, // 4: Cart/Draft
+                    CartGuid = Guid.NewGuid(),
+                    CustomerIdentity = User.Identity?.Name ?? "Guest Shopper",
                     CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now,
                     GrossAmount = 0,
-                    TotalAmount = 0,
                     TaxAmount = 0,
-                    DiscountAmount = 0
+                    DiscountAmount = 0,
+                    TotalAmount = 0
                 };
-                _context.Orders.Add(cart);
+                _context.StorefrontCarts.Add(cart);
                 await _context.SaveChangesAsync();
             }
             else
             {
-                cart = await _context.Orders.Include(o => o.OrderDetails).FirstOrDefaultAsync(o => o.OrderId == request.CartId);
+                cart = await _context.StorefrontCarts.Include(c => c.Items).FirstOrDefaultAsync(c => c.CartId == request.CartId);
                 if (cart == null)
                     return NotFound(new { Error = "Shopping cart session invalid or expired." });
             }
 
-            // Check if item already exists in cart -> merge quantities (increaseProduct)
-            var existingItem = await _context.OrderDetails.FirstOrDefaultAsync(od => od.OrderId == cart.OrderId && od.ProductId == request.ProductId);
+            var existingItem = cart.Items?.FirstOrDefault(i => i.ProductId == request.ProductId);
+
+            // >>> [O(1) EARLY STOCK GATE]: Prevent adding physical items exceeding live RAM stock balances
+            if (product.ItemNatureId == 1) // Physical goods (HQ Fulfillment BranchId = 1)
+            {
+                int availableStock = await _inventoryRam.GetStockAsync(1, product.ProductId);
+                int projectedQty = (existingItem?.Quantity ?? 0) + request.Quantity;
+                if (availableStock < projectedQty)
+                {
+                    return BadRequest(new { Error = "OUT_OF_STOCK", AvailableStock = availableStock, Requested = projectedQty, ProductName = product.ProductName });
+                }
+            }
+
             if (existingItem != null)
             {
                 existingItem.Quantity += request.Quantity;
-                _context.OrderDetails.Update(existingItem);
+                _context.StorefrontCartItems.Update(existingItem);
             }
             else
             {
-                var detail = new OrderDetail
+                var detail = new StorefrontCartItem
                 {
-                    OrderId = cart.OrderId,
+                    CartId = cart.CartId,
                     ProductId = product.ProductId,
                     Quantity = request.Quantity,
-                    UnitPrice = product.BasePrice, // Immutable Price Snapshot
+                    UnitPrice = product.BasePrice,
                     UnitName = product.Unit?.UnitName ?? "Unit"
                 };
-                _context.OrderDetails.Add(detail);
+                if (cart.Items == null)
+                    cart.Items = new List<StorefrontCartItem>();
+                cart.Items.Add(detail);
+                _context.StorefrontCartItems.Add(detail);
             }
 
+            cart.UpdatedAt = DateTime.Now;
             await _context.SaveChangesAsync();
-            await RecalculateCartTotals(cart.OrderId);
+            await RecalculateCartTotals(cart.CartId);
 
-            return Ok(new { Message = "Product added to cart successfully", CartId = cart.OrderId, CartState = "Card" });
+            return Ok(new { Message = "Product added to cart successfully", CartId = cart.CartId, CartGuid = cart.CartGuid, CartState = "Card" });
         }
 
         /// <summary>
         /// Adjusts line item quantity (updateQuantity / increaseProduct / decreaseProduct).
-        /// If NewQuantity <= 0, automatically removes line item from cart.
         /// </summary>
         [HttpPut("cart/update-quantity")]
         public async Task<IActionResult> UpdateQuantity([FromBody] UpdateQuantityRequest request)
         {
-            var item = await _context.OrderDetails.FirstOrDefaultAsync(od => od.OrderId == request.CartId && od.ProductId == request.ProductId);
+            var item = await _context.StorefrontCartItems.Include(i => i.Product).FirstOrDefaultAsync(od => od.CartId == request.CartId && od.ProductId == request.ProductId);
             if (item == null)
                 return NotFound(new { Error = "Item not present in shopping cart." });
 
             if (request.NewQuantity <= 0)
             {
-                _context.OrderDetails.Remove(item);
+                _context.StorefrontCartItems.Remove(item);
             }
             else
             {
+                if (item.Product?.ItemNatureId == 1)
+                {
+                    int availableStock = await _inventoryRam.GetStockAsync(1, item.ProductId);
+                    if (availableStock < request.NewQuantity)
+                    {
+                        return BadRequest(new { Error = "OUT_OF_STOCK", AvailableStock = availableStock, Requested = request.NewQuantity, ProductName = item.Product.ProductName });
+                    }
+                }
                 item.Quantity = request.NewQuantity;
-                _context.OrderDetails.Update(item);
+                _context.StorefrontCartItems.Update(item);
             }
+
+            var cart = await _context.StorefrontCarts.FindAsync(request.CartId);
+            if (cart != null) cart.UpdatedAt = DateTime.Now;
 
             await _context.SaveChangesAsync();
             await RecalculateCartTotals(request.CartId);
@@ -317,10 +364,13 @@ namespace DigiPOSE.Controllers.Api
         [HttpDelete("cart/remove")]
         public async Task<IActionResult> RemoveCartItem([FromBody] RemoveCartItemRequest request)
         {
-            var item = await _context.OrderDetails.FirstOrDefaultAsync(od => od.OrderId == request.CartId && od.ProductId == request.ProductId);
+            var item = await _context.StorefrontCartItems.FirstOrDefaultAsync(od => od.CartId == request.CartId && od.ProductId == request.ProductId);
             if (item != null)
             {
-                _context.OrderDetails.Remove(item);
+                _context.StorefrontCartItems.Remove(item);
+                var cart = await _context.StorefrontCarts.FindAsync(request.CartId);
+                if (cart != null) cart.UpdatedAt = DateTime.Now;
+                
                 await _context.SaveChangesAsync();
                 await RecalculateCartTotals(request.CartId);
             }
@@ -333,17 +383,18 @@ namespace DigiPOSE.Controllers.Api
         [HttpPost("cart/clear/{cartId}")]
         public async Task<IActionResult> RemoveAllItems(int cartId)
         {
-            var items = await _context.OrderDetails.Where(od => od.OrderId == cartId).ToListAsync();
+            var items = await _context.StorefrontCartItems.Where(od => od.CartId == cartId).ToListAsync();
             if (items.Any())
             {
-                _context.OrderDetails.RemoveRange(items);
-                var cart = await _context.Orders.FindAsync(cartId);
+                _context.StorefrontCartItems.RemoveRange(items);
+                var cart = await _context.StorefrontCarts.FindAsync(cartId);
                 if (cart != null)
                 {
                     cart.GrossAmount = 0;
                     cart.TaxAmount = 0;
                     cart.DiscountAmount = 0;
                     cart.TotalAmount = 0;
+                    cart.UpdatedAt = DateTime.Now;
                 }
                 await _context.SaveChangesAsync();
             }
@@ -356,64 +407,180 @@ namespace DigiPOSE.Controllers.Api
         #region 5. STOREFRONT CHECKOUT & PRODUCTION ORDER CONVERSION
 
         /// <summary>
-        /// Finalizes online checkout. Converts Cart into an Order (Status: Completed/Processing) wrapped in ACID transaction.
-        /// Automatically extends digital SaaS Subscriptions if purchasing item nature = 2.
+        /// Finalizes online E-Commerce checkout with enterprise resilience:
+        /// 1. O(1) RAM Idempotency Guard against network retry double-billing.
+        /// 2. O(1) RAM Stock Deduction (hot-path fail fast).
+        /// 3. ReadCommitted transaction + Append-only SQL ledger (0% deadlock).
+        /// 4. Asynchronous Channel queue for E-Invoice and SignalR Telemetry Radar broadcast.
         /// </summary>
         [HttpPost("checkout")]
         public async Task<IActionResult> ProcessStorefrontCheckout([FromBody] StorefrontCheckoutRequest request)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+            // >>> [O(1) RAM IDEMPOTENCY GUARD]: Intercept duplicate checkout retries instantly
+            string idempCacheKey = $"idemp_storefront_{request.IdempotencyKey}";
+            if (_cache.TryGetValue(idempCacheKey, out object? cachedResult) && cachedResult != null)
+            {
+                return Ok(cachedResult);
+            }
+
+            // Verify against completed SQL Orders if cache expired after 24h
+            var existingOrder = await _context.Orders
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.IdempotencyKey == request.IdempotencyKey);
+
+            if (existingOrder != null)
+            {
+                var replayPayload = new
+                {
+                    Status = "Success",
+                    OrderId = existingOrder.OrderId,
+                    InvoiceNumber = existingOrder.InvoiceNumber,
+                    TotalCharged = existingOrder.TotalAmount,
+                    IsReplay = true,
+                    Message = "Order previously processed successfully."
+                };
+                _cache.Set(idempCacheKey, replayPayload, TimeSpan.FromHours(24));
+                return Ok(replayPayload);
+            }
+
+            var cart = await _context.StorefrontCarts
+                .Include(o => o.Items!)
+                .ThenInclude(od => od.Product!)
+                .ThenInclude(p => p.ItemNature)
+                .FirstOrDefaultAsync(o => o.CartId == request.CartId);
+
+            if (cart == null || cart.Items == null || !cart.Items.Any())
+                return BadRequest(new { Error = "Cannot checkout an empty shopping cart (CardEmpty state)." });
+
+            var deductedProducts = new List<(int ProductId, int Quantity)>();
+
+            // 1. O(1) HOT-PATH RAM INVENTORY DEDUCTION FOR PHYSICAL GOODS (BranchId = 1)
+            foreach (var item in cart.Items)
+            {
+                if (item.Product?.ItemNatureId == 1) // Physical Retail Asset
+                {
+                    if (!await _inventoryRam.TryDeductStockAsync(1, item.ProductId, item.Quantity))
+                    {
+                        // Rollback in-memory deducted stock for items already processed in this checkout
+                        foreach (var deducted in deductedProducts)
+                        {
+                            _inventoryRam.RestoreStock(1, deducted.ProductId, deducted.Quantity);
+                        }
+                        return BadRequest(new { Error = "OUT_OF_STOCK", ProductId = item.ProductId, ProductName = item.Product.ProductName });
+                    }
+                    deductedProducts.Add((item.ProductId, item.Quantity));
+                }
+            }
+
+            // 2. READCOMMITTED ACID TRANSACTION & APPEND-ONLY LEDGER (NO DEADLOCKS)
+            using var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
             try
             {
-                var cart = await _context.Orders
-                    .Include(o => o.OrderDetails!)
-                    .ThenInclude(od => od.Product!)
-                    .ThenInclude(p => p.ItemNature)
-                    .FirstOrDefaultAsync(o => o.OrderId == request.CartId && (o.StatusId == 4 || o.StatusId == 5));
+                var newOrder = new Order
+                {
+                    BranchId = 1, // HQ Fulfillment branch for Online Web Orders
+                    ShiftId = 1, // Storefront general web fulfillment shift
+                    UserId = 1, // Default system web worker
+                    StatusId = 2, // 2: Completed / Processing E-Commerce Order
+                    PaymentMethodId = request.PaymentMethodId,
+                    IdempotencyKey = request.IdempotencyKey,
+                    CreatedAt = DateTime.Now,
+                    GrossAmount = cart.GrossAmount,
+                    TaxAmount = cart.TaxAmount,
+                    DiscountAmount = cart.DiscountAmount,
+                    TotalAmount = cart.TotalAmount,
+                    ShippingAddress = request.ShippingAddress,
+                    OrderNotes = request.CustomerNotes,
+                    ShippingFee = cart.GrossAmount >= 500000 ? 0 : 30000, // Freeship for orders >= 500,000 VND
+                    OrderDetails = new List<OrderDetail>()
+                };
 
-                if (cart == null || cart.OrderDetails == null || !cart.OrderDetails.Any())
-                    return BadRequest(new { Error = "Cannot checkout an empty shopping cart (CardEmpty state)." });
-
-                // Assign customer metadata if provided
+                // Assign customer CRM profile and reward loyalty points
                 if (request.CustomerId.HasValue)
                 {
                     var customer = await _context.Customers.FindAsync(request.CustomerId.Value);
                     if (customer != null)
                     {
-                        cart.CustomerId = customer.CustomerId;
-                        cart.SnapshotCustomerName = customer.FullName;
-                        cart.SnapshotCustomerPhone = customer.PhoneNumber ?? request.ContactPhone;
-                        
-                        // Reward loyalty CRM points (10 points per 100,000 VND spent)
-                        int earnedPoints = (int)(cart.TotalAmount / 100000) * 10;
+                        newOrder.CustomerId = customer.CustomerId;
+                        newOrder.SnapshotCustomerName = customer.FullName;
+                        newOrder.SnapshotCustomerPhone = customer.PhoneNumber ?? request.ContactPhone;
+
+                        // Award CRM loyalty points (10 points per 100,000 VND spent)
+                        int earnedPoints = (int)(newOrder.TotalAmount / 100000) * 10;
                         customer.RewardPoints += earnedPoints;
                     }
                 }
-
-                cart.PaymentMethodId = request.PaymentMethodId;
-                cart.StatusId = 2; // 2: Completed / Processing E-Commerce Order
-                cart.CreatedAt = DateTime.Now; // Final order placed timestamp
-
-                // Handle Physical Inventory & SaaS Subscriptions
-                foreach (var item in cart.OrderDetails)
+                else
                 {
-                    if (item.Product?.ItemNatureId == 2) // Digital SaaS Subscription
+                    newOrder.SnapshotCustomerName = cart.SnapshotCustomerName ?? request.CustomerNotes ?? "Online Shopper";
+                    newOrder.SnapshotCustomerPhone = request.ContactPhone ?? cart.SnapshotCustomerPhone;
+                }
+
+                _context.Orders.Add(newOrder);
+                await _context.SaveChangesAsync();
+
+                newOrder.InvoiceNumber = $"WEB-{DateTime.Now:yyyyMMdd}-{newOrder.OrderId}";
+
+                var productIds = new List<int>();
+                foreach (var item in cart.Items)
+                {
+                    productIds.Add(item.ProductId);
+                    decimal taxRate = item.Product?.TaxType?.TaxPercentage ?? 0;
+                    decimal lineTax = (item.Quantity * item.UnitPrice) * (taxRate / 100.0m);
+
+                    var od = new OrderDetail
                     {
-                        int durationDays = 365 * item.Quantity; // Default 1 year per subscription quantity unit
+                        OrderId = newOrder.OrderId,
+                        ProductId = item.ProductId,
+                        NatureId = item.Product?.ItemNatureId ?? 1,
+                        TaxTypeId = item.Product?.TaxTypeId ?? 1,
+                        Quantity = item.Quantity,
+                        ProductName = item.Product?.ProductName ?? "Item",
+                        UnitName = item.UnitName,
+                        UnitPrice = item.UnitPrice,
+                        DiscountRate = 0,
+                        DiscountAmount = 0,
+                        TaxRate = taxRate,
+                        TaxAmount = lineTax,
+                        TotalAmount = (item.Quantity * item.UnitPrice) + lineTax
+                    };
+                    newOrder.OrderDetails!.Add(od);
+                    _context.OrderDetails.Add(od);
+
+                    // Handle physical goods vs SaaS subscriptions
+                    if (item.Product?.ItemNatureId == 1) // Physical asset -> Append-Only Inventory Ledger
+                    {
+                        var txLog = new InventoryTransaction
+                        {
+                            ProductId = item.ProductId,
+                            BranchId = 1, // HQ Fulfillment
+                            QuantityDelta = -item.Quantity,
+                            TxType = InventoryTxType.WebSale,
+                            ReferenceOrderId = newOrder.OrderId,
+                            CreatedAt = DateTime.Now
+                        };
+                        _context.InventoryTransactions.Add(txLog);
+                    }
+                    else if (item.Product?.ItemNatureId == 2) // Digital SaaS Subscription
+                    {
+                        int durationDays = 365 * item.Quantity;
                         var existingSub = await _context.Subscriptions
-                            .FirstOrDefaultAsync(s => s.CustomerId == cart.CustomerId && s.ProductId == item.ProductId && s.Status == "ACTIVE");
+                            .FirstOrDefaultAsync(s => s.CustomerId == newOrder.CustomerId && s.ProductId == item.ProductId && s.Status == "ACTIVE");
 
                         if (existingSub != null)
                         {
                             existingSub.EndDate = (existingSub.EndDate > DateTime.Now ? existingSub.EndDate : DateTime.Now).AddDays(durationDays);
+                            existingSub.UpdatedAt = DateTime.Now;
+                            existingSub.OrderId = newOrder.OrderId;
                             _context.Subscriptions.Update(existingSub);
                         }
-                        else if (cart.CustomerId.HasValue)
+                        else if (newOrder.CustomerId.HasValue)
                         {
                             var newSub = new Subscription
                             {
-                                CustomerId = cart.CustomerId.Value,
+                                CustomerId = newOrder.CustomerId.Value,
                                 ProductId = item.ProductId,
+                                OrderId = newOrder.OrderId,
                                 StartDate = DateTime.Now,
                                 EndDate = DateTime.Now.AddDays(durationDays),
                                 Status = "ACTIVE",
@@ -424,42 +591,97 @@ namespace DigiPOSE.Controllers.Api
                     }
                 }
 
+                // >>> [ENTERPRISE_FISCAL_EXECUTION]: Balance VAT cent differences and calculate master total with shipping fee
+                _vatBalancingEngine.BalanceVatAndCalculateTotal(newOrder, newOrder.OrderDetails!.ToList());
+
+                // Append-only buffer in SQL for resilient background E-Invoice emailing
+                var printJob = new JobQueueItem
+                {
+                    JobType = "EMAIL_STOREFRONT_INVOICE",
+                    PayloadJson = JsonSerializer.Serialize(new { OrderId = newOrder.OrderId, InvoiceNumber = newOrder.InvoiceNumber, BranchId = 1, Email = request.ShippingAddress }),
+                    Status = "Pending",
+                    CreatedAt = DateTime.Now
+                };
+                _context.JobQueue.Add(printJob);
+
+                // Purge transient online cart after successful checkout conversion
+                _context.StorefrontCartItems.RemoveRange(cart.Items);
+                _context.StorefrontCarts.Remove(cart);
+
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // Proactively trigger asynchronous event notifications / E-Invoice queue here
-                return Ok(new
+                // 3. ASYNCHRONOUS NOTIFICATION & REAL-TIME TELEMETRY RADAR
+                _jobChannel.Writer.TryWrite(printJob);
+
+                var liveBalances = await _inventoryRam.GetBulkStockAsync(1, productIds);
+                await _hubContext.Clients.Group("Branch_1").SendAsync("OnStockChanged", liveBalances);
+
+                var lowStockAlerts = new List<string>();
+                foreach (var kvp in liveBalances)
+                {
+                    if (kvp.Value <= 5)
+                    {
+                        var prodName = cart.Items.FirstOrDefault(d => d.ProductId == kvp.Key)?.Product?.ProductName ?? $"SKU #{kvp.Key}";
+                        lowStockAlerts.Add($"[CRITICAL_STOCK]: {prodName} dropped to {kvp.Value} unit(s) at HQ Branch #1 due to Storefront web order");
+                    }
+                }
+
+                var telemetryPayload = new
+                {
+                    EventType = "ONLINE_STOREFRONT_SALE",
+                    OrderId = newOrder.OrderId,
+                    InvoiceNumber = newOrder.InvoiceNumber,
+                    RevenueDelta = newOrder.TotalAmount,
+                    ShippingFee = newOrder.ShippingFee,
+                    ShippingAddress = newOrder.ShippingAddress ?? "N/A",
+                    BranchId = 1,
+                    ProcessedAt = newOrder.CreatedAt.ToString("HH:mm:ss"),
+                    LowStockAlerts = lowStockAlerts
+                };
+                await _hubContext.Clients.Group("AdminTelemetryGroup").SendAsync("OnTelemetryAlert", telemetryPayload);
+
+                var successResponse = new
                 {
                     Status = "Success",
-                    OrderId = cart.OrderId,
-                    TotalCharged = cart.TotalAmount,
-                    Message = "Online Storefront checkout completed. E-Invoice has been queued for asynchronous delivery."
-                });
+                    OrderId = newOrder.OrderId,
+                    InvoiceNumber = newOrder.InvoiceNumber,
+                    TotalCharged = newOrder.TotalAmount,
+                    IsReplay = false,
+                    Message = "Online Storefront checkout completed. E-Invoice queued and live telemetry radar broadcasted."
+                };
+                _cache.Set(idempCacheKey, successResponse, TimeSpan.FromHours(24));
+
+                return Ok(successResponse);
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return StatusCode(500, new { Error = "Checkout transaction aborted due to concurrency lock or DB error.", Details = ex.Message });
+                foreach (var deducted in deductedProducts)
+                {
+                    _inventoryRam.RestoreStock(1, deducted.ProductId, deducted.Quantity);
+                }
+                return StatusCode(500, new { Error = "Checkout transaction aborted due to database exception or concurrency race.", Details = ex.Message });
             }
         }
 
         #endregion
 
         #region PRIVATE ENGINE HELPER: RECALCULATE TOTALS
-        
+
         private async Task RecalculateCartTotals(int cartId)
         {
-            var cart = await _context.Orders.Include(o => o.OrderDetails!).ThenInclude(od => od.Product!).ThenInclude(p => p.TaxType).FirstOrDefaultAsync(o => o.OrderId == cartId);
-            if (cart != null && cart.OrderDetails != null)
+            var cart = await _context.StorefrontCarts.Include(c => c.Items!).ThenInclude(i => i.Product!).ThenInclude(p => p.TaxType).FirstOrDefaultAsync(o => o.CartId == cartId);
+            if (cart != null && cart.Items != null)
             {
                 decimal gross = 0;
                 decimal totalTax = 0;
-                
-                foreach(var item in cart.OrderDetails)
+
+                foreach (var item in cart.Items)
                 {
                     decimal lineGross = item.Quantity * item.UnitPrice;
                     gross += lineGross;
-                    
+
                     decimal taxRate = item.Product?.TaxType?.TaxPercentage ?? 0;
                     totalTax += lineGross * (taxRate / 100.0m);
                 }
@@ -467,7 +689,7 @@ namespace DigiPOSE.Controllers.Api
                 cart.GrossAmount = gross;
                 cart.TaxAmount = totalTax;
                 cart.TotalAmount = gross + totalTax - cart.DiscountAmount;
-                _context.Orders.Update(cart);
+                _context.StorefrontCarts.Update(cart);
                 await _context.SaveChangesAsync();
             }
         }

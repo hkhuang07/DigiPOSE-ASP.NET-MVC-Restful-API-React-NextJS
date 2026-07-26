@@ -7,17 +7,16 @@ import {
   DollarSign,
   Printer,
   Trash2,
-  Lock,
-  UserCheck,
-  Zap,
   Activity,
   CheckCircle2,
   AlertCircle,
   Plus,
   Minus,
+  Database,
+  Zap
 } from "lucide-react";
 import { posApi } from "@/services/api/client";
-import { formatCurrency, getHudTimestamp } from "@/utils/formatters";
+import { formatCurrency } from "@/utils/formatters";
 
 interface DraftLineItem {
   productId: number;
@@ -28,85 +27,160 @@ interface DraftLineItem {
   lineTotal: number;
 }
 
-// Pre-seeded local barcode lookup dictionary for O(1) cashier simulated execution
-const BARCODE_DB: Record<string, { id: number; name: string; price: number }> = {
-  "POS-CYBER-8800": { id: 101, name: "DigiPOSE Cyber Touch Terminal 8800", price: 24500000 },
-  "PRINTER-PRO": { id: 103, name: "CyberPrint Thermal Receipt Unit", price: 3200000 },
-  "SCANNER-O1": { id: 104, name: "Omnidirectional Laser Scanner O(1)", price: 2800000 },
-  "8934567890123": { id: 201, name: "Retail Beverage Package 500ml", price: 15000 },
-  "8931112223334": { id: 202, name: "High-Speed Networking Ethernet Cable 5M", price: 120000 },
-};
-
 export default function PosTerminalPage() {
-  const [draftOrderId, setDraftOrderId] = useState<number>(40592); // Simulated active Draft Order ID
+  const [draftOrderId, setDraftOrderId] = useState<number>(0);
   const [items, setItems] = useState<DraftLineItem[]>([]);
   const [barcodeInput, setBarcodeInput] = useState<string>("");
-  const [shiftCash, setShiftCash] = useState<number>(5000000); // 5,000,000 VND initial float start cash
+  const [shiftCash, setShiftCash] = useState<number>(5000000); // Initial register float balance
   const [cashReceived, setCashReceived] = useState<string>("");
-  const [scanStatus, setScanStatus] = useState<string>("READY FOR HIGH-FREQUENCY BARCODE INPUT [ O(1) ]");
+  const [scanStatus, setScanStatus] = useState<string>("SYSTEM READY FOR BARCODE OR SKU INPUT");
   const [receiptPrinted, setReceiptPrinted] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Initialize live database-backed draft order on terminal boot
   useEffect(() => {
-    // Auto focus scanner input on terminal launch
+    const initializeDraftOrder = async () => {
+      try {
+        const savedOrderId = typeof window !== "undefined" ? Number(localStorage.getItem("digipose_active_draft_id") || 0) : 0;
+        if (savedOrderId > 0) {
+          try {
+            const existingDraft = await posApi.getDraftOrder(savedOrderId);
+            setDraftOrderId(existingDraft.orderId);
+            setItems(existingDraft.items || []);
+            setScanStatus(`>>> [SESSION_RECOVERED]: ACTIVE DRAFT ORDER #${existingDraft.orderId} SYNCED FROM DATABASE.`);
+            return;
+          } catch (e) {
+            console.warn(">>> [DRAFT_SYNC]: Existing draft closed or expired, initializing fresh order.");
+          }
+        }
+
+        const res = await posApi.createDraftOrder(1, 1, 1);
+        if (res.orderId) {
+          setDraftOrderId(res.orderId);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("digipose_active_draft_id", String(res.orderId));
+          }
+          setScanStatus(`>>> [TERMINAL_INIT]: NEW DRAFT ORDER #${res.orderId} CREATED IN DATABASE.`);
+        }
+      } catch (err) {
+        console.warn(">>> [LAN_OFFLINE]: Backend unreachable, enabling terminal local operational reserve.");
+        setDraftOrderId(10001);
+        setScanStatus(">>> [LOCAL_RESERVE]: OPERATING IN STANDALONE RESERVE MODE.");
+      }
+    };
+
+    initializeDraftOrder();
     if (inputRef.current) inputRef.current.focus();
   }, []);
 
-  const handleBarcodeScan = (e: React.FormEvent) => {
+  const handleBarcodeScan = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanSku = barcodeInput.trim().toUpperCase();
     if (!cleanSku) return;
 
-    const found = BARCODE_DB[cleanSku] || {
-      id: Math.floor(Math.random() * 800) + 300,
-      name: `Generic POS Retail Asset (${cleanSku})`,
-      price: 250000,
-    };
+    setIsLoading(true);
+    setScanStatus(`>>> [INVENTORY_QUERY]: VERIFYING SKU [${cleanSku}] IN DATABASE...`);
 
-    setItems((prev) => {
-      const idx = prev.findIndex((i) => i.productId === found.id || i.sku === cleanSku);
-      if (idx >= 0) {
-        const copy = [...prev];
-        copy[idx].quantity += 1;
-        copy[idx].lineTotal = copy[idx].quantity * copy[idx].unitPrice;
-        return copy;
+    try {
+      // Step 1: Real-time SKU lookup in database
+      const foundProduct = await posApi.lookupSku(cleanSku, 1);
+
+      // Step 2: Push item into database-backed draft order
+      const updateRes = await posApi.addItemToDraft(draftOrderId, foundProduct.productId, 1);
+      
+      if (updateRes && updateRes.items && updateRes.items.length > 0) {
+        setItems(updateRes.items);
       } else {
-        return [
-          ...prev,
-          {
-            productId: found.id,
-            sku: cleanSku,
-            productName: found.name,
-            quantity: 1,
-            unitPrice: found.price,
-            lineTotal: found.price,
-          },
-        ];
+        // Optimistic UI state sync
+        setItems((prev) => {
+          const idx = prev.findIndex((i) => i.productId === foundProduct.productId || i.sku.toUpperCase() === cleanSku);
+          if (idx >= 0) {
+            const copy = [...prev];
+            copy[idx].quantity += 1;
+            copy[idx].lineTotal = copy[idx].quantity * copy[idx].unitPrice;
+            return copy;
+          }
+          return [
+            ...prev,
+            {
+              productId: foundProduct.productId,
+              sku: foundProduct.sku,
+              productName: foundProduct.productName,
+              quantity: 1,
+              unitPrice: foundProduct.unitPrice,
+              lineTotal: foundProduct.unitPrice,
+            },
+          ];
+        });
       }
-    });
 
-    setScanStatus(`>>> [SCAN_SUCCESS]: SKU [${cleanSku}] ADDED IN 2.1ms (DB DRAFT SYNCHRONIZED)`);
-    setBarcodeInput("");
-    setReceiptPrinted(false);
+      setScanStatus(`>>> [ITEM_REGISTERED]: ${foundProduct.productName} ADDED TO ACTIVE DRAFT.`);
+      setBarcodeInput("");
+      setReceiptPrinted(false);
+    } catch (err: any) {
+      const errorMsg = err?.response?.data?.Error || err?.response?.data?.error;
+      if (errorMsg === "OUT_OF_STOCK") {
+        setScanStatus(`>>> [WARNING]: INSUFFICIENT STOCK FOR SKU [${cleanSku}]. TRANSACTION HELD.`);
+        alert(`>>> [STOCK ALERT]: Product ${cleanSku} has insufficient balance in active branch warehouse!`);
+      } else {
+        setScanStatus(`>>> [CATALOG_FAULT]: SKU [${cleanSku}] NOT FOUND IN REPOSITORY OR SERVER OFFLINE.`);
+      }
+    } finally {
+      setIsLoading(false);
+      if (inputRef.current) inputRef.current.focus();
+    }
   };
 
-  const handleQtyAdjust = (index: number, delta: number) => {
-    setItems((prev) => {
-      const copy = [...prev];
-      const newQty = copy[index].quantity + delta;
-      if (newQty <= 0) {
-        return copy.filter((_, i) => i !== index);
+  const handleQtyAdjust = async (index: number, delta: number) => {
+    const item = items[index];
+    if (!item) return;
+
+    try {
+      if (delta > 0) {
+        await posApi.addItemToDraft(draftOrderId, item.productId, 1);
+      } else if (item.quantity <= 1) {
+        await posApi.removeItemFromDraft(draftOrderId, item.productId);
+      } else {
+        // Adjust quantity in UI buffer when decrementing above 1
+        setItems((prev) => {
+          const copy = [...prev];
+          copy[index].quantity += delta;
+          copy[index].lineTotal = copy[index].quantity * copy[index].unitPrice;
+          return copy;
+        });
+        return;
       }
-      copy[index].quantity = newQty;
-      copy[index].lineTotal = newQty * copy[index].unitPrice;
-      return copy;
-    });
+
+      // Synchronize exact totals from server
+      const draftData = await posApi.getDraftOrder(draftOrderId);
+      if (draftData.items) setItems(draftData.items);
+    } catch (e) {
+      // Local state adjustment fallback
+      setItems((prev) => {
+        const copy = [...prev];
+        const newQty = copy[index].quantity + delta;
+        if (newQty <= 0) {
+          return copy.filter((_, i) => i !== index);
+        }
+        copy[index].quantity = newQty;
+        copy[index].lineTotal = newQty * copy[index].unitPrice;
+        return copy;
+      });
+    }
   };
 
-  const handleClearDraft = () => {
+  const handleClearDraft = async () => {
+    try {
+      for (const item of items) {
+        await posApi.removeItemFromDraft(draftOrderId, item.productId);
+      }
+    } catch (e) {
+      console.warn(">>> [VOID_WARN]: Offline draft clearing applied.");
+    }
     setItems([]);
-    setScanStatus(">>> [DRAFT_VOID]: ALL ITEMS CLEARED. TERMINAL RESET.");
+    setScanStatus(">>> [ORDER_VOIDED]: CURRENT DRAFT ORDER CLEARED. TERMINAL RESET.");
     if (inputRef.current) inputRef.current.focus();
   };
 
@@ -117,20 +191,47 @@ export default function PosTerminalPage() {
 
   const handleExecutePosCheckout = async () => {
     if (items.length === 0) {
-      alert(">>> [TERMINAL_FAULT]: Cannot execute paid checkout on empty Draft Order!");
+      alert(">>> [OPERATION ERROR]: Cannot finalize payment on an empty order!");
       return;
     }
 
-    setScanStatus(">>> [CHECKOUT_PROCESSING]: ATOMIC EF CORE INVENTORY DESTRUCTION IN PROGRESS...");
-    setTimeout(() => {
+    setIsLoading(true);
+    setScanStatus(">>> [SETTLEMENT]: COMMITTING FINANCIAL TRANSACTION & UPDATING INVENTORY LEDGER...");
+
+    try {
+      await posApi.checkoutPaid(draftOrderId, 1);
+      
       setShiftCash((prev) => prev + grandTotal);
       setItems([]);
       setCashReceived("");
       setReceiptPrinted(true);
-      setDraftOrderId((prev) => prev + 1);
-      setScanStatus(">>> [PAID_SUCCESS]: RECEIPT ISSUED IN 12.4ms. E-INVOICE JOB QUEUED.");
+      
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("digipose_active_draft_id");
+      }
+
+      // Automatically launch subsequent draft order for consecutive cashier operations
+      try {
+        const newDraft = await posApi.createDraftOrder(1, 1, 1);
+        if (newDraft.orderId) {
+          setDraftOrderId(newDraft.orderId);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("digipose_active_draft_id", String(newDraft.orderId));
+          }
+        }
+      } catch (e) {
+        setDraftOrderId((prev) => prev + 1);
+      }
+
+      setScanStatus(">>> [TRANSACTION COMPLETE]: ELECTRONIC INVOICE ISSUED & SHIFT LEDGER UPDATED.");
+    } catch (err: any) {
+      const errMsg = err?.response?.data?.Error || "Communication error during settlement commit.";
+      setScanStatus(`>>> [TRANSACTION REJECTED]: ${errMsg}`);
+      alert(`>>> [CHECKOUT FAILED]: ${errMsg}`);
+    } finally {
+      setIsLoading(false);
       if (inputRef.current) inputRef.current.focus();
-    }, 200);
+    }
   };
 
   return (
@@ -143,11 +244,11 @@ export default function PosTerminalPage() {
           <div className="flex items-center gap-2 text-[#00FF66] mb-1">
             <Terminal className="animate-bounce" size={24} />
             <h1 className="font-orbitron font-black text-2xl uppercase tracking-wider">
-              IN-STORE HIGH-SPEED POS MACHINE TERMINAL
+              ENTERPRISE POS RETAIL TERMINAL
             </h1>
           </div>
           <p className="font-mono text-sm text-[#777777]">
-            [OPERATOR_ID]: CASHIER_01 // BRANCH_HQ_01 // ACTIVE SHIFT FLOAT: <span className="text-[#00FF66] font-bold">{formatCurrency(shiftCash)}</span>
+            [REGISTER_ID]: TERM_01 // BRANCH: MAIN_STORE // ACTIVE SHIFT FLOAT: <span className="text-[#00FF66] font-bold">{formatCurrency(shiftCash)}</span>
           </p>
         </div>
 
@@ -155,13 +256,13 @@ export default function PosTerminalPage() {
         <div className="flex items-center gap-3 bg-[#000000] border border-[#00FF66]/50 px-4 py-2 font-mono">
           <Activity className="text-[#00FF66] animate-pulse" size={20} />
           <div className="flex flex-col">
-            <span className="text-xs text-[#00FF66]">DRAFT ORDER ID</span>
-            <span className="text-lg font-black text-[#00E5FF]">#DRAFT-{draftOrderId}</span>
+            <span className="text-xs text-[#00FF66]">ACTIVE DRAFT ORDER</span>
+            <span className="text-lg font-black text-[#00E5FF]">#{draftOrderId || "CONNECTING..."}</span>
           </div>
         </div>
       </div>
 
-      {/* O(1) BARCODE SCANNER FORM & DIAGNOSTIC BAR */}
+      {/* BARCODE SCANNER FORM & DIAGNOSTIC BAR */}
       <div className="cyber-panel grid grid-cols-1 lg:grid-cols-4 gap-4 items-center !p-4 border-[#00FF66]/60 bg-[#0A0A0A]">
         <form onSubmit={handleBarcodeScan} className="lg:col-span-3 flex items-center gap-2">
           <div className="relative flex-1">
@@ -170,21 +271,22 @@ export default function PosTerminalPage() {
               type="text"
               value={barcodeInput}
               onChange={(e) => setBarcodeInput(e.target.value)}
-              placeholder="SCAN BARCODE OR TYPE SKU HERE (E.G. POS-CYBER-8800, PRINTER-PRO)..."
-              className="cyber-input !pl-10 !py-3 !text-lg !font-bold text-[#00FF66] uppercase border-[#00FF66]"
+              placeholder="SCAN BARCODE OR ENTER ASSET SKU HERE..."
+              disabled={isLoading}
+              className="cyber-input !pl-10 !py-3 !text-lg !font-bold text-[#00FF66] uppercase border-[#00FF66] disabled:opacity-50"
             />
             <Scan className="absolute left-3 top-3.5 text-[#00FF66]" size={22} />
           </div>
-          <button type="submit" className="btn-emerald !py-3 !px-6 font-orbitron font-bold uppercase">
+          <button type="submit" disabled={isLoading} className="btn-emerald !py-3 !px-6 font-orbitron font-bold uppercase disabled:opacity-50">
             <Zap size={18} />
-            <span>SCAN [O(1)]</span>
+            <span>SCAN ASSET</span>
           </button>
         </form>
 
         <div className="text-right font-mono text-xs text-[#777777] border-l border-[#00FF66]/30 pl-3">
-          <span>AUDIO RECEIPT BIP:</span> <span className="text-[#00FF66] font-bold">ENABLED</span>
+          <span>AUDIBLE ALERT:</span> <span className="text-[#00FF66] font-bold">ACTIVE</span>
           <br />
-          <span>SESSION RAM BACKUP:</span> <span className="text-[#00FF66] font-bold">SQL DRAGGED</span>
+          <span>RESILIENCE LEDGER:</span> <span className="text-[#00FF66] font-bold">DATABASE SYNCED</span>
         </div>
       </div>
 
@@ -193,7 +295,7 @@ export default function PosTerminalPage() {
         <span className="text-[#00E5FF]">{scanStatus}</span>
         {receiptPrinted && (
           <span className="text-[#00FF66] font-bold animate-pulse flex items-center gap-1">
-            <Printer size={14} /> [RECEIPT #E-INV-{draftOrderId - 1} DISPATCHED]
+            <Printer size={14} /> [ELECTRONIC INVOICE ISSUED & AUDIT RECORDED]
           </span>
         )}
       </div>
@@ -203,7 +305,7 @@ export default function PosTerminalPage() {
         {/* RETAIL DRAFT ITEMS LIST */}
         <div className="lg:col-span-2 cyber-panel !p-0 overflow-hidden border-[#00FF66]/40">
           <div className="p-3 bg-[#0A0A0A] border-b border-[#00FF66]/40 flex items-center justify-between font-orbitron text-xs text-[#00FF66]">
-            <span>ACTIVE DRAFT ORDER DETAILS</span>
+            <span>ACTIVE DRAFT ORDER LINE ITEMS</span>
             <span>TOTAL ITEMS: {items.reduce((a, b) => a + b.quantity, 0)}</span>
           </div>
 
@@ -211,8 +313,8 @@ export default function PosTerminalPage() {
             {items.length === 0 ? (
               <div className="p-16 text-center font-mono text-[#777777] space-y-2">
                 <Scan size={48} className="mx-auto text-[#00FF66]/40" />
-                <div className="font-orbitron text-lg text-[#EEEEEE]">TERMINAL DRAFT IS EMPTY</div>
-                <p className="text-xs">Awaiting cashier barcode scanning or keyboard manual input.</p>
+                <div className="font-orbitron text-lg text-[#EEEEEE]">REGISTER DRAFT IS EMPTY</div>
+                <p className="text-xs">Awaiting barcode scan or SKU entry from retail operator.</p>
               </div>
             ) : (
               <table className="cyber-table w-full">
@@ -220,8 +322,8 @@ export default function PosTerminalPage() {
                   <tr className="bg-[#000000] border-b border-white/20">
                     <th className="!p-3 text-[#00FF66]">SKU // DESCRIPTION</th>
                     <th className="!p-3 text-center text-[#00FF66]">QTY</th>
-                    <th className="!p-3 text-right text-[#00FF66]">PRICE (VND)</th>
-                    <th className="!p-3 text-right text-[#00FF66]">TOTAL</th>
+                    <th className="!p-3 text-right text-[#00FF66]">UNIT PRICE (VND)</th>
+                    <th className="!p-3 text-right text-[#00FF66]">LINE TOTAL</th>
                     <th className="!p-3 text-center">DEL</th>
                   </tr>
                 </thead>
@@ -234,11 +336,11 @@ export default function PosTerminalPage() {
                       </td>
                       <td className="p-3 text-center">
                         <div className="inline-flex items-center gap-1 bg-[#000000] border border-[#00FF66]/40 px-2 py-0.5">
-                          <button onClick={() => handleQtyAdjust(idx, -1)} className="text-[#EEEEEE] hover:text-[#FF3333]">
+                          <button onClick={() => handleQtyAdjust(idx, -1)} disabled={isLoading} className="text-[#EEEEEE] hover:text-[#FF3333] disabled:opacity-50">
                             <Minus size={14} />
                           </button>
                           <span className="text-[#00FF66] font-bold w-6 text-center">{item.quantity}</span>
-                          <button onClick={() => handleQtyAdjust(idx, 1)} className="text-[#EEEEEE] hover:text-[#00FF66]">
+                          <button onClick={() => handleQtyAdjust(idx, 1)} disabled={isLoading} className="text-[#EEEEEE] hover:text-[#00FF66] disabled:opacity-50">
                             <Plus size={14} />
                           </button>
                         </div>
@@ -246,7 +348,7 @@ export default function PosTerminalPage() {
                       <td className="p-3 text-right text-[#EEEEEE]">{formatCurrency(item.unitPrice)}</td>
                       <td className="p-3 text-right font-bold text-[#00FF66]">{formatCurrency(item.lineTotal)}</td>
                       <td className="p-3 text-center">
-                        <button onClick={() => handleQtyAdjust(idx, -item.quantity)} className="text-[#777777] hover:text-[#FF3333]">
+                        <button onClick={() => handleQtyAdjust(idx, -item.quantity)} disabled={isLoading} className="text-[#777777] hover:text-[#FF3333] disabled:opacity-50">
                           <Trash2 size={16} />
                         </button>
                       </td>
@@ -258,24 +360,24 @@ export default function PosTerminalPage() {
           </div>
         </div>
 
-        {/* CASH RECEIPT & FAST SETTLEMENT CONTROLLER */}
+        {/* CASH SETTLEMENT & CHECKOUT CONTROLLER */}
         <div className="cyber-panel-emerald bg-[#0A0A0A] !p-6 space-y-5">
           <span className="reticle-tr">+</span>
           <span className="reticle-bl">+</span>
 
           <div className="flex items-center gap-2 text-[#00FF66] border-b border-[#00FF66]/40 pb-3">
             <DollarSign size={22} />
-            <h2 className="font-orbitron font-black text-xl uppercase">CASHIER CHECKOUT</h2>
+            <h2 className="font-orbitron font-black text-xl uppercase">SETTLEMENT CONTROLLER</h2>
           </div>
 
           {/* Totals Box */}
           <div className="bg-[#000000] p-4 border border-[#00FF66]/50 space-y-2 font-mono text-sm">
             <div className="flex justify-between text-[#777777]">
-              <span>GROSS TOTAL:</span>
+              <span>SUBTOTAL (GROSS):</span>
               <span className="text-[#EEEEEE]">{formatCurrency(grossTotal)}</span>
             </div>
             <div className="flex justify-between text-[#777777]">
-              <span>VAT TAX (10%):</span>
+              <span>ESTIMATED VAT (10%):</span>
               <span className="text-[#FFB000]">+ {formatCurrency(vatTax)}</span>
             </div>
             <div className="border-t border-[#00FF66] pt-2 flex justify-between items-baseline">
@@ -289,18 +391,19 @@ export default function PosTerminalPage() {
           {/* Cash received calculator */}
           <div className="space-y-2">
             <label className="block font-mono text-xs text-[#00FF66] font-bold uppercase">
-              CASH RECEIVED FROM CUSTOMER (VND):
+              TENDERED AMOUNT (VND):
             </label>
             <input
               type="number"
               value={cashReceived}
               onChange={(e) => setCashReceived(e.target.value)}
-              placeholder="ENTER CASH TENDERED..."
-              className="cyber-input !py-2.5 !text-lg !font-bold text-[#EEEEEE] border-[#00FF66]"
+              placeholder="ENTER AMOUNT TENDERED..."
+              disabled={isLoading}
+              className="cyber-input !py-2.5 !text-lg !font-bold text-[#EEEEEE] border-[#00FF66] disabled:opacity-50"
             />
             {Number(cashReceived) > 0 && (
               <div className="flex justify-between items-center p-2 bg-[#000000] border border-white/20 font-mono text-sm">
-                <span className="text-[#777777]">CUSTOMER CHANGE:</span>
+                <span className="text-[#777777]">CHANGE DUE:</span>
                 <span className={`font-bold text-md ${customerChange >= 0 ? "text-[#00FF66]" : "text-[#FF3333]"}`}>
                   {formatCurrency(Math.max(0, customerChange))}
                 </span>
@@ -312,18 +415,18 @@ export default function PosTerminalPage() {
           <div className="space-y-3 pt-3">
             <button
               onClick={handleExecutePosCheckout}
-              disabled={items.length === 0}
-              className="btn-emerald w-full !py-4 font-orbitron font-black text-lg flex items-center justify-center gap-2 uppercase shadow-[0_0_20px_rgba(0,255,102,0.6)] hover:shadow-[0_0_30px_rgba(0,255,102,1)]"
+              disabled={items.length === 0 || isLoading}
+              className="btn-emerald w-full !py-4 font-orbitron font-black text-lg flex items-center justify-center gap-2 uppercase shadow-[0_0_20px_rgba(0,255,102,0.6)] hover:shadow-[0_0_30px_rgba(0,255,102,1)] disabled:opacity-50"
             >
               <Printer size={22} />
-              <span>PAID // PRINT RECEIPT [O(1)]</span>
+              <span>{isLoading ? "PROCESSING..." : "COMPLETE TRANSACTION"}</span>
             </button>
             <button
               onClick={handleClearDraft}
-              disabled={items.length === 0}
-              className="btn-danger w-full !py-2 font-orbitron font-bold text-xs uppercase"
+              disabled={items.length === 0 || isLoading}
+              className="btn-danger w-full !py-2 font-orbitron font-bold text-xs uppercase disabled:opacity-50"
             >
-              <span>VOID DRAFT // CLEAR TERMINAL</span>
+              <span>VOID ORDER // RESET TERMINAL</span>
             </button>
           </div>
         </div>
@@ -331,3 +434,4 @@ export default function PosTerminalPage() {
     </div>
   );
 }
+

@@ -60,6 +60,15 @@ namespace DigiPOSE.Models
         [Display(Name = "Total Amount")] 
         public decimal TotalAmount { get; set; } = 0; // = (Qty*UnitPrice) - Discount + Tax
 
+        // >>> [FISCAL_PRECISION_BALANCING]: Tax cent differences from VatBalancingEngine & exact net unit pricing
+        [Column(TypeName = "decimal(18,4)")]
+        [Display(Name = "Tax Balance")] 
+        public decimal TaxBalance { get; set; } = 0;
+
+        [Column(TypeName = "decimal(18,4)")]
+        [Display(Name = "Net Price")] 
+        public decimal NetPrice { get; set; } = 0;
+
         [StringLength(500, ErrorMessage = "Notes cannot exceed 500 characters.")]
         [Display(Name = "Notes")] 
         public string? Notes { get; set; }
