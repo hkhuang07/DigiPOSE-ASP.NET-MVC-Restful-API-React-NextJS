@@ -1,7 +1,7 @@
 # DigiPOSE - Enterprise B2B Retail & POS Management Platform
-**Official Architecture Overview & Deployment Manual (v1.0.0)**
+**Official Architecture Overview & Feature Specification Manual (v1.0.0)**
 
-DigiPOSE is a robust, high-performance Point of Sale (POS), Enterprise Resource Planning (ERP), and Online E-Commerce system engineered for scalable retail operations and B2B cloud SaaS distribution. The platform integrates real-time in-store transaction terminal capabilities with an API-driven online storefront and an administrative CMS backoffice.
+DigiPOSE is a robust, high-performance Point of Sale (POS), Enterprise Resource Planning (ERP), and Online E-Commerce platform engineered for scalable retail operations and B2B cloud SaaS distribution. The platform integrates real-time in-store transaction terminal capabilities with an API-driven online storefront and an administrative CMS backoffice.
 
 ---
 
@@ -25,62 +25,94 @@ DigiPOSE adopts a decoupled domain-driven architecture separating public commerc
          ▼                                               ▼
 [ ADMINISTRATOR CMS ]                         [ RESTful WEB API MODULES ]
  (ASP.NET Core Razor / Cookie Auth)           (Controllers/Api/ -> Stateless JSON)
- ├── Master Data Management (26 Tables)       ├── POS Operations & Shifts
- ├── Financial Analytics & SLA Reports        ├── Storefront Catalog & Checkout
- └── Role-Based Access Control (RBAC)         └── Asynchronous SMTP E-Invoice Queue
+ ├── Master Data Management (30 Controllers)  ├── POS Operations & Shifts (PosController)
+ ├── Financial Analytics & SLA Reports        ├── Storefront Catalog & Checkout (Storefront)
+ └── Role-Based Access Control (RBAC)         └── Real-Time SignalR WebSockets (PosRealtimeHub)
          │                                               │
          └───────────────────────┬───────────────────────┘
+                                 │
+                [ SERVICES & BACKGROUND WORKERS ]
+                ├── IInventoryRAMService (O(1) Memory Manager)
+                ├── IVatBalancingEngine (VAT Cent Rounding)
+                ├── InventoryWarmupWorker (RAM Pre-loader)
+                └── ResilientInvoiceWorker (Async MailKit Queue)
                                  │
                    (Entity Framework Core 10)
                                  ▼
                   [ SQL SERVER DATABASE ENGINE ]
 ```
 
-### Core Architectural Features:
-* **Dual Sales Architecture**: Simultaneous operation of real-time cash drawer POS terminals and online e-commerce portals without accounting ledger contamination. Shopping carts operate inside temporary session buffers and only register as production invoices upon completed checkout.
-* **High-Throughput Database Engine**: Implements EF Core `DbContextPooling` to reduce Garbage Collection overhead and maximize transactional concurrency under peak retail load.
-* **Automated SEO & SSR Metadata**: Next.js App Router integrates dynamic server-side rendering with metadata injection for product catalogs and SaaS subscription assets.
-* **Audit & Ledger Integrity**: Financial ledgers store immutable snapshot records of customer identities, prices, and taxes at checkout, ensuring complete accounting auditing integrity.
+---
+
+## ✨ 2. Implemented Features & Core Capabilities
+
+### 🛒 A. High-Speed Cashier POS Terminal (`/pos` & `PosController.cs`)
+* **O(1) In-Memory Stock Deduction**: Pre-deducts and validates product stock instantly via `IInventoryRAMService` (<15ms latency) before executing database transactions.
+* **Hardware Debounce Guard**: Integrated `IMemoryCache` TTL buffer prevents accidental double-scanning from barcode scanners.
+* **VAT Rounding & Balancing Engine (`VatBalancingEngine.cs`)**: Implements an enterprise VAT cent balancing algorithm (`Round(Sum(PreTax) * TaxRate, 2)` vs line-item rounding) that injects tax variance into the primary line item, guaranteeing 100% financial ledger match.
+* **Dual-Layer Idempotency Safeguard**: RAM cache checks combined with SQL unique constraint locks eliminate duplicate transaction processing during unstable network connectivity.
+* **Cashier Tender & Change Calculation**: Records `TenderedAmount` and automatically computes exact `ChangeAmount` for accurate cash drawer reconciliation.
+* **Shift & Counter Management**: Open/close cashier shifts, balance cash drawers, and map terminal counters (`ShiftsController`, `CountersController`).
+
+### 🌐 B. Online E-Commerce Storefront (`/`, `/cart` & `StorefrontController.cs`)
+* **Dynamic Product Catalog**: Filtering, pagination, full-text searching, category navigation, and SSR SEO metadata optimization.
+* **Session Shopping Cart (`cartStore.ts`)**: Client-side Zustand state buffer supporting real-time stock availability verification.
+* **Atomic Order Checkout**: Calculates delivery fees (`ShippingFee`), records recipient information (`ShippingAddress`), saves customer notes (`OrderNotes`), and wraps creation in isolated SQL transactions (`BeginTransactionAsync`).
+
+### 📡 C. Real-Time Telemetry & SignalR Broadcasting (`PosRealtimeHub.cs`)
+* **Instant Stock Synchronization**: Broadcasts inventory updates (`OnStockChanged`) across all active POS terminals within <1ms.
+* **Low Stock Alerts**: Automatic alert dispatching (`LowStockAlerts <= 5`) to cashiers and store administrators.
+* **Live Order Arrival**: Pushes real-time web order notifications (`WEB_ORDER_CREATED`) directly to administrative HUD monitors.
+
+### ⚡ D. Asynchronous Background Engine (`Services/Background/`)
+* **`InventoryWarmupWorker`**: Pre-loads active branch inventory levels into high-speed memory on ASP.NET Core startup.
+* **`ResilientInvoiceWorker`**: Asynchronous background queue executing electronic invoice generation and MailKit SMTP email dispatching without blocking payment checkout threads.
+
+### 🛡️ E. Enterprise Backoffice CMS (`/Administrator` & `Areas/Administrator/`)
+* **30 Master Data Controllers**: Complete administrative CRUD for 26 database entities (Products, Inventories, Categories, Suppliers, Customers, Manufacturers, Units, Tax Types, Payment Methods, etc.).
+* **Inventory Restoration & Order Safeguard (`OrdersController.cs`)**: Cancelling or deleting orders automatically restores RAM stock (`RestoreStock`), logs audit vouchers (`InventoryTransactions`), and notifies POS terminals via SignalR.
+* **RBAC & Security**: Fine-grained Role-Based Access Control (`Permissions`, `Roles`, `UserRoles`), BCrypt password hashing, and Cookie/JWT authentication.
+* **Cyber-Cinematic HUD UI**: High-density military lab aesthetic featuring custom dark mode canvas (`#000000`), neon status indicators (`#00E5FF`, `#00FF66`, `#FFB000`, `#FF3333`), segmented progress bars, and scanline FX.
 
 ---
 
-## 📁 2. Repository Structure
-
-This codebase follows a modular corporate monorepo organization:
+## 📁 3. Repository Structure
 
 ```
 digipose/
 ├── backend/                  # Backend applications (.NET SDK 10.0)
 │   └── DigiPOSE/             # ASP.NET Core MVC & RESTful Web API project
-│       ├── Areas/            # Administrator Backoffice CMS MVC views and controllers
-│       ├── Controllers/      # MVC Web Controllers & API REST Endpoints (Controllers/Api/)
+│       ├── Areas/            # Administrator Backoffice CMS MVC views and controllers (30 Controllers)
+│       ├── Controllers/      # API REST Endpoints (Controllers/Api/ -> PosController, StorefrontController)
+│       ├── Hubs/             # Real-Time WebSocket Hubs (PosRealtimeHub)
 │       ├── Models/           # EF Core Entities, Database Context, and DTO Schemas
-│       ├── Services/         # Business logic & asynchronous MailKit service integration
-│       ├── Views/            # Razor Server-Side Web & POS layout templates
+│       ├── Services/         # Business logic, RAM inventory manager & VAT balancing engine
+│       │   └── Background/   # Hosted services (InventoryWarmupWorker, ResilientInvoiceWorker)
+│       ├── Views/            # Razor Server-Side Web & Cyber-HUD layout templates
 │       └── wwwroot/          # Hosted stylesheet frameworks and uploaded product media
 ├── frontend/                 # Client web application (Node 20+)
-│   ├── app/                  # Next.js 15 App Router pages, layout, and styling
-│   ├── components/           # Reusable functional user interface and structure components
+│   ├── app/                  # Next.js 15 App Router pages (/, /pos, /cart)
+│   ├── components/           # Reusable functional UI & Cyber-HUD components (CyberNavbar, CyberSidebar)
 │   ├── services/             # API client network fetchers and Axios endpoints
-│   ├── store/                # Zustand local client state management buffers
+│   ├── store/                # Zustand local client state management (cartStore, authStore)
 │   └── types/                # Strict TypeScript interface declarations
 ├── docs/                     # System deployment architecture & functional domain specifications
-└── asset/                    # System branding, documentation media, and static assets
+├── asset/                    # System branding, documentation media, and static assets
+└── demo/                     # Screenshots and UI demo media isolation
 ```
 
 ---
 
-## 💻 3. Technology Stack & Prerequisites
+## 💻 4. Technology Stack & Prerequisites
 
 ### Technology Stack
-* **Backend Runtime**: .NET 10.0 SDK, ASP.NET Core MVC, ASP.NET Core Web API.
+* **Backend Runtime**: .NET 10.0 SDK, ASP.NET Core MVC, ASP.NET Core Web API, SignalR.
 * **Database & ORM**: Microsoft SQL Server 2022+, Entity Framework Core 10, System.Linq.Dynamic.Core.
 * **Frontend Runtime**: Node.js v20+, Next.js 15, React 19, TypeScript, Tailwind CSS v4, PostCSS.
 * **State & Network**: Zustand, TanStack React Query, Axios.
 * **Security & Utility**: BCrypt.Net-Next (Hash Encryption), MailKit (SMTP Electronic Receipt Delivery), Stateless JWT Bearer & Secure HTTP-Only Cookie Authentication.
 
 ### Prerequisites & Required Tooling
-Ensure your local host has the following tooling pre-installed before initiating builds:
 * [.NET SDK 10.0+](https://dotnet.microsoft.com/download/dotnet/10.0)
 * [Node.js (v20.x or higher) & npm](https://nodejs.org/)
 * [Microsoft SQL Server (2019/2022) or SQL Server Developer/Express](https://www.microsoft.com/en-us/sql-server)
@@ -88,21 +120,15 @@ Ensure your local host has the following tooling pre-installed before initiating
 
 ---
 
-## 🚀 4. Build, Installation & Execution Guide
-
-Follow this systematic guide to configure, build, and run the enterprise system locally.
+## 🚀 5. Build, Installation & Execution Guide
 
 ### Step 1: Clone Repository & Configure Database Connection
-1. Clone the master project repository:
+1. Clone the project repository:
    ```bash
    git clone <repository-url> digipose
    cd digipose
    ```
-2. Navigate to the backend directory and open `appsettings.json`:
-   ```bash
-   cd backend/DigiPOSE
-   ```
-3. Update the `DefaultConnection` string to point to your SQL Server instance:
+2. Open `backend/DigiPOSE/appsettings.json` and configure `DefaultConnection`:
    ```json
    "ConnectionStrings": {
      "DefaultConnection": "Server=localhost;Database=DigiPOSE_DB;Trusted_Connection=True;TrustServerCertificate=True;"
@@ -110,67 +136,62 @@ Follow this systematic guide to configure, build, and run the enterprise system 
    ```
 
 ### Step 2: Install Backend Packages & Apply Database Schema
-1. Restore standard NuGet package libraries and dependencies:
+1. Restore NuGet packages:
    ```powershell
+   cd backend/DigiPOSE
    dotnet restore
    ```
-2. Verify project compilation without structural errors:
+2. Compile backend project:
    ```powershell
    dotnet build --nologo -v q
    ```
-3. Execute EF Core database migration to generate standard tables and initial seeds:
+3. Update EF Core database schema and seed initial data:
    ```powershell
    dotnet ef database update
    ```
-   *(Note: If EF CLI tooling is absent, install it via: `dotnet tool install --global dotnet-ef`)*
 
 ### Step 3: Start ASP.NET Core Backend & REST API Server
-Launch the backend application dev server:
+Launch the backend dev server:
 ```powershell
 dotnet run
 ```
-The server will initialize on port `5128` by default. You can verify network availability via:
+Default endpoint links:
 * **Administrator Backoffice CMS**: `http://localhost:5128/Administrator`
-* **Direct MVC Storefront Portal**: `http://localhost:5128/Storefront`
-* **RESTful Web API Gateway**: `http://localhost:5128/api/v1/Storefront/user-identity`
+* **POS REST API Gateway**: `http://localhost:5128/api/v1/pos/products`
+* **Storefront REST API Gateway**: `http://localhost:5128/api/v1/Storefront/user-identity`
 
 ---
 
 ### Step 4: Install & Launch Frontend Next.js Web Client
-Open a secondary external terminal window and navigate to the frontend directory:
-1. Navigate to the client directory:
+Open a separate terminal window:
+1. Navigate to frontend:
    ```powershell
-   cd d:\Study\ASP_Web_Technology\Project\digipose\frontend
+   cd frontend
    ```
-2. Install Node.js libraries and PostCSS / Tailwind CSS engine packages:
+2. Install packages:
    ```powershell
    npm install
    ```
-3. Start the Next.js development server:
+3. Launch development client:
    ```powershell
    npm run dev
    ```
-The frontend application will compile and initialize on port `3000`:
-* **Online E-Commerce & SaaS Storefront**: `http://localhost:3000/`
+Default client links:
+* **Online E-Commerce Storefront**: `http://localhost:3000/`
 * **In-Store Cashier POS Terminal**: `http://localhost:3000/pos`
-* **Shopping Cart & Checkout Buffer**: `http://localhost:3000/cart`
+* **Shopping Cart & Checkout**: `http://localhost:3000/cart`
 
 ---
 
-## 🏗 5. Production Build & Deployment Guide
+## 🏗 6. Production Build & Deployment Guide
 
-For enterprise staging and production environments, optimize binaries and static assets as follows:
-
-### Backend Production Publishing
-Compile optimized release assemblies and required runtime libraries:
+### Backend Release Publishing
 ```powershell
 cd backend/DigiPOSE
 dotnet publish -c Release -o ./publish
 ```
-Configure IIS, Kestrel, or Linux Docker containers to execute `DigiPOSE.dll` directly under strict Reverse Proxy and HTTPS redirection policies.
 
-### Frontend Static & SSR Bundle Generation
-Generate highly optimized production client bundles and statically optimized metadata pages:
+### Frontend Bundle Production Generation
 ```powershell
 cd frontend
 npm run build
@@ -179,7 +200,7 @@ npm run start --port 3000
 
 ---
 
-## 🔐 6. Enterprise Security Guardrails
-* **Secret Isolation**: Never commit active API keys, JWT secrets, or production database credentials into source control. Always maintain `.env` and `appsettings.Production.json` file entries inside `.gitignore`.
-* **Tenant Isolation**: Backend RESTful endpoints strictly enforce JWT token decoding and user identity validation to prevent IDOR (Insecure Direct Object Reference) anomalies.
-* **ACID Transaction Security**: Checkout executions (`StorefrontController.cs`) operate within explicit serializable database transactions (`BeginTransactionAsync`), guaranteeing rollback protection during system interruptions or inventory concurrency locking.
+## 🔐 7. Enterprise Security & Ledger Guardrails
+* **Secret Isolation**: All credentials, JWT secrets, and SMTP tokens are excluded via `.gitignore` and configured through environment variables.
+* **IDOR Prevention**: API endpoints validate decoded JWT tokens and enforce tenant boundaries.
+* **ACID Financial Transactions**: Payment checkouts use `BeginTransactionAsync` with explicit rollback handling to ensure zero data corruption.
