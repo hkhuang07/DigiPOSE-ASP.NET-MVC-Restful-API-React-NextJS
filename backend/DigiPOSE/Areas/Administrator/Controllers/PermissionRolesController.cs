@@ -75,6 +75,29 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.PermissionRoles
+                .Include(pr => pr.Role)
+                .Include(pr => pr.Permission).ThenInclude(p => p.Module)
+                .AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.Role != null && m.Role.RoleName != null && m.Role.RoleName.Contains(searchValue)) ||
+                    (m.Permission != null && m.Permission.PermissionName != null && m.Permission.PermissionName.Contains(searchValue)));
+            }
+            var list = await query.Select(m => new {
+                RoleName = m.Role != null ? m.Role.RoleName : "",
+                PermissionName = m.Permission != null ? m.Permission.PermissionName : "",
+                SystemModule = m.Permission != null && m.Permission.Module != null ? m.Permission.Module.ModuleName : "GLOBAL"
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "PermissionRoles", "Permission-Role Matrix Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"PermissionRoles_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         public IActionResult Create()
         {
             ViewBag.RoleId = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_context.Roles, "RoleId", "RoleName");

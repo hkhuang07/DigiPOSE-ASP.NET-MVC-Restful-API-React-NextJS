@@ -66,6 +66,26 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.ProductTypes.AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.TypeName != null && m.TypeName.Contains(searchValue)));
+            }
+            var list = await query.Select(m => new {
+                m.ProductTypeId,
+                m.TypeName,
+                m.IsInventoryTracked,
+                m.IsActive
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "ProductTypes", "Product Types Registry Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ProductTypes_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();

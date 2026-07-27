@@ -82,6 +82,36 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.Shifts
+                .Include(s => s.User)
+                .Include(s => s.Counter)
+                .Include(s => s.Status)
+                .AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.User != null && m.User.UserName != null && m.User.UserName.Contains(searchValue)) ||
+                    (m.Counter != null && m.Counter.CounterName != null && m.Counter.CounterName.Contains(searchValue)) ||
+                    (m.Status != null && m.Status.StatusName != null && m.Status.StatusName.Contains(searchValue)));
+            }
+            var list = await query.Select(m => new {
+                m.ShiftId,
+                UserName = m.User != null ? m.User.UserName : "",
+                CounterName = m.Counter != null ? m.Counter.CounterName : "",
+                StartTime = m.StartTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                EndTime = m.EndTime.HasValue ? m.EndTime.Value.ToString("yyyy-MM-dd HH:mm:ss") : "",
+                m.StartCash,
+                m.EndCash,
+                StatusName = m.Status != null ? m.Status.StatusName : ""
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "Shifts", "Shift Management Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Shifts_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();

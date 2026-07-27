@@ -68,6 +68,26 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.ShiftStatuses.AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.StatusName != null && m.StatusName.Contains(searchValue)) ||
+                    (m.Description != null && m.Description.Contains(searchValue)));
+            }
+            var list = await query.Select(m => new {
+                m.StatusId,
+                m.StatusName,
+                m.Description
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "ShiftStatuses", "Shift Statuses Registry Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ShiftStatuses_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();

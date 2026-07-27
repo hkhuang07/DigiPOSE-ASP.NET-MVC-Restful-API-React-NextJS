@@ -75,6 +75,28 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.Categories.AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.CategoryName != null && m.CategoryName.Contains(searchValue)) ||
+                    (m.Slug != null && m.Slug.Contains(searchValue)));
+            }
+            var list = await query.Select(m => new {
+                m.CategoryId,
+                m.CategoryName,
+                m.Slug,
+                m.Description,
+                IsActive = m.IsActive
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "Categories", "Category Directory Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Categories_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         // GET: Categories/Details/5
         public async Task<IActionResult> Details(int? id)
         {

@@ -70,6 +70,28 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.StockVoucherDetails.Include(d => d.StockVoucher).Include(d => d.Product).AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.Product != null && m.Product.ProductName != null && m.Product.ProductName.Contains(searchValue)) ||
+                    (m.StockVoucher != null && m.StockVoucher.VoucherType != null && m.StockVoucher.VoucherType.Contains(searchValue)));
+            }
+            var list = await query.Select(m => new {
+                m.VoucherDetailId,
+                m.VoucherId,
+                ProductName = m.Product != null ? m.Product.ProductName : "",
+                m.Quantity,
+                m.ActualPrice
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "StockVoucherDetails", "Stock Voucher Line Items Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"StockVoucherDetails_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();

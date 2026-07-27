@@ -69,6 +69,28 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.TaxTypes.AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.TaxName != null && m.TaxName.Contains(searchValue)) ||
+                    (m.TaxXmlCode != null && m.TaxXmlCode.Contains(searchValue)));
+            }
+            var list = await query.Select(m => new {
+                m.TaxTypeId,
+                m.TaxName,
+                m.TaxPercentage,
+                m.TaxXmlCode,
+                m.IsActive
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "TaxTypes", "Tax Types Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"TaxTypes_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();

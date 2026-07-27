@@ -481,6 +481,15 @@
     
     <script src="~/js/cyber-hud.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        $(document).on('click', '.btn-export-excel', function (e) {
+            e.preventDefault();
+            var baseUrl = $(this).attr('href');
+            var searchInput = $('.dataTables_filter input').val() || '';
+            var finalUrl = baseUrl + (baseUrl.indexOf('?') >= 0 ? '&' : '?') + 'searchValue=' + encodeURIComponent(searchInput);
+            window.location.href = finalUrl;
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

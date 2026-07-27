@@ -96,6 +96,41 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Manufacturer)
+                .Include(p => p.ProductType)
+                .Include(p => p.Unit)
+                .Include(p => p.TaxType)
+                .AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.ProductName != null && m.ProductName.Contains(searchValue)) ||
+                    (m.Barcode != null && m.Barcode.Contains(searchValue)) ||
+                    (m.Category != null && m.Category.CategoryName != null && m.Category.CategoryName.Contains(searchValue)) ||
+                    (m.Manufacturer != null && m.Manufacturer.ManufacturerName != null && m.Manufacturer.ManufacturerName.Contains(searchValue)));
+            }
+            var list = await query.Select(p => new {
+                p.ProductId,
+                p.ProductName,
+                Category = p.Category != null ? p.Category.CategoryName : "",
+                Type = p.ProductType != null ? p.ProductType.TypeName : "",
+                Unit = p.Unit != null ? p.Unit.UnitName : "",
+                Manufacturer = p.Manufacturer != null ? p.Manufacturer.ManufacturerName : "",
+                p.CostPrice,
+                p.BasePrice,
+                p.Barcode,
+                p.IsActive
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "Products", "Product Catalog Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Products_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();

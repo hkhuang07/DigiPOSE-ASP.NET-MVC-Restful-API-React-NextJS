@@ -69,6 +69,27 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.Permissions.Include(p => p.Module).AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.PermissionName != null && m.PermissionName.Contains(searchValue)) ||
+                    (m.Description != null && m.Description.Contains(searchValue)));
+            }
+            var list = await query.Select(m => new {
+                m.PermissionId,
+                m.PermissionName,
+                SystemModule = m.Module != null ? m.Module.ModuleName : "",
+                m.Description
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "Permissions", "Permission Management Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Permissions_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();

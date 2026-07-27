@@ -83,6 +83,37 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.Invoices
+                .Include(x => x.Order)
+                .Include(x => x.InvoiceStatus)
+                .Include(x => x.InvoiceType)
+                .AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.InvoiceNo != null && m.InvoiceNo.Contains(searchValue)) ||
+                    (m.Form != null && m.Form.Contains(searchValue)) ||
+                    (m.Series != null && m.Series.Contains(searchValue)) ||
+                    (m.InvoiceType != null && m.InvoiceType.TypeName != null && m.InvoiceType.TypeName.Contains(searchValue)) ||
+                    (m.InvoiceStatus != null && m.InvoiceStatus.StatusName != null && m.InvoiceStatus.StatusName.Contains(searchValue)));
+            }
+            var list = await query.Select(m => new {
+                m.InvoiceId,
+                m.InvoiceNo,
+                m.Form,
+                m.Series,
+                TypeName = m.InvoiceType != null ? m.InvoiceType.TypeName : "",
+                StatusName = m.InvoiceStatus != null ? m.InvoiceStatus.StatusName : "",
+                Date = m.Date.ToString("yyyy-MM-dd")
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "Invoices", "Financial Invoices Ledger Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Invoices_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();

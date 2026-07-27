@@ -80,6 +80,36 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.Branch)
+                .AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.UserName != null && m.UserName.Contains(searchValue)) ||
+                    (m.FullName != null && m.FullName.Contains(searchValue)) ||
+                    (m.Email != null && m.Email.Contains(searchValue)) ||
+                    (m.PhoneNumber != null && m.PhoneNumber.Contains(searchValue)));
+            }
+            var list = await query.Select(m => new {
+                m.UserId,
+                m.UserName,
+                m.FullName,
+                m.Email,
+                m.PhoneNumber,
+                RoleName = m.Role != null ? m.Role.RoleName : "",
+                BranchName = m.Branch != null ? m.Branch.BranchName : "",
+                m.IsActive
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "Users", "Personnel Directory Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Users_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();

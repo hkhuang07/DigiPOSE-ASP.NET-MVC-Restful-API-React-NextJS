@@ -75,6 +75,33 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.Branches.AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.BranchName != null && m.BranchName.Contains(searchValue)) ||
+                    (m.Address != null && m.Address.Contains(searchValue)) ||
+                    (m.ContactPhone != null && m.ContactPhone.Contains(searchValue)) ||
+                    (m.Email != null && m.Email.Contains(searchValue)));
+            }
+            var list = await query.Select(m => new {
+                m.BranchId,
+                m.BranchName,
+                m.Slug,
+                m.Address,
+                m.ContactPhone,
+                m.Email,
+                m.ManagerName,
+                IsActive = m.IsActive
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "Branches", "Branch Directory Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Branches_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         public async Task<IActionResult> Details(int? id) //Lấy thông tin chi tiết 1 sản phẩm
         {
             if (id == null) 

@@ -68,6 +68,27 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.ItemNatures.AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.NatureName != null && m.NatureName.Contains(searchValue)) ||
+                    (m.TaxXmlCode != null && m.TaxXmlCode.Contains(searchValue)));
+            }
+            var list = await query.Select(m => new {
+                m.NatureId,
+                m.NatureName,
+                m.TaxXmlCode,
+                IsActive = m.IsActive
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "ItemNatures", "Item Natures Registry Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ItemNatures_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();

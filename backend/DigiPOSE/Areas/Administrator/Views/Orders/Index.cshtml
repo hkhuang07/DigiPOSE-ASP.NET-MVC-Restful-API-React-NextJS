@@ -6,7 +6,10 @@
         <div class="cyber-panel-sub">[SALES MODULE] // TRANSACTION LEDGER</div>
     </div>
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <button type="button" class="btn-cyber-success btn-show-modal" data-url="@Url.Action("Create", "Orders")"><i class="fa-solid fa-plus me-1"></i> ADD NEW ORDER</button>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn-cyber-success btn-show-modal" data-url="@Url.Action("Create", "Orders")"><i class="fa-solid fa-plus me-1"></i> ADD NEW ORDER</button>
+            <a href="@Url.Action("ExportExcel", "Orders")" class="btn-cyber-info btn-export-excel" style="text-decoration:none;"><i class="fa-solid fa-file-excel me-1"></i> EXPORT EXCEL</a>
+        </div>
         <div style="font-family:'Roboto Mono'; font-size:0.85rem; color:#00E5FF; white-space:nowrap;">TOTAL RECORDS: <strong id="totalRecordsCount" style="color:#FFF; font-family:'VT323'; font-size:1.3rem;">--</strong></div>
     </div>
     <div class="table-responsive">

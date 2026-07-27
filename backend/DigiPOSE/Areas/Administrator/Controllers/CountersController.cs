@@ -69,6 +69,27 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.Counters.Include(c => c.Branch).AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.CounterName != null && m.CounterName.Contains(searchValue)) ||
+                    (m.Branch != null && m.Branch.BranchName != null && m.Branch.BranchName.Contains(searchValue)));
+            }
+            var list = await query.Select(m => new {
+                m.CounterId,
+                m.CounterName,
+                BranchName = m.Branch != null ? m.Branch.BranchName : "",
+                IsActive = m.IsActive
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "Counters", "Counter Registry Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Counters_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();

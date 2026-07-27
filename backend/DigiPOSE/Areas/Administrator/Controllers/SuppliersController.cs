@@ -73,6 +73,32 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.Suppliers.AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.SupplierName != null && m.SupplierName.Contains(searchValue)) ||
+                    (m.Phone != null && m.Phone.Contains(searchValue)) ||
+                    (m.Email != null && m.Email.Contains(searchValue)) ||
+                    (m.ContactPerson != null && m.ContactPerson.Contains(searchValue)));
+            }
+            var list = await query.Select(m => new {
+                m.SupplierId,
+                m.SupplierName,
+                m.Phone,
+                m.ContactPerson,
+                m.Email,
+                m.DebtBalance,
+                m.IsActive
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "Suppliers", "Supplier Directory Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Suppliers_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();

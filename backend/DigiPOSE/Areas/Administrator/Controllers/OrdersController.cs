@@ -92,6 +92,40 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.Orders
+                .Include(x => x.User)
+                .Include(x => x.Customer)
+                .Include(x => x.PaymentMethod)
+                .Include(x => x.OrderStatus)
+                .AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.InvoiceNumber != null && m.InvoiceNumber.Contains(searchValue)) ||
+                    (m.Customer != null && m.Customer.FullName != null && m.Customer.FullName.Contains(searchValue)) ||
+                    (m.User != null && m.User.UserName != null && m.User.UserName.Contains(searchValue)));
+            }
+            var list = await query.Select(m => new {
+                m.OrderId,
+                InvoiceNumber = m.InvoiceNumber ?? $"ORD-{m.OrderId:D6}",
+                Customer = m.SnapshotCustomerName != null ? m.SnapshotCustomerName : (m.Customer != null ? m.Customer.FullName : "Walk-in"),
+                Staff = m.User != null ? m.User.UserName : "",
+                Status = m.OrderStatus != null ? m.OrderStatus.StatusName : "",
+                Payment = m.PaymentMethod != null ? m.PaymentMethod.MethodName : "",
+                CreatedAt = m.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+                m.GrossAmount,
+                m.DiscountAmount,
+                m.TaxAmount,
+                m.TotalAmount
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "Orders", "Sales Orders Ledger Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Orders_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();

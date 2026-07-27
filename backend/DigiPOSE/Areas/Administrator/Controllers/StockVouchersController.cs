@@ -80,6 +80,35 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.StockVouchers
+                .Include(v => v.Branch)
+                .Include(v => v.User)
+                .Include(v => v.Supplier)
+                .AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.VoucherType != null && m.VoucherType.Contains(searchValue)) ||
+                    (m.Branch != null && m.Branch.BranchName != null && m.Branch.BranchName.Contains(searchValue)) ||
+                    (m.Supplier != null && m.Supplier.SupplierName != null && m.Supplier.SupplierName.Contains(searchValue)));
+            }
+            var list = await query.Select(m => new {
+                m.VoucherId,
+                m.VoucherType,
+                BranchName = m.Branch != null ? m.Branch.BranchName : "",
+                UserName = m.User != null ? m.User.UserName : "",
+                SupplierName = m.Supplier != null ? m.Supplier.SupplierName : "---",
+                m.TotalValue,
+                CreatedAt = m.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "StockVouchers", "Stock Vouchers Ledger Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"StockVouchers_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();

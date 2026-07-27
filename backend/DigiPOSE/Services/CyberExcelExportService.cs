@@ -76,7 +76,7 @@ namespace DigiPOSE.Services
                 headerCell.Style.Border.BottomBorder = XLBorderStyleValues.Medium;
                 headerCell.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
                 headerCell.Style.Border.RightBorder = XLBorderStyleValues.Thin;
-                headerCell.Style.Border.BorderColor = XLColor.FromHtml("#000000");
+                headerCell.Style.Border.OutsideBorderColor = XLColor.FromHtml("#000000");
             }
             worksheet.Row(startRow).Height = 24;
 

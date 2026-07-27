@@ -70,6 +70,28 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.ProductInventories.Include(p => p.Branch).Include(p => p.Product).AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.Product != null && m.Product.ProductName != null && m.Product.ProductName.Contains(searchValue)) ||
+                    (m.Branch != null && m.Branch.BranchName != null && m.Branch.BranchName.Contains(searchValue)));
+            }
+            var list = await query.Select(m => new {
+                m.InventoryId,
+                ProductName = m.Product != null ? m.Product.ProductName : "",
+                BranchName = m.Branch != null ? m.Branch.BranchName : "",
+                m.StockQuantity,
+                m.MinStockLevel
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "ProductInventories", "Product Inventory Levels Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ProductInventories_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();

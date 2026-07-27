@@ -75,6 +75,34 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.Customers.Include(c => c.CustomeType).AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.FullName != null && m.FullName.Contains(searchValue)) ||
+                    (m.CompanyName != null && m.CompanyName.Contains(searchValue)) ||
+                    (m.PhoneNumber != null && m.PhoneNumber.Contains(searchValue)) ||
+                    (m.Email != null && m.Email.Contains(searchValue)) ||
+                    (m.CustomeType != null && m.CustomeType.TypeName.Contains(searchValue)));
+            }
+            var list = await query.Select(m => new {
+                m.CustomerId,
+                m.FullName,
+                m.PhoneNumber,
+                m.Email,
+                m.RewardPoints,
+                m.DebtBalance,
+                CustomeTypeName = m.CustomeType != null ? m.CustomeType.TypeName : "",
+                IsActive = m.IsActive
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "Customers", "Customer Registry Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Customers_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();

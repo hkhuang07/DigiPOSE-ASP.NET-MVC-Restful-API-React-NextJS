@@ -89,6 +89,35 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportExcel(string? searchValue)
+        {
+            var query = _context.OrderDetails
+                .Include(od => od.Product)
+                .Include(od => od.ItemNature)
+                .Include(od => od.TaxType)
+                .AsQueryable();
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                query = query.Where(m =>
+                    (m.ProductName != null && m.ProductName.Contains(searchValue)) ||
+                    (m.Product != null && m.Product.ProductName != null && m.Product.ProductName.Contains(searchValue)));
+            }
+            var list = await query.Select(m => new {
+                m.OrderDetailId,
+                m.OrderId,
+                ProductName = m.Product != null ? m.Product.ProductName : m.ProductName,
+                m.Quantity,
+                m.UnitPrice,
+                m.DiscountAmount,
+                m.TaxAmount,
+                m.TotalAmount
+            }).ToListAsync();
+
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "OrderDetails", "Order Line Items Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"OrderDetails_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+        }
+
         // GET: OrderDetails/Details/5
         public async Task<IActionResult> Details(int? id)
         {
