@@ -66,22 +66,22 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // 3b. Profile Dropdown Caret Single Icon Toggle (Up when open, Down when closed)
+    // 3b. Profile Dropdown Caret Single Icon Toggle (Up when open, Down when closed via 180deg smooth rotation)
     const profileDropdownEl = document.getElementById("profileDropdown");
     const profileCaret = document.getElementById("hudProfileCaret");
     if (profileDropdownEl && profileCaret) {
         const parentDropdown = profileDropdownEl.closest('.dropdown');
         if (parentDropdown) {
             parentDropdown.addEventListener('show.bs.dropdown', function () {
-                profileCaret.className = "fa-solid fa-caret-up text-cyan ms-2";
+                profileCaret.style.transform = "rotate(180deg)";
             });
             parentDropdown.addEventListener('hide.bs.dropdown', function () {
-                profileCaret.className = "fa-solid fa-caret-down text-cyan ms-2";
+                profileCaret.style.transform = "rotate(0deg)";
             });
         }
     }
 
-    // 4. Live Telemetry Clock in Footer
+    // 4. Live Telemetry Clock & Real Network Latency Monitor in Footer
     const footerClock = document.getElementById("hudFooterClock");
     function updateClock() {
         if (!footerClock) return;
@@ -92,11 +92,37 @@ document.addEventListener("DOMContentLoaded", function () {
         const hours = String(now.getHours()).padStart(2, "0");
         const mins = String(now.getMinutes()).padStart(2, "0");
         const secs = String(now.getSeconds()).padStart(2, "0");
-        const ms = String(Math.floor(now.getMilliseconds() / 10)).padStart(2, "0");
+        const ms = String(now.getMilliseconds()).padStart(3, "0");
         footerClock.textContent = `${year}-${month}-${day} ${hours}:${mins}:${secs}.${ms} UTC+7`;
     }
     updateClock();
     setInterval(updateClock, 50);
+
+    const globalPingVal = document.getElementById("globalPingVal");
+    const globalStatusLabel = document.getElementById("globalStatusLabel");
+    const globalPingDot = document.getElementById("globalPingDot");
+    async function executeGlobalTelemetryPing() {
+        if (!globalPingVal || !globalStatusLabel) return;
+        const t0 = performance.now();
+        try {
+            const res = await fetch('/api/v1/POS/health/ping', { cache: 'no-store' });
+            const rtt = Math.round(performance.now() - t0);
+            globalPingVal.textContent = `${rtt}ms`;
+            globalPingVal.style.color = rtt < 15 ? '#00FF66' : rtt < 80 ? '#FFB000' : '#FF3333';
+            if (res.ok) {
+                globalStatusLabel.textContent = "ONLINE";
+                globalStatusLabel.style.color = "#00FF66";
+                if (globalPingDot) globalPingDot.style.background = "#00FF66";
+            }
+        } catch (e) {
+            globalStatusLabel.textContent = "OFFLINE [WIRE_ERR]";
+            globalStatusLabel.style.color = "#FF3333";
+            globalPingVal.textContent = "ERR";
+            if (globalPingDot) globalPingDot.style.background = "#FF3333";
+        }
+    }
+    executeGlobalTelemetryPing();
+    setInterval(executeGlobalTelemetryPing, 5000);
 
     // 5. Active Menu Highlight based on current URL path
     const currentPath = window.location.pathname.toLowerCase();

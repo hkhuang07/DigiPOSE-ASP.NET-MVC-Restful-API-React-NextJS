@@ -102,6 +102,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             var item = await _context.Products
                 .Include(p => p.Category).Include(p => p.ProductType)
                 .Include(p => p.Unit).Include(p => p.Manufacturer).Include(p => p.TaxType)
+                .Include(p => p.ItemNature)
                 .FirstOrDefaultAsync(m => m.ProductId == id);
             if (item == null) return NotFound();
             return PartialView("_DetailsPartial", item);
@@ -109,13 +110,17 @@ namespace DigiPOSE.Areas.Administrator.Controllers
 
         public IActionResult Create()
         {
-            PopulateDropdowns();
-            return PartialView("_CreateOrEditPartial", new Product());
+            var model = new Product { ItemNatureId = 1 };
+            PopulateDropdowns(model);
+            return PartialView("_CreateOrEditPartial", model);
         }
 
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Product model)
         {
+            if (model.ItemNatureId <= 0)
+                model.ItemNatureId = 1;
+
             if (string.IsNullOrWhiteSpace(model.Slug))
                 model.Slug = SlugHelper.GenerateSlug(model.ProductName);
             
@@ -264,6 +269,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         {
             ViewBag.CategoryId = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_context.Categories, "CategoryId", "CategoryName", model?.CategoryId);
             ViewBag.ProductTypeId = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_context.ProductTypes.Where(x => x.IsActive), "ProductTypeId", "TypeName", model?.ProductTypeId);
+            ViewBag.ItemNatureId = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_context.ItemNatures, "NatureId", "NatureName", model?.ItemNatureId ?? 1);
             ViewBag.UnitId = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_context.Units, "UnitId", "UnitName", model?.UnitId);
             ViewBag.ManufacturerId = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_context.Manufacturers.Where(x => x.IsActive), "ManufacturerId", "ManufacturerName", model?.ManufacturerId);
             ViewBag.TaxTypeId = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_context.TaxTypes.Where(x => x.IsActive), "TaxTypeId", "TaxName", model?.TaxTypeId);

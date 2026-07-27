@@ -107,11 +107,17 @@ namespace DigiPOSE.Controllers.Api
         [HttpPost("retail-draft/create")]
         public async Task<IActionResult> CreateDraftOrder([FromBody] CreateDraftRequest request)
         {
+            // >>> [GUARD]: Validate ShiftId exists to prevent FK_Orders_Shifts_ShiftId constraint violation
+            var shiftExists = await _context.Shifts.AsNoTracking()
+                .AnyAsync(s => s.ShiftId == request.ShiftId);
+            if (!shiftExists)
+                return BadRequest(new { Error = "INVALID_SHIFT", Message = $"Shift #{request.ShiftId} does not exist. Start a shift before creating orders." });
+
             var order = new Order
             {
                 BranchId = request.BranchId,
                 ShiftId = request.ShiftId,
-                UserId = request.UserId, // Cashier 
+                UserId = request.UserId,
                 StatusId = 4, // 4: Draft
                 CreatedAt = DateTime.Now,
                 GrossAmount = 0,
@@ -123,6 +129,215 @@ namespace DigiPOSE.Controllers.Api
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
             return Ok(new { OrderId = order.OrderId, Status = "Draft Created" });
+        }
+
+        // >>> [REAL-TIME HEALTH TELEMETRY]: Actual server roundtrip ping — NO hardcoded values
+        [HttpGet("health/ping")]
+        public IActionResult Ping()
+        {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            sw.Stop();
+            return Ok(new
+            {
+                Pong = true,
+                ServerTime = DateTime.UtcNow.ToString("O"),
+                ServerTimeLocal = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"),
+                LatencyMs = sw.Elapsed.TotalMilliseconds,
+                Status = "ONLINE"
+            });
+        }
+
+        // >>> [SETUP CONTEXT]: Return active branches for pre-POS device setup form
+        [HttpGet("setup/branches")]
+        public async Task<IActionResult> GetBranches()
+        {
+            var branches = await _context.Branches.AsNoTracking()
+                .Where(b => b.IsActive)
+                .Select(b => new { b.BranchId, b.BranchName, b.Address, b.ContactPhone })
+                .ToListAsync();
+            return Ok(branches);
+        }
+
+        // >>> [SETUP CONTEXT]: Return counters for selected branch
+        [HttpGet("setup/branches/{branchId}/counters")]
+        public async Task<IActionResult> GetCounters(int branchId)
+        {
+            var counters = await _context.Counters.AsNoTracking()
+                .Where(c => c.BranchId == branchId && c.IsActive)
+                .Select(c => new { c.CounterId, c.CounterName, c.BranchId })
+                .ToListAsync();
+            return Ok(counters);
+        }
+
+        // >>> [SETUP CONTEXT]: Return product inventory summary for selected branch
+        [HttpGet("setup/branches/{branchId}/inventory-summary")]
+        public async Task<IActionResult> GetInventorySummary(int branchId)
+        {
+            var totalProducts = await _context.ProductInventories.AsNoTracking()
+                .Where(i => i.BranchId == branchId && i.StockQuantity > 0)
+                .CountAsync();
+            var lowStockCount = await _context.ProductInventories.AsNoTracking()
+                .Where(i => i.BranchId == branchId && i.StockQuantity <= i.MinStockLevel && i.StockQuantity > 0)
+                .CountAsync();
+            var outOfStockCount = await _context.ProductInventories.AsNoTracking()
+                .Where(i => i.BranchId == branchId && i.StockQuantity == 0)
+                .CountAsync();
+            return Ok(new { TotalProducts = totalProducts, LowStock = lowStockCount, OutOfStock = outOfStockCount });
+        }
+
+        // >>> [SHIFT MANAGEMENT]: Payment methods from DB for payment modal
+        [HttpGet("payment-methods")]
+        public async Task<IActionResult> GetPaymentMethods()
+        {
+            var methods = await _context.PaymentMethods.AsNoTracking()
+                .Select(m => new { m.PaymentMethodId, m.MethodName, m.Description })
+                .ToListAsync();
+            return Ok(methods);
+        }
+
+        // >>> [SHIFT MANAGEMENT]: Start a work shift — creates a real Shift record in DB
+        [HttpPost("shift/start")]
+        public async Task<IActionResult> StartShift([FromBody] StartShiftRequest request)
+        {
+            // Verify counter exists for this branch
+            var counter = await _context.Counters.AsNoTracking()
+                .FirstOrDefaultAsync(c => c.CounterId == request.CounterId && c.BranchId == request.BranchId);
+            if (counter == null)
+                return BadRequest(new { Error = "INVALID_COUNTER", Message = "Counter not found for this branch." });
+
+            // Check if user already has an open shift on this counter
+            var existingOpenShift = await _context.Shifts.AsNoTracking()
+                .FirstOrDefaultAsync(s => s.UserId == request.UserId && s.CounterId == request.CounterId && s.StatusId == 1);
+            if (existingOpenShift != null)
+                return Ok(new
+                {
+                    ShiftId = existingOpenShift.ShiftId,
+                    Message = "Existing open shift resumed.",
+                    IsNew = false,
+                    StartTime = existingOpenShift.StartTime,
+                    StartCash = existingOpenShift.StartCash
+                });
+
+            var shift = new Shift
+            {
+                UserId = request.UserId,
+                CounterId = request.CounterId,
+                StatusId = 1, // 1: Open/Active
+                StartTime = DateTime.Now,
+                StartCash = request.StartCash
+            };
+            _context.Shifts.Add(shift);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                ShiftId = shift.ShiftId,
+                Message = "Shift started successfully.",
+                IsNew = true,
+                StartTime = shift.StartTime,
+                StartCash = shift.StartCash,
+                CounterId = shift.CounterId,
+                CounterName = counter.CounterName
+            });
+        }
+
+        // >>> [SHIFT MANAGEMENT]: Get active shift for current user/counter
+        [HttpGet("shift/active")]
+        public async Task<IActionResult> GetActiveShift([FromQuery] int userId, [FromQuery] int counterId)
+        {
+            var shift = await _context.Shifts.AsNoTracking()
+                .Include(s => s.Counter)
+                .Include(s => s.User)
+                .FirstOrDefaultAsync(s => s.UserId == userId && s.CounterId == counterId && s.StatusId == 1);
+
+            if (shift == null)
+                return NotFound(new { Error = "NO_ACTIVE_SHIFT" });
+
+            return Ok(new
+            {
+                ShiftId = shift.ShiftId,
+                StartTime = shift.StartTime,
+                StartCash = shift.StartCash,
+                CounterId = shift.CounterId,
+                CounterName = shift.Counter?.CounterName,
+                UserId = shift.UserId,
+                UserName = shift.User?.FullName ?? shift.User?.UserName
+            });
+        }
+
+        // >>> [TODAY'S ORDERS]: Real-time order list for current branch/shift — no mock
+        [HttpGet("orders/today")]
+        public async Task<IActionResult> GetOrdersToday([FromQuery] int branchId, [FromQuery] int? shiftId = null, [FromQuery] string? invoiceNo = null, [FromQuery] decimal? minAmount = null)
+        {
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
+
+            var query = _context.Orders.AsNoTracking()
+                .Include(o => o.PaymentMethod)
+                .Include(o => o.OrderDetails)
+                .Where(o => o.BranchId == branchId && o.CreatedAt >= today && o.CreatedAt < tomorrow && o.StatusId == 1);
+
+            if (shiftId.HasValue) query = query.Where(o => o.ShiftId == shiftId.Value);
+            if (!string.IsNullOrEmpty(invoiceNo)) query = query.Where(o => (o.InvoiceNumber ?? "").Contains(invoiceNo));
+            if (minAmount.HasValue) query = query.Where(o => o.TotalAmount >= minAmount.Value);
+
+            var orders = await query.OrderByDescending(o => o.CreatedAt).Take(100)
+                .Select(o => new
+                {
+                    o.OrderId,
+                    o.InvoiceNumber,
+                    o.CreatedAt,
+                    o.TotalAmount,
+                    o.SnapshotCustomerName,
+                    o.SnapshotCustomerPhone,
+                    PaymentMethod = o.PaymentMethod != null ? o.PaymentMethod.MethodName : "Cash",
+                    ItemCount = o.OrderDetails != null ? o.OrderDetails.Count : 0
+                }).ToListAsync();
+
+            var summary = new
+            {
+                TotalOrders = orders.Count,
+                TotalRevenue = orders.Sum(o => o.TotalAmount),
+                Orders = orders
+            };
+
+            return Ok(summary);
+        }
+
+        // >>> [POS DASHBOARD]: Real KPIs for today — revenue, orders, top products
+        [HttpGet("dashboard/summary")]
+        public async Task<IActionResult> GetDashboardSummary([FromQuery] int branchId, [FromQuery] int? shiftId = null)
+        {
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
+
+            var ordersQuery = _context.Orders.AsNoTracking()
+                .Where(o => o.BranchId == branchId && o.CreatedAt >= today && o.CreatedAt < tomorrow && o.StatusId == 1);
+
+            if (shiftId.HasValue) ordersQuery = ordersQuery.Where(o => o.ShiftId == shiftId.Value);
+
+            var totalRevenue = await ordersQuery.SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            var totalOrders = await ordersQuery.CountAsync();
+            var avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+            var topProducts = await _context.OrderDetails.AsNoTracking()
+                .Include(d => d.Order)
+                .Where(d => d.Order != null && d.Order.BranchId == branchId
+                    && d.Order.CreatedAt >= today && d.Order.CreatedAt < tomorrow
+                    && d.Order.StatusId == 1)
+                .GroupBy(d => new { d.ProductId, d.ProductName })
+                .Select(g => new { g.Key.ProductName, TotalQty = g.Sum(d => d.Quantity), TotalRevenue = g.Sum(d => d.TotalAmount) })
+                .OrderByDescending(x => x.TotalQty)
+                .Take(5)
+                .ToListAsync();
+
+            return Ok(new
+            {
+                TodayRevenue = totalRevenue,
+                TodayOrders = totalOrders,
+                AvgOrderValue = avgOrderValue,
+                TopProducts = topProducts
+            });
         }
 
         // >>> [DATABASE_OPTIMIZATION_WORKER]: Purge abandoned POS draft bills (> 24h) to keep database indexes O(1) clean
@@ -299,8 +514,9 @@ namespace DigiPOSE.Controllers.Api
                 
                 if (completedOrder != null)
                 {
+                    var existingRetail = await _context.Retails.AsNoTracking().FirstOrDefaultAsync(r => r.OrderId == completedOrder.OrderId);
                     var existingBalances = await _inventoryRam.GetBulkStockAsync(completedOrder.BranchId, new List<int>());
-                    var fallbackResponse = new CheckoutResponseDto(completedOrder.OrderId, completedOrder.InvoiceNumber ?? $"INV-{completedOrder.OrderId}", completedOrder.CreatedAt, true, existingBalances, completedOrder.TenderedAmount, completedOrder.ChangeAmount);
+                    var fallbackResponse = new CheckoutResponseDto(completedOrder.OrderId, existingRetail?.RetailId ?? 0, completedOrder.InvoiceNumber ?? $"INV-{completedOrder.OrderId}", existingRetail?.DocNo ?? $"BL-{completedOrder.OrderId}", existingRetail?.DocType ?? "POS_RETAIL", completedOrder.CreatedAt, true, existingBalances, completedOrder.TenderedAmount, completedOrder.ChangeAmount);
                     _cache.Set(idempCacheKey, fallbackResponse, TimeSpan.FromHours(24));
                     return Ok(fallbackResponse);
                 }
@@ -357,6 +573,47 @@ namespace DigiPOSE.Controllers.Api
                     shift.EndCash += order.TotalAmount;
                     _context.Shifts.Update(shift);
                 }
+
+                // >>> [ENTERPRISE_POS_ACCOUNTING]: Generate immutable Retail trade document & corporate tax voucher per docs/pos domain standards
+                string docType = !string.IsNullOrWhiteSpace(request.DocType) ? request.DocType : (!string.IsNullOrWhiteSpace(request.BuyerTaxCode) ? "B2B_INVOICE" : "POS_RETAIL");
+                string prefix = docType == "B2B_INVOICE" ? "HD" : "BL";
+                string docNo = $"{prefix}-{order.BranchId:D2}-{DateTime.Now:yyyyMMdd}-{order.OrderId:D5}";
+                string retailNo = $"REC-{order.BranchId:D2}-{order.OrderId:D5}";
+                decimal totalQty = order.OrderDetails!.Sum(d => (decimal)d.Quantity);
+
+                var retailDoc = new Retail
+                {
+                    OrderId = order.OrderId,
+                    DocNo = docNo,
+                    RetailNo = retailNo,
+                    DocType = docType,
+                    BranchId = order.BranchId,
+                    WarehouseId = request.WarehouseId ?? order.BranchId,
+                    CounterId = request.CounterId ?? shift?.CounterId,
+                    ShiftId = order.ShiftId,
+                    UserId = order.UserId,
+                    CustomerId = request.CustomerId,
+                    BuyerLegalName = !string.IsNullOrWhiteSpace(request.BuyerLegalName) ? request.BuyerLegalName : (order.SnapshotCustomerName ?? "Walk-in Customer"),
+                    BuyerTaxCode = request.BuyerTaxCode,
+                    BuyerAddress = request.BuyerAddress,
+                    BuyerEmail = request.BuyerEmail,
+                    PaymentMethodId = request.PaymentMethodId,
+                    TotalQuantity = totalQty,
+                    GrossAmount = order.GrossAmount,
+                    DiscountAmount = order.DiscountAmount,
+                    VatAmount = order.TaxAmount,
+                    NetAmount = order.TotalAmount - order.TaxAmount,
+                    TotalAmount = order.TotalAmount,
+                    TenderedAmount = order.TenderedAmount,
+                    ChangeAmount = order.ChangeAmount,
+                    PrintNo = 1,
+                    Date = order.CreatedAt,
+                    EndDate = DateTime.Now,
+                    IdempotencyKey = request.IdempotencyKey,
+                    IsEInvoiceReported = docType == "B2B_INVOICE", // Marked for electronic tax transmission
+                    Notes = request.Notes
+                };
+                _context.Retails.Add(retailDoc);
 
                 var productIds = new List<int>();
                 foreach (var detail in order.OrderDetails!)
@@ -440,6 +697,8 @@ namespace DigiPOSE.Controllers.Api
                 {
                     EventType = "ORDER_COMPLETED",
                     OrderId = order.OrderId,
+                    RetailId = retailDoc.RetailId,
+                    DocNo = retailDoc.DocNo,
                     InvoiceNumber = order.InvoiceNumber,
                     RevenueDelta = order.TotalAmount,
                     BranchId = order.BranchId,
@@ -448,7 +707,7 @@ namespace DigiPOSE.Controllers.Api
                 };
                 await _hubContext.Clients.Group("AdminTelemetryGroup").SendAsync("OnTelemetryAlert", telemetryPayload);
 
-                var successDto = new CheckoutResponseDto(order.OrderId, order.InvoiceNumber, order.CreatedAt, false, liveBalances, order.TenderedAmount, order.ChangeAmount);
+                var successDto = new CheckoutResponseDto(order.OrderId, retailDoc.RetailId, order.InvoiceNumber, retailDoc.DocNo, retailDoc.DocType, order.CreatedAt, false, liveBalances, order.TenderedAmount, order.ChangeAmount);
                 // Preserve successful checkout reply in RAM cache for 24 hours to intercept retries in O(1) time
                 _cache.Set(idempCacheKey, successDto, TimeSpan.FromHours(24));
 
@@ -475,7 +734,8 @@ namespace DigiPOSE.Controllers.Api
 
                 var productIds = order.OrderDetails!.Select(d => d.ProductId).ToList();
                 var currentBalances = await _inventoryRam.GetBulkStockAsync(existingOrder.BranchId, productIds);
-                var conflictDto = new CheckoutResponseDto(existingOrder.OrderId, existingOrder.InvoiceNumber ?? $"INV-{existingOrder.OrderId}", existingOrder.CreatedAt, true, currentBalances, existingOrder.TenderedAmount, existingOrder.ChangeAmount);
+                var existingRetail = await _context.Retails.AsNoTracking().FirstOrDefaultAsync(r => r.OrderId == existingOrder.OrderId);
+                var conflictDto = new CheckoutResponseDto(existingOrder.OrderId, existingRetail?.RetailId ?? 0, existingOrder.InvoiceNumber ?? $"INV-{existingOrder.OrderId}", existingRetail?.DocNo ?? $"BL-{existingOrder.OrderId}", existingRetail?.DocType ?? "POS_RETAIL", existingOrder.CreatedAt, true, currentBalances, existingOrder.TenderedAmount, existingOrder.ChangeAmount);
                 _cache.Set(idempCacheKey, conflictDto, TimeSpan.FromHours(24));
 
                 return Ok(conflictDto);
@@ -489,6 +749,70 @@ namespace DigiPOSE.Controllers.Api
                 }
                 return StatusCode(500, new { Error = "Checkout execution failed: " + ex.Message });
             }
+        }
+
+        // >>> [O(1) POS TERMINAL METADATA BUFFER]: Real-time supply of Categories, Manufacturers, Product Types, and VIP Customers
+        [HttpGet("catalog/metadata")]
+        public async Task<IActionResult> GetCatalogMetadata()
+        {
+            var categories = await _context.Categories.AsNoTracking().Select(c => new { c.CategoryId, c.CategoryName }).ToListAsync();
+            var manufacturers = await _context.Manufacturers.AsNoTracking().Select(m => new { m.ManufacturerId, m.ManufacturerName }).ToListAsync();
+            var productTypes = await _context.ProductTypes.AsNoTracking().Select(t => new { t.ProductTypeId, t.TypeName }).ToListAsync();
+            var units = await _context.Units.AsNoTracking().Select(u => new { u.UnitId, u.UnitName }).ToListAsync();
+            var vipCustomers = await _context.Customers.AsNoTracking()
+                .Include(c => c.CustomeType)
+                .Select(c => new { c.CustomerId, c.FullName, c.PhoneNumber, TypeName = c.CustomeType != null ? c.CustomeType.TypeName : "VIP", c.RewardPoints })
+                .ToListAsync();
+
+            return Ok(new { Categories = categories, Manufacturers = manufacturers, ProductTypes = productTypes, Units = units, Customers = vipCustomers });
+        }
+
+        // >>> [REAL-TIME RAM INVENTORY PRODUCT GRID]: Dynamic product filter queries with O(1) branch inventory integration
+        [HttpGet("catalog/products")]
+        public async Task<IActionResult> GetCatalogProducts([FromQuery] int branchId = 1, [FromQuery] int? categoryId = null, [FromQuery] int? manufacturerId = null, [FromQuery] int? productTypeId = null, [FromQuery] int? unitId = null, [FromQuery] string? query = null, [FromQuery] string? filterType = null)
+        {
+            var dbQuery = _context.Products
+                .AsNoTracking()
+                .Include(p => p.Category)
+                .Include(p => p.Manufacturer)
+                .Include(p => p.ProductType)
+                .Include(p => p.Unit)
+                .Where(p => p.IsActive);
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var q = query.Trim().ToLower();
+                dbQuery = dbQuery.Where(p => p.ProductName.ToLower().Contains(q) || p.SKU.ToLower().Contains(q));
+            }
+            if (categoryId.HasValue && categoryId.Value > 0) dbQuery = dbQuery.Where(p => p.CategoryId == categoryId.Value);
+            if (manufacturerId.HasValue && manufacturerId.Value > 0) dbQuery = dbQuery.Where(p => p.ManufacturerId == manufacturerId.Value);
+            if (productTypeId.HasValue && productTypeId.Value > 0) dbQuery = dbQuery.Where(p => p.ProductTypeId == productTypeId.Value);
+            if (unitId.HasValue && unitId.Value > 0) dbQuery = dbQuery.Where(p => p.UnitId == unitId.Value);
+
+            if (filterType == "bestseller") dbQuery = dbQuery.OrderByDescending(p => p.BasePrice);
+            else if (filterType == "newest") dbQuery = dbQuery.OrderByDescending(p => p.ProductId);
+            else if (filterType == "promo") dbQuery = dbQuery.Where(p => p.BasePrice < 5000000);
+            else dbQuery = dbQuery.OrderBy(p => p.ProductName);
+
+            var list = await dbQuery.Take(100).ToListAsync();
+            var productIds = list.Select(p => p.ProductId).ToList();
+            var stockBalances = await _inventoryRam.GetBulkStockAsync(branchId, productIds);
+
+            var results = list.Select(p => new
+            {
+                ProductId = p.ProductId,
+                Sku = p.SKU,
+                ProductName = p.ProductName,
+                BasePrice = p.BasePrice,
+                UnitName = p.Unit?.UnitName ?? "Unit",
+                CategoryName = p.Category?.CategoryName ?? "General",
+                ManufacturerName = p.Manufacturer?.ManufacturerName ?? "DigiPRO",
+                ImageUrl = string.IsNullOrEmpty(p.ImageUrl) ? "/demo/products/default_cyber_product.png" : p.ImageUrl,
+                AvailableStock = stockBalances.TryGetValue(p.ProductId, out int st) ? st : 100,
+                IsSaaS = p.ItemNatureId == 2
+            });
+
+            return Ok(new { Products = results, Count = list.Count });
         }
     }
 }

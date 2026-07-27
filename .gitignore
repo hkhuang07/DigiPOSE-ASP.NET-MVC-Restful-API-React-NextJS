@@ -49,6 +49,9 @@ backend/DigiPOSE/gg-app-password.jpg
 appsettings.Development.Secret.json
 gg-app-password.jpg
 ModelBuilderExtensions.cs
+docs/pos
+docs/store
+
 
 # ── Cryptographic Secrets & SSL Certificates ──
 *.pfx

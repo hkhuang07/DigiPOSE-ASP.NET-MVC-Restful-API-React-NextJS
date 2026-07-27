@@ -1,24 +1,16 @@
 @{
-    Layout = null; // Phase 6.1: Standalone High-Speed Cyber-HUD POS Terminal View
+    Layout = null;
 }
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DigiPOSE // TELEMETRY TERMINAL [PHASE 6.1]</title>
-    
-    <!-- Google Fonts: Orbitron, Rajdhani, Roboto Mono, VT323 -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Rajdhani:wght@600;700&family=Roboto+Mono:wght@500;700&family=VT323&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <title>DigiPOS - POS Center</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    
+    <link rel="stylesheet" href="~/lib/font-awesome/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@600;700&family=Roboto+Mono:wght@400;500;700&family=VT323&display=swap" rel="stylesheet" />
     <style>
-        /* ====================================================================
-           [UI/UX SPEC: CYBER-CINEMATIC HUD - PURE MEDICAL/MILITARY HUD]
-           ==================================================================== */
         :root {
             --true-black: #000000;
             --carbon-void: #0A0A0A;
@@ -26,653 +18,2461 @@
             --bio-emerald: #00FF66;
             --amber-warn: #FFB000;
             --crimson-danger: #FF3333;
+            --font-hdr: 'Orbitron', 'Rajdhani', sans-serif;
+            --font-data: 'VT323', 'Roboto Mono', monospace;
+            --sidebar-w: 200px;
+            --header-h: 48px;
+            --footer-h: 32px;
+            --register-w: 380px;
         }
 
-        body, html {
-            margin: 0;
-            padding: 0;
-            background-color: var(--true-black);
-            color: #EEEEEE;
-            font-family: 'Rajdhani', sans-serif;
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--true-black);
+            color: #EEE;
+            font-family: 'Roboto Mono', monospace;
             height: 100vh;
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
             user-select: none;
         }
 
-        /* Subtle Horizontal CRT Scanline Pattern */
+        /* CRT scanline overlay */
         body::before {
-            content: " ";
-            display: block;
-            position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            z-index: 999;
-            background-size: 100% 2px, 3px 100%;
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
             pointer-events: none;
-            opacity: 0.7;
+            z-index: 9999;
         }
 
-        .hud-grid {
-            display: grid;
-            grid-template-rows: 64px calc(100vh - 120px) 56px;
-            height: 100vh;
-        }
-
-        /* Top Header Strip */
-        .hud-header {
-            background-color: var(--carbon-void);
+        /* ======================================================
+           TOP HEADER
+        ====================================================== */
+        .pos-header {
+            height: var(--header-h);
+            background: var(--carbon-void);
             border-bottom: 1px solid var(--holo-cyan);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 24px;
-            filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.3));
+            padding: 0 12px;
+            box-shadow: 0 2px 20px rgba(0,229,255,0.2);
+            flex-shrink: 0;
+            z-index: 100;
         }
 
-        .hud-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.5rem;
+        .header-left { display: flex; align-items: center; gap: 10px; }
+
+        .btn-hamburger {
+            background: transparent;
+            border: 1px solid #333;
             color: var(--holo-cyan);
-            letter-spacing: 2px;
+            width: 34px; height: 34px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; cursor: pointer;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        .btn-hamburger:hover { border-color: var(--holo-cyan); background: rgba(0,229,255,0.1); }
+
+        .pos-brand {
+            font-family: var(--font-hdr);
+            font-size: 1rem;
+            font-weight: 900;
+            color: #FFF;
+            text-decoration: none;
+            letter-spacing: 1px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .pos-brand span { color: var(--holo-cyan); }
+
+        .header-right { display: flex; align-items: center; gap: 8px; }
+
+        /* Navbar icons — same style as main layout */
+        .hud-nav-icon-btn {
+            background: transparent;
+            border: 1px solid #333;
+            color: #CCC;
+            width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; border-radius: 0;
+            transition: all 0.15s;
+        }
+        .hud-nav-icon-btn:hover { border-color: var(--holo-cyan); color: var(--holo-cyan); }
+
+        .hud-profile-trigger {
+            display: flex; align-items: center; gap: 6px;
+            cursor: pointer; padding: 4px 8px;
+            border: 1px solid #333;
+            transition: all 0.15s;
+        }
+        .hud-profile-trigger:hover { border-color: var(--holo-cyan); }
+
+        .hud-avatar-box {
+            width: 28px; height: 28px;
+            background: linear-gradient(135deg, #00E5FF22, #00FF6622);
+            border: 1px solid var(--holo-cyan);
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-hdr); font-size: 0.65rem; font-weight: 700;
+            color: var(--holo-cyan);
+        }
+        .hud-user-name { font-family: 'Rajdhani', sans-serif; font-size: 0.85rem; font-weight: 700; color: #EEE; line-height: 1; }
+        .hud-user-role { font-size: 0.65rem; color: #888; line-height: 1; }
+
+        .dropdown-menu.pos-drop {
+            background: #0A0A0A;
+            border: 1px solid var(--holo-cyan);
+            border-radius: 0;
+            min-width: 180px;
+        }
+        .dropdown-item { color: #DDD; font-size: 0.85rem; padding: 8px 14px; }
+        .dropdown-item:hover { background: rgba(0,229,255,0.1); color: var(--holo-cyan); }
+        .dropdown-divider { border-color: #222; }
+
+        /* ======================================================
+           WORKSPACE: SIDEBAR + CATALOG + REGISTER
+        ====================================================== */
+        .pos-workspace {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* -------  LEFT SIDEBAR  ------- */
+        .pos-sidebar {
+            width: var(--sidebar-w);
+            background: #050505;
+            border-right: 1px solid #222;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            overflow-y: auto;
+            transition: transform 0.2s ease;
+        }
+
+        .sidebar-section-title {
+            font-family: var(--font-hdr);
+            font-size: 0.6rem;
+            color: #444;
             text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 10px 12px 4px;
+            border-bottom: 1px solid #111;
         }
 
-        .hud-reticle {
-            color: var(--bio-emerald);
+        .sidebar-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            color: #AAA;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.82rem;
+            border-left: 2px solid transparent;
+            transition: all 0.15s;
+        }
+        .sidebar-nav-item:hover, .sidebar-nav-item.active {
+            background: rgba(0,229,255,0.06);
+            color: var(--holo-cyan);
+            border-left-color: var(--holo-cyan);
+        }
+        .sidebar-nav-item i { width: 16px; text-align: center; font-size: 0.9rem; }
+
+        .sidebar-divider { height: 1px; background: #111; margin: 4px 0; }
+
+        /* Shift status badge in sidebar */
+        .shift-status-badge {
+            display: flex; align-items: center; gap: 6px;
+            padding: 6px 14px;
+            font-size: 0.72rem;
+            color: #666;
+        }
+        .shift-status-badge.active-shift { color: var(--bio-emerald); }
+        .shift-dot { width: 6px; height: 6px; border-radius: 50%; background: #333; flex-shrink: 0; }
+        .shift-dot.active { background: var(--bio-emerald); box-shadow: 0 0 6px var(--bio-emerald); }
+
+        /* -------  CENTER: CATALOG  ------- */
+        .pos-catalog {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #222;
+            min-width: 0;
+        }
+
+        /* Top toolbar row */
+        .catalog-toolbar {
+            background: #050505;
+            border-bottom: 1px solid #1A1A1A;
+            padding: 8px 12px;
+            flex-shrink: 0;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .pos-search-input {
+            flex: 1;
+            background: #000;
+            border: 1px solid #333;
+            border-right: none;
+            color: #EEE;
+            padding: 6px 12px;
             font-family: 'Roboto Mono', monospace;
+            font-size: 0.88rem;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .pos-search-input:focus { border-color: var(--holo-cyan); }
+
+        .btn-search {
+            background: var(--holo-cyan);
+            border: 1px solid var(--holo-cyan);
+            color: #000;
+            padding: 6px 14px;
+            font-family: var(--font-hdr);
+            font-size: 0.75rem;
             font-weight: 700;
-            margin-right: 8px;
+            cursor: pointer;
+            letter-spacing: 1px;
+        }
+        .btn-search:hover { background: #000; color: var(--holo-cyan); }
+
+        /* Filter tags row */
+        .filter-tags-row {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
         }
 
-        .hud-status-badge {
-            background: rgba(0, 255, 102, 0.1);
-            border: 1px solid var(--bio-emerald);
+        .btn-filter {
+            background: transparent;
+            border: 1px solid #2A2A2A;
+            color: #888;
+            padding: 3px 10px;
+            font-size: 0.75rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            transition: all 0.15s;
+        }
+        .btn-filter:hover, .btn-filter.active {
+            border-color: var(--holo-cyan);
+            color: var(--holo-cyan);
+            background: rgba(0,229,255,0.08);
+        }
+        .btn-filter.sort-tag:hover, .btn-filter.sort-tag.active {
+            border-color: var(--bio-emerald);
             color: var(--bio-emerald);
-            padding: 4px 12px;
-            font-family: 'Roboto Mono', monospace;
-            font-size: 0.85rem;
+            background: rgba(0,255,102,0.06);
+        }
+
+        /* Dynamic sub-filter strip */
+        .sub-filter-strip {
+            background: #030303;
+            border-bottom: 1px solid #111;
+            padding: 5px 12px;
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            min-height: 30px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .sub-filter-strip::-webkit-scrollbar { height: 3px; }
+        .sub-filter-strip::-webkit-scrollbar-thumb { background: #333; }
+
+        .btn-sub-tag {
+            background: #000;
+            border: 1px dashed #2A2A2A;
+            color: #888;
+            padding: 2px 8px;
+            font-size: 0.72rem;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.1s;
+        }
+        .btn-sub-tag:hover, .btn-sub-tag.active { border-color: var(--holo-cyan); color: var(--holo-cyan); background: rgba(0,229,255,0.06); }
+
+        /* Product grid */
+        .product-grid {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 8px;
+            align-content: flex-start;
+        }
+        .product-grid::-webkit-scrollbar { width: 4px; }
+        .product-grid::-webkit-scrollbar-thumb { background: #222; }
+
+        .prod-card {
+            background: #0A0A0A;
+            border: 1px solid #1E1E1E;
+            padding: 8px;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            height: 170px;
+            transition: all 0.15s;
+        }
+        .prod-card:hover {
+            border-color: var(--bio-emerald);
+            box-shadow: 0 0 10px rgba(0,255,102,0.2);
+            transform: translateY(-1px);
+        }
+        .prod-card.out-of-stock { opacity: 0.4; cursor: not-allowed; }
+
+        .prod-stock-chip {
+            position: absolute;
+            top: 5px; right: 5px;
+            font-size: 0.65rem;
+            font-weight: bold;
+            padding: 1px 5px;
+            border: 1px solid var(--holo-cyan);
+            color: var(--holo-cyan);
+            background: #000;
+        }
+        .prod-stock-chip.low { border-color: var(--amber-warn); color: var(--amber-warn); }
+        .prod-stock-chip.zero { border-color: var(--crimson-danger); color: var(--crimson-danger); }
+
+        .prod-sku { font-size: 0.65rem; color: var(--holo-cyan); font-weight: bold; margin-top: 4px; }
+        .prod-name {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #DDD;
+            flex: 1;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            margin-top: 4px;
+        }
+        .prod-price {
+            font-family: var(--font-data);
+            font-size: 1.2rem;
+            color: var(--bio-emerald);
+            font-weight: bold;
+            padding-top: 5px;
+            border-top: 1px solid #1A1A1A;
+        }
+        .prod-unit { font-size: 0.65rem; color: #666; }
+
+        /* -------  RIGHT: ORDER REGISTER  ------- */
+        .pos-register {
+            width: var(--register-w);
+            display: flex;
+            flex-direction: column;
+            background: #050505;
+            flex-shrink: 0;
+        }
+
+        /* Customer row */
+        .register-customer-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 10px;
+            background: #080808;
+            border-bottom: 1px solid #1A1A1A;
+            min-height: 36px;
+        }
+
+        .customer-info {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 0.78rem;
+        }
+        .customer-name { color: var(--holo-cyan); font-weight: bold; font-family: 'Rajdhani', sans-serif; }
+
+        .btn-select-customer {
+            background: transparent;
+            border: 1px dashed #333;
+            color: #666;
+            padding: 2px 8px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-select-customer:hover { border-color: var(--holo-cyan); color: var(--holo-cyan); }
+
+        /* Tabs: NOW / SHIPPING / TEMP */
+        .order-tabs {
+            display: flex;
+            border-bottom: 1px solid #1A1A1A;
+        }
+        .order-tab {
+            flex: 1;
+            padding: 7px 4px;
+            text-align: center;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #555;
+            cursor: pointer;
+            border-right: 1px solid #111;
+            background: #050505;
+            transition: all 0.15s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .order-tab:last-child { border-right: none; }
+        .order-tab:hover { color: #AAA; background: #0A0A0A; }
+        .order-tab.active { color: var(--holo-cyan); background: rgba(0,229,255,0.06); border-bottom: 2px solid var(--holo-cyan); }
+
+        /* Order # badge */
+        .order-no-badge {
+            font-family: var(--font-hdr);
+            font-size: 0.65rem;
+            color: #444;
+            padding: 3px 10px;
+            border-bottom: 1px solid #111;
+        }
+
+        /* Line items table */
+        .register-items {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .register-items::-webkit-scrollbar { width: 3px; }
+        .register-items::-webkit-scrollbar-thumb { background: #222; }
+
+        table.order-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+        }
+        .order-table thead th {
+            background: #080808;
+            color: #555;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 5px 8px;
+            border-bottom: 1px solid #1A1A1A;
+            position: sticky; top: 0;
+        }
+        .order-table tbody td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #0D0D0D;
+            vertical-align: middle;
+        }
+        .order-table tbody tr:hover td { background: rgba(0,229,255,0.03); }
+
+        .btn-void {
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
+            padding: 1px 5px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .btn-void:hover { border-color: var(--crimson-danger); color: var(--crimson-danger); }
+
+        /* Billing strip */
+        .billing-strip {
+            background: #030303;
+            border-top: 1px solid #1A1A1A;
+            padding: 8px 10px;
+        }
+
+        .billing-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2px 0;
+            font-size: 0.78rem;
+        }
+        .billing-row span:first-child { color: #666; }
+        .billing-row span:last-child { color: #CCC; font-weight: bold; }
+
+        .billing-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 5px 0 3px;
+            border-top: 1px solid #1A1A1A;
+            margin-top: 4px;
+        }
+        .total-label { font-family: var(--font-hdr); font-size: 0.75rem; color: #AAA; text-transform: uppercase; }
+        .total-amount { font-family: var(--font-data); font-size: 2rem; color: var(--bio-emerald); font-weight: bold; line-height: 1; }
+
+        /* Action buttons */
+        .register-actions {
+            padding: 8px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            border-top: 1px solid #1A1A1A;
+        }
+
+        .btn-action {
+            padding: 8px 6px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex; align-items: center; justify-content: center; gap: 5px;
+            transition: all 0.15s;
+        }
+        .btn-hold { background: transparent; border-color: var(--amber-warn); color: var(--amber-warn); }
+        .btn-hold:hover { background: rgba(255,176,0,0.1); }
+        .btn-ship { background: transparent; border-color: var(--holo-cyan); color: var(--holo-cyan); }
+        .btn-ship:hover { background: rgba(0,229,255,0.1); }
+        .btn-payment {
+            grid-column: span 2;
+            background: var(--bio-emerald);
+            border-color: var(--bio-emerald);
+            color: #000;
+            font-size: 0.95rem;
+            padding: 10px;
+            box-shadow: 0 0 15px rgba(0,255,102,0.3);
+        }
+        .btn-payment:hover { background: #000; color: var(--bio-emerald); box-shadow: 0 0 20px rgba(0,255,102,0.5); }
+        .btn-payment:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+        /* ======================================================
+           FOOTER TELEMETRY STRIP
+        ====================================================== */
+        .pos-footer {
+            height: var(--footer-h);
+            background: #030303;
+            border-top: 1px solid #1A1A1A;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            font-family: var(--font-data);
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .footer-left { display: flex; align-items: center; gap: 14px; }
+        .footer-status { display: flex; align-items: center; gap: 4px; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--bio-emerald); box-shadow: 0 0 6px var(--bio-emerald); }
+        .status-dot.offline { background: var(--crimson-danger); box-shadow: 0 0 6px var(--crimson-danger); }
+        .ping-val { color: var(--bio-emerald); font-weight: bold; }
+        .footer-meta { color: #444; }
+        .footer-clock { color: #BBB; }
+
+        /* ======================================================
+           SLIDE-OUT SIDEBAR MENU (hamburger)
+        ====================================================== */
+        .side-menu-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 200;
+            display: none;
+        }
+        .side-menu-overlay.show { display: block; }
+
+        .side-menu {
+            position: fixed;
+            top: 0; left: 0;
+            width: 240px; height: 100vh;
+            background: #060606;
+            border-right: 1px solid var(--holo-cyan);
+            box-shadow: 4px 0 30px rgba(0,229,255,0.15);
+            z-index: 201;
+            transform: translateX(-100%);
+            transition: transform 0.2s ease;
+            overflow-y: auto;
+        }
+        .side-menu.show { transform: translateX(0); }
+
+        .side-menu-header {
+            padding: 14px 16px 10px;
+            font-family: var(--font-hdr);
+            font-size: 0.75rem;
+            color: var(--holo-cyan);
+            border-bottom: 1px solid #111;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .side-menu-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 11px 18px;
+            color: #CCC;
+            cursor: pointer;
+            font-size: 0.88rem;
+            border-left: 2px solid transparent;
+            transition: all 0.15s;
+        }
+        .side-menu-item:hover { background: rgba(0,229,255,0.07); color: var(--holo-cyan); border-left-color: var(--holo-cyan); }
+        .side-menu-item i { width: 18px; text-align: center; }
+
+        .side-menu-divider { height: 1px; background: #111; margin: 6px 0; }
+        .side-menu-section { padding: 8px 18px 4px; font-size: 0.65rem; color: #444; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* ======================================================
+           MODALS (shared base)
+        ====================================================== */
+        .pos-modal-bg {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .pos-modal-bg.show { display: flex; }
+
+        .pos-modal {
+            background: #0A0A0A;
+            border: 1px solid var(--holo-cyan);
+            box-shadow: 0 0 40px rgba(0,229,255,0.2);
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .pos-modal::-webkit-scrollbar { width: 4px; }
+        .pos-modal::-webkit-scrollbar-thumb { background: #333; }
+
+        .modal-hdr {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid #1A1A1A;
+            background: #060606;
+        }
+        .modal-title {
+            font-family: var(--font-hdr);
+            font-size: 0.9rem;
+            color: var(--holo-cyan);
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-
-        .btn-exit-hud {
-            border: 1px solid var(--crimson-danger);
-            background: rgba(255, 51, 51, 0.1);
-            color: var(--crimson-danger);
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.8rem;
-            padding: 6px 16px;
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-        .btn-exit-hud:hover {
-            background: var(--crimson-danger);
-            color: var(--true-black);
-            filter: drop-shadow(0 0 8px var(--crimson-danger));
-        }
-
-        /* Main Workspace Asymmetric Grid */
-        .hud-workspace {
-            display: grid;
-            grid-template-columns: 1.6fr 1fr;
-            gap: 12px;
-            padding: 12px 16px;
-        }
-
-        .hud-panel {
-            background-color: var(--carbon-void);
-            border: 1px solid var(--holo-cyan);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            padding: 16px;
-            backdrop-filter: blur(12px);
-        }
-
-        /* Technical Markers at Corners */
-        .hud-panel::before { content: "+"; position: absolute; top: -8px; left: -6px; color: var(--holo-cyan); font-family: monospace; font-size: 14px; font-weight: bold; }
-        .hud-panel::after { content: "+"; position: absolute; bottom: -8px; right: -6px; color: var(--holo-cyan); font-family: monospace; font-size: 14px; font-weight: bold; }
-
-        .panel-heading {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.1rem;
-            color: var(--holo-cyan);
-            border-bottom: 1px solid rgba(0, 229, 255, 0.2);
-            padding-bottom: 8px;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        /* Scanner Barcode Input */
-        .scanner-input-group {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        .scanner-input {
-            flex: 1;
-            background-color: var(--true-black);
-            border: 1px solid var(--bio-emerald);
-            color: var(--bio-emerald);
-            font-family: 'VT323', monospace;
-            font-size: 2rem;
-            padding: 4px 16px;
-            outline: none;
-            text-transform: uppercase;
-        }
-        .scanner-input::placeholder { color: rgba(0, 255, 102, 0.4); }
-        .scanner-input:focus {
-            filter: drop-shadow(0 0 8px rgba(0, 255, 102, 0.6));
-        }
-
-        .btn-scan {
-            background-color: var(--bio-emerald);
-            color: var(--true-black);
-            border: none;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 800;
-            padding: 0 24px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-scan:hover { filter: drop-shadow(0 0 10px var(--bio-emerald)); }
-
-        /* Items Table */
-        .items-container {
-            flex: 1;
-            overflow-y: auto;
-            border: 1px solid rgba(0, 229, 255, 0.2);
-        }
-        .hud-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .hud-table th {
-            background-color: var(--true-black);
-            color: var(--holo-cyan);
-            font-family: 'Roboto Mono', monospace;
-            padding: 8px 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--holo-cyan);
-            font-size: 0.9rem;
-        }
-        .hud-table td {
-            padding: 10px 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            font-family: 'Roboto Mono', monospace;
-            font-size: 1rem;
-        }
-        .hud-table tr:hover { background-color: rgba(0, 229, 255, 0.05); }
-
-        .btn-del {
+        .btn-close-modal {
             background: transparent;
-            border: 1px solid var(--crimson-danger);
-            color: var(--crimson-danger);
-            padding: 2px 8px;
-            font-size: 0.8rem;
-            cursor: pointer;
+            border: 1px solid #333;
+            color: #888;
+            width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 0.9rem;
+            transition: all 0.15s;
         }
-        .btn-del:hover { background: var(--crimson-danger); color: var(--true-black); }
+        .btn-close-modal:hover { border-color: var(--crimson-danger); color: var(--crimson-danger); }
 
-        /* Billing Stats Summary */
-        .billing-stat-row {
-            display: flex;
-            justify-content: space-between;
-            font-family: 'Roboto Mono', monospace;
-            font-size: 1.1rem;
-            margin-bottom: 8px;
-        }
-        .stat-total {
-            font-family: 'VT323', monospace;
-            font-size: 3.5rem;
-            color: var(--bio-emerald);
-            border-top: 1px solid var(--bio-emerald);
-            border-bottom: 1px solid var(--bio-emerald);
-            padding: 8px 0;
-            margin-top: 12px;
-            text-align: right;
-            filter: drop-shadow(0 0 8px rgba(0, 255, 102, 0.4));
+        .modal-body { padding: 16px; }
+        .modal-footer {
+            padding: 10px 16px;
+            border-top: 1px solid #1A1A1A;
+            display: flex; gap: 8px; justify-content: flex-end;
         }
 
-        .btn-checkout {
-            background: var(--holo-cyan);
-            color: var(--true-black);
-            border: none;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.4rem;
-            font-weight: 900;
-            padding: 16px;
-            margin-top: 20px;
-            cursor: pointer;
-            width: 100%;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            transition: all 0.2s;
-        }
-        .btn-checkout:hover {
-            background: var(--bio-emerald);
-            filter: drop-shadow(0 0 16px var(--bio-emerald));
-        }
-
-        /* Footer Telemetry & Hotkeys Strip */
-        .hud-footer {
-            background-color: var(--carbon-void);
-            border-top: 1px solid var(--holo-cyan);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 24px;
+        /* Form controls inside modals */
+        .pos-input, .pos-select {
+            background: #000;
+            border: 1px solid #333;
+            color: #EEE;
+            padding: 7px 10px;
             font-family: 'Roboto Mono', monospace;
             font-size: 0.85rem;
-            color: #AAAAAA;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.15s;
+            -webkit-appearance: none;
         }
-        .hotkey-badge {
-            color: var(--holo-cyan);
-            border: 1px solid var(--holo-cyan);
-            padding: 2px 6px;
-            font-weight: bold;
-            margin-right: 4px;
+        .pos-input:focus, .pos-select:focus { border-color: var(--holo-cyan); }
+        .pos-select option { background: #111; }
+
+        .form-row { margin-bottom: 12px; }
+        .form-label { display: block; font-size: 0.72rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+
+        /* Buttons in modals */
+        .btn-pos-primary {
+            background: var(--holo-cyan); border: 1px solid var(--holo-cyan); color: #000;
+            padding: 8px 18px; font-family: var(--font-hdr); font-size: 0.78rem; font-weight: 700;
+            cursor: pointer; letter-spacing: 1px; text-transform: uppercase; transition: all 0.15s;
+        }
+        .btn-pos-primary:hover { background: #000; color: var(--holo-cyan); }
+        .btn-pos-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .btn-pos-success {
+            background: var(--bio-emerald); border: 1px solid var(--bio-emerald); color: #000;
+            padding: 8px 18px; font-family: var(--font-hdr); font-size: 0.78rem; font-weight: 700;
+            cursor: pointer; letter-spacing: 1px; text-transform: uppercase; transition: all 0.15s;
+        }
+        .btn-pos-success:hover { background: #000; color: var(--bio-emerald); }
+
+        .btn-pos-secondary {
+            background: transparent; border: 1px solid #444; color: #888;
+            padding: 8px 18px; font-family: 'Rajdhani', sans-serif; font-size: 0.78rem; font-weight: 700;
+            cursor: pointer; transition: all 0.15s;
+        }
+        .btn-pos-secondary:hover { border-color: #888; color: #CCC; }
+
+        /* ======================================================
+           START SHIFT MODAL
+        ====================================================== */
+        #modalStartShift .pos-modal { max-width: 600px; }
+
+        .shift-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .shift-info-item label { font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px; }
+        .shift-info-item span { font-family: var(--font-hdr); font-size: 0.85rem; color: #CCC; }
+
+        /* Cash denomination table */
+        .denom-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        .denom-table th { background: #060606; color: #555; font-size: 0.7rem; text-transform: uppercase; padding: 5px 8px; border-bottom: 1px solid #1A1A1A; text-align: right; }
+        .denom-table th:first-child { text-align: left; }
+        .denom-table td { padding: 5px 8px; border-bottom: 1px solid #0D0D0D; text-align: right; }
+        .denom-table td:first-child { text-align: left; color: #888; }
+        .denom-input { background: #000; border: 1px solid #222; color: #EEE; padding: 3px 6px; width: 60px; text-align: right; font-size: 0.8rem; outline: none; }
+        .denom-input:focus { border-color: var(--holo-cyan); }
+        .denom-total { color: var(--bio-emerald); font-family: var(--font-data); }
+
+        /* Unfinished orders list in shift modal */
+        .pending-order-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 6px 10px;
+            border: 1px solid #111;
+            margin-bottom: 4px;
+            font-size: 0.78rem;
+        }
+        .pending-order-item:hover { border-color: #333; }
+
+        /* ======================================================
+           PAYMENT MODAL
+        ====================================================== */
+        #modalPayment .pos-modal { max-width: 560px; }
+
+        .payment-method-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+        .payment-method-btn {
+            padding: 10px 6px;
+            background: #000;
+            border: 1px solid #222;
+            color: #888;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+        }
+        .payment-method-btn:hover { border-color: var(--holo-cyan); color: var(--holo-cyan); }
+        .payment-method-btn.selected { border-color: var(--bio-emerald); color: var(--bio-emerald); background: rgba(0,255,102,0.06); }
+        .payment-method-btn i { font-size: 1.2rem; }
+
+        .payment-summary-row {
+            display: flex; justify-content: space-between; align-items: baseline;
+            padding: 3px 0;
+            font-size: 0.82rem;
+        }
+        .payment-summary-row span:first-child { color: #666; }
+        .payment-total-row {
+            display: flex; justify-content: space-between; align-items: baseline;
+            padding: 8px 0 0;
+            border-top: 1px solid #1A1A1A;
+        }
+        .payment-total-label { font-family: var(--font-hdr); font-size: 0.78rem; color: #AAA; }
+        .payment-total-val { font-family: var(--font-data); font-size: 2.2rem; color: var(--bio-emerald); }
+
+        .change-highlight { font-family: var(--font-data); font-size: 1.5rem; color: var(--holo-cyan); font-weight: bold; }
+
+        /* ======================================================
+           PAYMENT SUCCESS MODAL
+        ====================================================== */
+        #modalPaySuccess .pos-modal { max-width: 400px; text-align: center; }
+
+        .success-icon { font-size: 3rem; color: var(--bio-emerald); margin: 16px 0 8px; }
+        .success-invoice { font-family: var(--font-hdr); font-size: 1rem; color: var(--holo-cyan); }
+        .success-total { font-family: var(--font-data); font-size: 2rem; color: var(--bio-emerald); }
+        .success-meta { font-size: 0.78rem; color: #666; margin: 8px 0; }
+
+        /* ======================================================
+           ORDERS TODAY MODAL
+        ====================================================== */
+        #modalOrdersToday .pos-modal { max-width: 700px; }
+
+        .orders-filter-row {
+            display: flex; gap: 8px; margin-bottom: 12px;
         }
 
-        /* Segmented Progress bar */
-        .segmented-progress {
-            font-family: 'Roboto Mono', monospace;
-            color: var(--amber-warn);
-            font-size: 1.2rem;
-            letter-spacing: 2px;
-            display: none;
-            margin-top: 12px;
+        .orders-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        .orders-table th { background: #060606; color: #555; padding: 6px 10px; font-size: 0.7rem; text-transform: uppercase; border-bottom: 1px solid #1A1A1A; }
+        .orders-table td { padding: 7px 10px; border-bottom: 1px solid #0D0D0D; }
+        .orders-table tr:hover td { background: rgba(0,229,255,0.03); cursor: pointer; }
+        .orders-summary-row { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.82rem; color: #666; }
+
+        /* ======================================================
+           POS DASHBOARD MODAL
+        ====================================================== */
+        #modalDashboard .pos-modal { max-width: 640px; }
+
+        .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+        .kpi-card {
+            background: #060606;
+            border: 1px solid #1A1A1A;
+            padding: 12px 10px;
+            text-align: center;
         }
+        .kpi-label { font-size: 0.65rem; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .kpi-value { font-family: var(--font-data); font-size: 1.8rem; color: var(--holo-cyan); }
+        .kpi-sub { font-size: 0.7rem; color: #444; margin-top: 2px; }
+
+        .top-products-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        .top-products-table th { background: #060606; color: #555; padding: 5px 8px; font-size: 0.7rem; text-transform: uppercase; border-bottom: 1px solid #1A1A1A; }
+        .top-products-table td { padding: 6px 8px; border-bottom: 1px solid #0D0D0D; }
+
+        /* ======================================================
+           VIP CUSTOMER MODAL
+        ====================================================== */
+        #modalVip .pos-modal { max-width: 680px; }
+
+        .vip-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .vip-list { border: 1px solid #1A1A1A; max-height: 350px; overflow-y: auto; }
+        .vip-list::-webkit-scrollbar { width: 3px; }
+        .vip-list-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #0D0D0D;
+            font-size: 0.82rem;
+        }
+        .vip-list-item:hover { background: rgba(0,229,255,0.06); color: var(--holo-cyan); }
+        .vip-list-item.selected { background: rgba(0,255,102,0.06); border-left: 2px solid var(--bio-emerald); }
+        .vip-list-item .vip-code { font-size: 0.7rem; color: #555; }
+        .vip-list-item .vip-name { font-weight: bold; color: #DDD; }
+        .vip-list-item .vip-phone { font-size: 0.72rem; color: #888; }
+
+        .vip-detail { border: 1px solid #1A1A1A; padding: 12px; }
+        .vip-detail-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #0D0D0D; font-size: 0.8rem; }
+        .vip-detail-row label { color: #555; }
+        .vip-detail-row span { color: #DDD; font-weight: bold; }
+        .reward-points { font-family: var(--font-data); font-size: 1.5rem; color: var(--amber-warn); }
+
+        /* ======================================================
+           SETUP GATE (Pre-POS Setup Form)
+        ====================================================== */
+        #setupGate {
+            position: fixed; inset: 0;
+            background: #000;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .setup-card {
+            background: #0A0A0A;
+            border: 1px solid var(--holo-cyan);
+            box-shadow: 0 0 60px rgba(0,229,255,0.15);
+            padding: 32px;
+            width: 90%;
+            max-width: 420px;
+        }
+        .setup-logo {
+            font-family: var(--font-hdr);
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #FFF;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        .setup-logo span { color: var(--holo-cyan); }
+        .setup-subtitle { text-align: center; font-size: 0.72rem; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 24px; }
+
+        .setup-step-indicator {
+            display: flex; gap: 6px; justify-content: center; margin-bottom: 20px;
+        }
+        .step-dot { width: 8px; height: 8px; border-radius: 50%; background: #222; transition: all 0.2s; }
+        .step-dot.active { background: var(--holo-cyan); box-shadow: 0 0 8px var(--holo-cyan); }
+        .step-dot.done { background: var(--bio-emerald); }
+
+        .inventory-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .inv-chip { padding: 3px 10px; border: 1px solid #222; font-size: 0.72rem; color: #666; }
+        .inv-chip.good { border-color: var(--bio-emerald); color: var(--bio-emerald); }
+        .inv-chip.warn { border-color: var(--amber-warn); color: var(--amber-warn); }
+        .inv-chip.bad { border-color: var(--crimson-danger); color: var(--crimson-danger); }
     </style>
 </head>
 <body>
-    <div class="hud-grid">
-        <!-- HEADER STRIP -->
-        <header class="hud-header">
-            <div class="hud-title">
-                <span class="hud-reticle">[ // ]</span> DIGIPOSE TELEMETRY TERMINAL // O(1) ENGINE
-            </div>
-            <div style="display: flex; align-items: center; gap: 16px;">
-                <span class="hud-status-badge"><i class="fa-solid fa-wifi me-1"></i> LAN SYNCHRONIZED: <strong id="signalrStatus">ONLINE</strong></span>
-                <span style="font-family:'Roboto Mono'; color:var(--holo-cyan);">BRANCH #1 // CA-01</span>
-                <a href="~/Administrator/Home/Index" class="btn-exit-hud"><i class="fa-solid fa-person-walking-arrow-right me-1"></i> EXIT TO CMS</a>
-            </div>
-        </header>
 
-        <!-- WORKSPACE GRIDS -->
-        <main class="hud-workspace">
-            <!-- LEFT PANEL: CART & ITEMS -->
-            <div class="hud-panel">
-                <div class="panel-heading">
-                    <span><span class="hud-reticle">+</span> ACTIVE RETAIL TRANSACTION // DRAFT BUFFER</span>
-                    <span id="orderIdLabel">ORDER #-- [IDLE]</span>
+    <!-- ====================================================
+         SETUP GATE — Counter selection only
+         Branch is determined from auth claim (server-side)
+    ==================================================== -->
+    <div id="setupGate">
+        <div class="setup-card">
+            <div class="setup-logo">Digi<span>POS</span></div>
+            <div class="setup-subtitle">POS Terminal Setup</div>
+
+            <div class="setup-step-indicator">
+                <div class="step-dot active" id="step1dot"></div>
+                <div class="step-dot" id="step2dot"></div>
+            </div>
+
+            <!-- Branch chip (auto from auth claim) -->
+            <div style="border:1px solid #1A1A1A; padding:8px 12px; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-code-branch" style="color:var(--holo-cyan);"></i>
+                <div>
+                    <div style="font-size:0.65rem; color:#555; text-transform:uppercase; letter-spacing:1px;">Assigned Branch</div>
+                    <div style="font-family:var(--font-hdr); font-size:0.9rem; color:var(--holo-cyan);">@(User.FindFirst("BranchName")?.Value ?? "N/A")</div>
+                </div>
+                <span style="margin-left:auto; font-size:0.65rem; color:#444; border:1px solid #222; padding:2px 6px;">ID: @(User.FindFirst("BranchId")?.Value ?? "--")</span>
+            </div>
+
+            <!-- Step 1: Counter selection -->
+            <div id="setupStep1">
+                <div class="form-row">
+                    <label class="form-label">Select Counter / Terminal</label>
+                    <select id="setupCounterSel" class="pos-select">
+                        <option value="">-- Loading counters... --</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label class="form-label">Branch Inventory Status</label>
+                    <div class="inventory-chips" id="inventoryChips">
+                        <span style="color:#444; font-size:0.72rem;">Loading...</span>
+                    </div>
+                </div>
+                <button class="btn-pos-primary" style="width:100%; margin-top:4px;" id="btnStep1Next" onclick="confirmSetup()" disabled>
+                    <i class="fa-solid fa-terminal me-1"></i>Enter POS
+                </button>
+            </div>
+
+            <!-- Step 2: Initializing -->
+            <div id="setupStep2" style="display:none; text-align:center;">
+                <div style="margin:16px 0;">
+                    <i class="fa-solid fa-gear fa-spin" style="font-size:2rem; color:var(--holo-cyan);"></i>
+                </div>
+                <div style="font-family:var(--font-hdr); color:#AAA; font-size:0.85rem;">Initializing POS Engine...</div>
+                <div id="setupProgressMsg" style="font-size:0.72rem; color:#555; margin-top:6px;">Loading catalog...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================
+         HAMBURGER SIDE MENU
+         Navigation ORDER mirrors main _Layout.cshtml MODULE structure
+    ==================================================== -->
+    <div class="side-menu-overlay" id="sideMenuOverlay" onclick="closeSideMenu()"></div>
+    <div class="side-menu" id="sideMenu">
+        <div class="side-menu-header">
+            <i class="fa-solid fa-terminal"></i>
+            OPERATOR MENU
+        </div>
+
+        <!-- POS Operations -->
+        <div class="side-menu-section">POS Operations</div>
+        <div class="side-menu-item" onclick="openDashboard(); closeSideMenu();">
+            <i class="fa-solid fa-chart-line" style="color:var(--holo-cyan);"></i>
+            Dashboard
+        </div>
+        <div class="side-menu-item" onclick="openStartShift(); closeSideMenu();">
+            <i class="fa-solid fa-clock-rotate-left" style="color:var(--amber-warn);"></i>
+            Start / Close Shift
+        </div>
+        <div class="side-menu-item" onclick="openVip(); closeSideMenu();">
+            <i class="fa-solid fa-id-badge" style="color:var(--bio-emerald);"></i>
+            VIP Customer
+        </div>
+        <div class="side-menu-item" onclick="openOrdersToday(); closeSideMenu();">
+            <i class="fa-solid fa-receipt" style="color:#CCC;"></i>
+            Orders Today
+        </div>
+
+        <div class="side-menu-divider"></div>
+        <!-- Catalog Filters -->
+        <div class="side-menu-section">Catalog</div>
+        <div class="side-menu-item" onclick="setPrimaryFilter('all',null); closeSideMenu();">
+            <i class="fa-solid fa-border-all"></i> All Products
+        </div>
+        <div class="side-menu-item" onclick="setPrimaryFilter('category',null); closeSideMenu();">
+            <i class="fa-solid fa-tags"></i> By Category
+        </div>
+        <div class="side-menu-item" onclick="setPrimaryFilter('manufacturer',null); closeSideMenu();">
+            <i class="fa-solid fa-industry"></i> By Manufacturer
+        </div>
+
+        @if (User.IsInRole("Super Admin") || User.IsInRole("Branch Manager"))
+        {
+            <div class="side-menu-divider"></div>
+            <!-- MODULE 4: Sales & Billing (Admin only) -->
+            <div class="side-menu-section">Admin: Sales</div>
+            <a class="side-menu-item" href="/Administrator/Orders/Index">
+                <i class="fa-solid fa-receipt"></i> Sales Orders
+            </a>
+            <a class="side-menu-item" href="/Administrator/Home/Index">
+                <i class="fa-solid fa-gauge-high"></i> Admin Panel
+            </a>
+        }
+
+        <div class="side-menu-divider"></div>
+        <!-- MODULE 5: Links & Terminals (matches main layout bottom section) -->
+        <div class="side-menu-section">Links &amp; Terminals</div>
+        <a class="side-menu-item" href="/Storefront/Index" style="color:var(--holo-cyan); border-left-color:var(--holo-cyan);">
+            <i class="fa-solid fa-cart-shopping" style="color:var(--holo-cyan);"></i> Online Storefront
+        </a>
+        <a class="side-menu-item" href="/Home/Index" style="color:#888;">
+            <i class="fa-solid fa-gauge-high"></i> HUD Dashboard
+        </a>
+    </div>
+
+    <!-- ====================================================
+         TOP HEADER
+    ==================================================== -->
+    <header class="pos-header">
+        <div class="header-left">
+            <button class="btn-hamburger" id="btnHamburger" title="Operator Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <a href="/Home/Index" class="pos-brand" title="Back to Main Dashboard">
+                <i class="fa-solid fa-cash-register" style="color:var(--bio-emerald); font-size:1rem;"></i>
+                Digi<span>POS</span>
+                <span style="font-size:0.6rem; color:#444; margin-left:2px;">POS CENTER</span>
+            </a>
+        </div>
+        <div class="header-right">
+            <!-- Language -->
+            <button class="hud-nav-icon-btn" id="langToggleBtn" title="Switch Language">
+                <i class="fa-solid fa-globe" style="font-size:0.9rem;"></i>
+            </button>
+            <!-- Dark/Light mode -->
+            <button class="hud-nav-icon-btn" id="themeToggleBtn" title="Toggle Theme">
+                <i class="fa-solid fa-sun" id="themeIcon" style="font-size:0.9rem;"></i>
+            </button>
+            <!-- Notifications -->
+            <div class="dropdown">
+                <button class="hud-nav-icon-btn" data-bs-toggle="dropdown" title="Notifications">
+                    <i class="fa-solid fa-bell" style="font-size:0.9rem;"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end pos-drop">
+                    <li><h6 class="dropdown-header" style="color:var(--holo-cyan); font-family:var(--font-hdr); font-size:0.7rem;">ALERTS</h6></li>
+                    <li><a class="dropdown-item" href="#"><i class="fa-solid fa-circle-info me-2 text-info"></i>POS Engine Ready</a></li>
+                </ul>
+            </div>
+            <!-- Profile -->
+            <div class="dropdown">
+                <div class="hud-profile-trigger dropdown-toggle" id="profileDropdown" data-bs-toggle="dropdown">
+                    <div class="hud-avatar-box">@(User.Identity?.Name != null && User.Identity.Name.Length >= 2 ? User.Identity.Name.Substring(0, 2).ToUpper() : "OP")</div>
+                    <div>
+                        <div class="hud-user-name">@(User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "Operator")</div>
+                        <div class="hud-user-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "POS Operator")</div>
+                    </div>
+                    <i class="fa-solid fa-caret-down" style="font-size:0.7rem; color:#666;"></i>
+                </div>
+                <ul class="dropdown-menu dropdown-menu-end pos-drop" aria-labelledby="profileDropdown">
+                    <li><a class="dropdown-item" href="/Home/Index"><i class="fa-solid fa-house me-2"></i>Main Dashboard</a></li>
+                    @if (User.IsInRole("Super Admin") || User.IsInRole("Branch Manager"))
+                    {
+                        <li><a class="dropdown-item" href="/Administrator/Home/Index"><i class="fa-solid fa-gauge-high me-2"></i>Admin Panel</a></li>
+                    }
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" asp-area="" asp-controller="Auth" asp-action="Logout"><i class="fa-solid fa-power-off me-2"></i>Log Out</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <!-- ====================================================
+         MAIN WORKSPACE
+    ==================================================== -->
+    <div class="pos-workspace">
+
+        <!-- LEFT SIDEBAR: Category quick-nav -->
+        <aside class="pos-sidebar" id="posSidebar">
+            <!-- Shift status -->
+            <div class="shift-status-badge" id="sidebarShiftStatus">
+                <div class="shift-dot" id="shiftDot"></div>
+                <span id="shiftStatusLabel">No Active Shift</span>
+            </div>
+            <div class="sidebar-divider"></div>
+
+            <div class="sidebar-section-title">Categories</div>
+            <div id="sidebarCategories">
+                <div class="sidebar-nav-item" onclick="setPrimaryFilter('all', null)">
+                    <i class="fa-solid fa-border-all"></i>
+                    <span>All Products</span>
+                </div>
+            </div>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-title">Sort By</div>
+            <div class="sidebar-nav-item" onclick="applySortFilter('newest', this)">
+                <i class="fa-solid fa-star" style="color:var(--bio-emerald);"></i> New Arrivals
+            </div>
+            <div class="sidebar-nav-item" onclick="applySortFilter('bestseller', this)">
+                <i class="fa-solid fa-fire" style="color:var(--amber-warn);"></i> Best Sellers
+            </div>
+            <div class="sidebar-nav-item" onclick="applySortFilter('promo', this)">
+                <i class="fa-solid fa-tag" style="color:var(--holo-cyan);"></i> Promotions
+            </div>
+        </aside>
+
+        <!-- CENTER: CATALOG -->
+        <section class="pos-catalog">
+            <!-- Toolbar -->
+            <div class="catalog-toolbar">
+                <div class="search-row">
+                    <span style="background:#000; border:1px solid #333; border-right:none; padding:0 10px; display:flex; align-items:center;">
+                        <i class="fa-solid fa-barcode" style="color:var(--holo-cyan);"></i>
+                    </span>
+                    <input type="text" id="posSearchInput" class="pos-search-input" placeholder="SKU / Barcode / Product Name  [F1]" autocomplete="off" />
+                    <button class="btn-search" onclick="executeSearch()">SEARCH</button>
+                </div>
+                <div class="filter-tags-row">
+                    <button class="btn-filter active" id="btnFltAll" onclick="setPrimaryFilter('all', this)">All</button>
+                    <button class="btn-filter" id="btnFltCate" onclick="setPrimaryFilter('category', this)">Category</button>
+                    <button class="btn-filter" id="btnFltManu" onclick="setPrimaryFilter('manufacturer', this)">Manufacturer</button>
+                    <button class="btn-filter" id="btnFltType" onclick="setPrimaryFilter('productType', this)">Type</button>
+                    <button class="btn-filter" id="btnFltUnit" onclick="setPrimaryFilter('unit', this)">Unit</button>
+                    <span style="border-left:1px solid #222; margin:0 4px; height:18px; align-self:center;"></span>
+                    <button class="btn-filter sort-tag" onclick="applySortFilter('newest', this)"><i class="fa-solid fa-star me-1"></i>New</button>
+                    <button class="btn-filter sort-tag" onclick="applySortFilter('bestseller', this)"><i class="fa-solid fa-fire me-1"></i>Best</button>
+                    <button class="btn-filter sort-tag" onclick="applySortFilter('promo', this)"><i class="fa-solid fa-tag me-1"></i>Promo</button>
+                </div>
+            </div>
+
+            <!-- Sub-filter strip -->
+            <div class="sub-filter-strip" id="subFilterStrip">
+                <span style="color:#333; font-size:0.7rem;">Select a filter above to narrow catalog</span>
+            </div>
+
+            <!-- Product grid -->
+            <div class="product-grid" id="productGrid">
+                <div style="grid-column:1/-1; text-align:center; padding:40px; color:#333;">
+                    <i class="fa-solid fa-gear fa-spin fa-2x" style="color:var(--holo-cyan);"></i>
+                    <div style="margin-top:10px; font-family:var(--font-hdr); font-size:0.8rem;">Loading catalog...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT: ORDER REGISTER -->
+        <section class="pos-register">
+            <!-- Customer row -->
+            <div class="register-customer-row">
+                <div class="customer-info">
+                    <i class="fa-solid fa-user" style="color:#444; font-size:0.85rem;"></i>
+                    <span class="customer-name" id="lblCustomer">WALK-IN CUSTOMER</span>
+                </div>
+                <button class="btn-select-customer" onclick="openVip()">
+                    <i class="fa-solid fa-magnifying-glass me-1"></i>VIP
+                </button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="order-tabs">
+                <div class="order-tab active" id="tabNow" onclick="switchTab(0)">
+                    <i class="fa-solid fa-cash-register me-1"></i>Now
+                </div>
+                <div class="order-tab" id="tabShip" onclick="switchTab(1)">
+                    <i class="fa-solid fa-truck me-1"></i>Shipping
+                </div>
+                <div class="order-tab" id="tabTemp" onclick="switchTab(2)">
+                    <i class="fa-solid fa-bookmark me-1"></i>Held
+                </div>
+            </div>
+
+            <!-- Order No -->
+            <div class="order-no-badge">
+                ORDER <span id="lblOrderNo" style="color:var(--holo-cyan);">---</span>
+            </div>
+
+            <!-- Line items -->
+            <div class="register-items">
+                <table class="order-table" id="orderTable">
+                    <thead>
+                        <tr>
+                            <th style="width:22%;">SKU</th>
+                            <th style="width:35%;">Product</th>
+                            <th style="width:12%; text-align:center;">Qty</th>
+                            <th style="width:22%; text-align:right;">Amount</th>
+                            <th style="width:9%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="orderTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align:center; padding:30px; color:#333;">
+                                <i class="fa-solid fa-crosshairs fa-2x" style="color:#1A1A1A; display:block; margin-bottom:8px;"></i>
+                                Awaiting product selection...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Billing totals -->
+            <div class="billing-strip">
+                <div class="billing-row">
+                    <span>Subtotal:</span>
+                    <span id="txtGross">0 ₫</span>
+                </div>
+                <div class="billing-row">
+                    <span>VAT:</span>
+                    <span id="txtVat" style="color:var(--holo-cyan);">0 ₫</span>
+                </div>
+                <div class="billing-row">
+                    <span>Discount:</span>
+                    <span id="txtDiscount" style="color:var(--amber-warn);">0 ₫</span>
+                </div>
+                <div class="billing-total-row">
+                    <span class="total-label">Total Amount</span>
+                    <span class="total-amount" id="txtTotal">0</span>
+                </div>
+                <div style="text-align:right; font-size:0.7rem; color:#444; margin-top:2px;">VND</div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="register-actions">
+                <button class="btn-action btn-hold" onclick="holdCurrentOrder()">
+                    <i class="fa-solid fa-pause"></i> Hold [F5]
+                </button>
+                <button class="btn-action btn-ship" onclick="markShippingOrder()">
+                    <i class="fa-solid fa-truck"></i> Ship [F6]
+                </button>
+                <button class="btn-action btn-payment" id="btnPayment" onclick="openPayment()" disabled>
+                    <i class="fa-solid fa-bolt me-2"></i> PAYMENT [F12]
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <!-- ====================================================
+         FOOTER TELEMETRY
+    ==================================================== -->
+    <footer class="pos-footer">
+        <div class="footer-left" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:0.75rem;">
+            <div class="footer-status" id="footerStatus">
+                <div class="status-dot" id="statusDot"></div>
+                <span style="color:#666; font-family:var(--font-mono); letter-spacing:0.5px;">SYSTEM STATUS:</span>
+                <strong id="statusLabel" style="color:var(--bio-emerald); margin-left:2px;">CHECKING...</strong>
+            </div>
+            <span style="color:#222;">|</span>
+            <div style="display:flex; align-items:center; gap:4px;">
+                <span style="color:#666; font-family:var(--font-mono); letter-spacing:0.5px;">LAN SYN:</span>
+                <strong class="ping-val" id="footerPing" style="color:var(--holo-cyan);">--ms</strong>
+            </div>
+            <span style="color:#222;">|</span>
+            <span class="footer-meta">BRANCH: <strong id="footerBranch" style="color:var(--holo-cyan);">--</strong></span>
+            <span style="color:#222;">|</span>
+            <span class="footer-meta">COUNTER: <strong id="footerCounter" style="color:#AAA;">--</strong></span>
+            <span style="color:#222;">|</span>
+            <span class="footer-meta">WAREHOUSE: <strong id="footerWarehouse" style="color:#AAA;">--</strong></span>
+            <span style="color:#222;">|</span>
+            <span class="footer-meta">SHIFT: <strong id="footerShift" style="color:var(--bio-emerald);">--</strong></span>
+        </div>
+        <div class="footer-clock" id="footerClock">2026-07-27 00:00:00.000 UTC+7</div>
+    </footer>
+
+    <!-- ====================================================
+         MODAL: START SHIFT
+    ==================================================== -->
+    <div class="pos-modal-bg" id="modalStartShift">
+        <div class="pos-modal" style="max-width:580px;">
+            <div class="modal-hdr">
+                <span class="modal-title"><i class="fa-solid fa-clock-rotate-left me-2"></i>Start Work Shift</span>
+                <button class="btn-close-modal" onclick="closeModal('modalStartShift')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="shift-info-grid">
+                    <div class="shift-info-item">
+                        <label>Start Time</label>
+                        <span id="shiftStartTime">--</span>
+                    </div>
+                    <div class="shift-info-item">
+                        <label>Cashier</label>
+                        <span>@(User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "Operator")</span>
+                    </div>
+                    <div class="shift-info-item">
+                        <label>Branch</label>
+                        <span id="shiftBranchLabel">--</span>
+                    </div>
+                    <div class="shift-info-item">
+                        <label>Counter</label>
+                        <span id="shiftCounterLabel">--</span>
+                    </div>
                 </div>
 
-                <div class="scanner-input-group">
-                    <input type="text" id="skuInput" class="scanner-input" placeholder="SCAN BARCODE / ENTER SKU [HOTKEY: F1]..." autocomplete="off" autofocus />
-                    <button id="btnScanAction" class="btn-scan"><i class="fa-solid fa-barcode me-2"></i> ADD ITEM [ENTER]</button>
-                </div>
-
-                <div class="items-container">
-                    <table class="hud-table" id="itemsTable">
+                <div class="form-row">
+                    <label class="form-label">Opening Cash Count</label>
+                    <table class="denom-table" id="denomTable">
                         <thead>
                             <tr>
-                                <th style="width: 15%;">SKU</th>
-                                <th style="width: 40%;">PRODUCT DESCRIPTION</th>
-                                <th style="width: 15%;">UNIT PRICE</th>
-                                <th style="width: 15%;">QTY</th>
-                                <th style="width: 15%;">TOTAL</th>
-                                <th style="width: 10%;">ACTION</th>
+                                <th>Denomination (₫)</th>
+                                <th>Count</th>
+                                <th>Total</th>
                             </tr>
                         </thead>
-                        <tbody id="itemsTableBody">
+                        <tbody id="denomBody"></tbody>
+                        <tfoot>
                             <tr>
-                                <td colspan="6" style="text-align: center; color: #777777; padding: 40px 0;">
-                                    <i class="fa-solid fa-crosshairs fa-2x mb-2" style="color:var(--holo-cyan); display:block;"></i>
-                                    Awaiting laser hardware input. Press <strong>[F1]</strong> to activate scanner focus.
-                                </td>
+                                <td colspan="2" style="text-align:right; color:#555; font-size:0.78rem; padding-top:6px;">OPENING CASH TOTAL:</td>
+                                <td style="text-align:right; padding-top:6px;"><span class="denom-total" id="denomTotal">0</span> ₫</td>
                             </tr>
-                        </tbody>
+                        </tfoot>
                     </table>
                 </div>
-            </div>
 
-            <!-- RIGHT PANEL: BILLING & TELEMETRY -->
-            <div class="hud-panel">
-                <div class="panel-heading">
-                    <span><span class="hud-reticle">_</span> FINANCIAL AUDIT & ACID CHECKOUT</span>
-                    <span>VND // CURRENCY</span>
-                </div>
-
-                <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
-                    <div>
-                        <div class="billing-stat-row">
-                            <span style="color:#AAAAAA;">GROSS SUB-TOTAL:</span>
-                            <span id="lblGross">0.00</span>
-                        </div>
-                        <div class="billing-stat-row">
-                            <span style="color:#AAAAAA;">VALUE ADDED TAX (VAT):</span>
-                            <span id="lblTax">0.00</span>
-                        </div>
-                        <div class="billing-stat-row">
-                            <span style="color:#AAAAAA;">DISCOUNT DEDUCTION:</span>
-                            <span id="lblDiscount" style="color:var(--amber-warn);">0.00</span>
-                        </div>
-
-                        <div class="stat-total" id="lblTotal">
-                            0.00 <span style="font-size:1.5rem; color:var(--holo-cyan);">VND</span>
-                        </div>
-
-                        <div class="segmented-progress" id="loadingProgress">
-                            >>> COMMITTING ACID TX: [██████░░░░] 60%
-                        </div>
-                        
-                        <div style="margin-top: 24px; padding: 12px; border: 1px dashed var(--holo-cyan); background: rgba(0, 229, 255, 0.03);">
-                            <div style="font-family:'Orbitron'; font-size:0.85rem; color:var(--holo-cyan); margin-bottom:8px;">
-                                <i class="fa-solid fa-layer-group me-1"></i> LAN RAM ENGINE INVENTORY ALERTS
-                            </div>
-                            <div id="stockAlertBox" style="font-family:'VT323'; font-size:1.3rem; color:var(--bio-emerald);">
-                                SYNC_STATUS: ZERO-DEADLOCK RAM BUFFER ACTIVE.
-                            </div>
-                        </div>
+                <div id="pendingOrdersSection" style="display:none;">
+                    <div class="form-label" style="margin-top:10px; color:var(--amber-warn);">
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i>Pending Unfinished Orders
                     </div>
+                    <div id="pendingOrdersList"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-pos-secondary" onclick="closeModal('modalStartShift')">Cancel</button>
+                <button class="btn-pos-success" onclick="confirmStartShift()">
+                    <i class="fa-solid fa-play me-1"></i>Confirm Start Shift
+                </button>
+            </div>
+        </div>
+    </div>
 
-                    <div>
-                        <button class="btn-checkout" id="btnCheckout">
-                            <i class="fa-solid fa-bolt me-2"></i> FLASH CHECKOUT [F12]
+    <!-- ====================================================
+         MODAL: PAYMENT
+    ==================================================== -->
+    <div class="pos-modal-bg" id="modalPayment">
+        <div class="pos-modal" style="max-width:520px;">
+            <div class="modal-hdr">
+                <span class="modal-title"><i class="fa-solid fa-credit-card me-2"></i>Payment</span>
+                <button class="btn-close-modal" onclick="closeModal('modalPayment')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <!-- Order Nature Selector (B2B vs Walk-in Retail) -->
+                <div class="form-row">
+                    <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>TRANSACTION NATURE</span>
+                        <span style="font-size:0.68rem; color:#666; font-family:var(--font-mono);">[PRO_BILLING_SPEC]</span>
+                    </label>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <button type="button" id="btnOrderTypeRetail" class="btn-pos-primary" onclick="toggleOrderType('retail')" style="padding:6px 10px; font-size:0.78rem;">
+                            <i class="fa-solid fa-person-walking me-1"></i>Walk-in Retail (B2C)
+                        </button>
+                        <button type="button" id="btnOrderTypeB2B" class="btn-pos-secondary" onclick="toggleOrderType('b2b')" style="padding:6px 10px; font-size:0.78rem;">
+                            <i class="fa-solid fa-building me-1"></i>Corporate (B2B)
                         </button>
                     </div>
                 </div>
-            </div>
-        </main>
 
-        <!-- FOOTER TELEMETRY STRIP -->
-        <footer class="hud-footer">
-            <div>
-                <span>HARDWARE HOTKEYS // </span>
-                <span class="hotkey-badge">F1</span> FOCUS SCANNER
-                <span class="hotkey-badge">ENTER</span> FAST ADD ITEM
-                <span class="hotkey-badge">F12</span> FLASH AUTHORIZE CHECKOUT
-                <span class="hotkey-badge">ESC</span> RESET / VOID
+                <!-- B2B Compliance Restriction Box -->
+                <div id="b2bComplianceWarn" style="display:none; background:#1A0A0A; border:1px solid var(--crimson-danger); padding:10px; margin-bottom:12px; border-left:4px solid var(--crimson-danger);">
+                    <div style="font-family:var(--font-mono); font-size:0.72rem; color:var(--crimson-danger); line-height:1.4;">
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                        <strong>>>> [CORPORATE_COMPLIANCE_RESTRICTION]:</strong> Corporate B2B billing strictly forbids anonymous walk-in transactions. Assign a verified Client Entity &amp; valid Tax ID to unlock payment execution.
+                    </div>
+                </div>
+
+                <!-- Customer selection -->
+                <div class="form-row">
+                    <label class="form-label">Customer Profile</label>
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <span style="flex:1; font-family:'Rajdhani',sans-serif; font-size:0.95rem; color:var(--holo-cyan); background:#0B0B0B; border:1px solid #1A1A1A; padding:6px 10px;" id="payCustomerName">Walk-in Customer</span>
+                        <button class="btn-pos-secondary" onclick="openVip();" style="padding:6px 12px; font-size:0.75rem;"><i class="fa-solid fa-users me-1"></i>Select VIP</button>
+                    </div>
+                </div>
+
+                <!-- B2B Corporate Invoice Credentials -->
+                <div id="b2bInvoiceBlock" style="display:none; background:#080D10; border:1px solid #102028; padding:10px; margin-bottom:12px;">
+                    <div style="font-family:var(--font-mono); font-size:0.68rem; color:var(--holo-cyan); text-transform:uppercase; margin-bottom:8px;">
+                        <i class="fa-solid fa-file-invoice me-1"></i>Mandatory e-Invoice Credentials (MST / Tax Code)
+                    </div>
+                    <div class="form-row" style="margin-bottom:8px;">
+                        <label class="form-label" style="font-size:0.72rem; color:#888;">Tax Code / MST (*)</label>
+                        <input type="text" id="payTaxCode" class="pos-input" placeholder="e.g., 0101245789-001..." style="padding:6px 8px; font-size:0.85rem;" oninput="validatePaymentState()" />
+                    </div>
+                    <div class="form-row" style="margin-bottom:0;">
+                        <label class="form-label" style="font-size:0.72rem; color:#888;">Company Legal Name &amp; Address (*)</label>
+                        <input type="text" id="payCompanyName" class="pos-input" placeholder="e.g., DigiPRO Tech Solutions Ltd, Hanoi..." style="padding:6px 8px; font-size:0.85rem;" oninput="validatePaymentState()" />
+                    </div>
+                </div>
+
+                <!-- Payment method -->
+                <div class="form-row">
+                    <label class="form-label">Payment Method</label>
+                    <div class="payment-method-grid" id="paymentMethodGrid">
+                        <div style="color:#333; font-size:0.8rem; padding:8px;">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- Order summary -->
+                <div style="background:#060606; border:1px solid #1A1A1A; padding:10px; margin-bottom:12px;">
+                    <div class="payment-summary-row"><span>Subtotal:</span><span id="paySub" style="color:#CCC;">0 ₫</span></div>
+                    <div class="payment-summary-row"><span>VAT:</span><span id="payVat" style="color:var(--holo-cyan);">0 ₫</span></div>
+                    <div class="payment-summary-row"><span>Discount:</span><span id="payDiscount" style="color:var(--amber-warn);">0 ₫</span></div>
+                    <div class="payment-total-row">
+                        <span class="payment-total-label">Total Amount</span>
+                        <span class="payment-total-val" id="payTotal">0</span>
+                    </div>
+                </div>
+
+                <!-- Tendered amount -->
+                <div class="form-row">
+                    <label class="form-label">Amount Received (₫)</label>
+                    <input type="number" id="tenderedInput" class="pos-input" placeholder="Enter amount..." oninput="calcChange()" />
+                </div>
+                <div class="billing-row" style="padding:6px 0;">
+                    <span style="color:#666;">Change:</span>
+                    <span class="change-highlight" id="changeDisplay">0</span>
+                </div>
+
+                <!-- Notes -->
+                <div class="form-row">
+                    <label class="form-label">Order Notes</label>
+                    <input type="text" id="orderNotesInput" class="pos-input" placeholder="Optional notes..." />
+                </div>
             </div>
-            <div>
-                <span style="color:var(--holo-cyan);">DIAGNOSTIC LATENCY: <strong style="color:var(--bio-emerald);">4.2ms [O(1)]</strong></span>
+            <div class="modal-footer">
+                <button class="btn-pos-secondary" onclick="closeModal('modalPayment')">Cancel</button>
+                <button class="btn-pos-success" id="btnConfirmPayment" onclick="confirmPayment()" disabled>
+                    <i class="fa-solid fa-bolt me-1"></i>Confirm Payment
+                </button>
             </div>
-        </footer>
+        </div>
+    </div>
+
+    <!-- ====================================================
+         MODAL: PAYMENT SUCCESS
+    ==================================================== -->
+    <div class="pos-modal-bg" id="modalPaySuccess">
+        <div class="pos-modal" style="max-width:380px; text-align:center;">
+            <div class="modal-body" style="padding:24px 20px;">
+                <div class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
+                <div style="font-family:var(--font-hdr); font-size:1rem; color:var(--bio-emerald); margin-bottom:6px;">Payment Successful</div>
+                <div class="success-invoice" id="successInvoice">INV-XXXXXXXX</div>
+                <div class="success-total" id="successTotal">0 ₫</div>
+                <div class="success-meta" id="successTime">--</div>
+                <div style="border:1px solid #1A1A1A; padding:10px; margin:12px 0; text-align:left;">
+                    <div class="billing-row"><span>Change Given:</span><span style="color:var(--holo-cyan);" id="successChange">0 ₫</span></div>
+                    <div class="billing-row"><span>Payment Method:</span><span id="successMethod">Cash</span></div>
+                </div>
+                <div style="display:flex; gap:8px; justify-content:center;">
+                    <button class="btn-pos-secondary" onclick="viewInvoice()"><i class="fa-solid fa-eye me-1"></i>View</button>
+                    <button class="btn-pos-secondary" onclick="printInvoice()"><i class="fa-solid fa-print me-1"></i>Print</button>
+                    <button class="btn-pos-success" onclick="closePaySuccess()"><i class="fa-solid fa-check me-1"></i>Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================
+         MODAL: ORDERS TODAY
+    ==================================================== -->
+    <div class="pos-modal-bg" id="modalOrdersToday">
+        <div class="pos-modal" style="max-width:700px;">
+            <div class="modal-hdr">
+                <span class="modal-title"><i class="fa-solid fa-receipt me-2"></i>Orders Today</span>
+                <button class="btn-close-modal" onclick="closeModal('modalOrdersToday')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="orders-filter-row">
+                    <input type="text" id="todayFilterInvoice" class="pos-input" style="flex:1;" placeholder="Invoice number..." />
+                    <button class="btn-pos-primary" onclick="loadOrdersToday()">
+                        <i class="fa-solid fa-magnifying-glass me-1"></i>Search
+                    </button>
+                    <button class="btn-pos-secondary" onclick="loadOrdersToday(true)">
+                        <i class="fa-solid fa-rotate me-1"></i>Refresh
+                    </button>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table class="orders-table" id="ordersTodayTable">
+                        <thead>
+                            <tr>
+                                <th>Invoice</th>
+                                <th>Time</th>
+                                <th>Customer</th>
+                                <th style="text-align:right;">Amount</th>
+                                <th>Method</th>
+                                <th style="text-align:center;">Items</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTodayBody">
+                            <tr><td colspan="6" style="text-align:center; color:#333; padding:20px;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="orders-summary-row" id="ordersTodaySummary"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================
+         MODAL: POS DASHBOARD
+    ==================================================== -->
+    <div class="pos-modal-bg" id="modalDashboard">
+        <div class="pos-modal" style="max-width:620px;">
+            <div class="modal-hdr">
+                <span class="modal-title"><i class="fa-solid fa-chart-line me-2"></i>POS Dashboard</span>
+                <button class="btn-close-modal" onclick="closeModal('modalDashboard')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Today Revenue</div>
+                        <div class="kpi-value" id="kpiRevenue">--</div>
+                        <div class="kpi-sub">₫</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Orders</div>
+                        <div class="kpi-value" id="kpiOrders" style="color:var(--bio-emerald);">--</div>
+                        <div class="kpi-sub">completed</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Avg. Order</div>
+                        <div class="kpi-value" id="kpiAvg" style="color:var(--amber-warn);">--</div>
+                        <div class="kpi-sub">₫</div>
+                    </div>
+                </div>
+                <div class="form-label" style="margin-bottom:8px; color:#555;">Top Products Today</div>
+                <table class="top-products-table">
+                    <thead>
+                        <tr><th>#</th><th>Product</th><th style="text-align:right;">Qty Sold</th><th style="text-align:right;">Revenue</th></tr>
+                    </thead>
+                    <tbody id="topProductsBody">
+                        <tr><td colspan="4" style="text-align:center; color:#333; padding:16px;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-pos-primary" onclick="loadDashboard()"><i class="fa-solid fa-rotate me-1"></i>Refresh</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================
+         MODAL: VIP CUSTOMER
+    ==================================================== -->
+    <div class="pos-modal-bg" id="modalVip">
+        <div class="pos-modal" style="max-width:660px;">
+            <div class="modal-hdr">
+                <span class="modal-title"><i class="fa-solid fa-id-badge me-2"></i>VIP Customer</span>
+                <button class="btn-close-modal" onclick="closeVip()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <input type="text" id="vipSearchInput" class="pos-input" placeholder="Search by name, phone, or code..." oninput="filterVipList()" />
+                </div>
+                <div class="vip-layout">
+                    <div class="vip-list" id="vipList">
+                        <div style="padding:20px; text-align:center; color:#333;">Loading customers...</div>
+                    </div>
+                    <div class="vip-detail" id="vipDetail">
+                        <div style="text-align:center; color:#333; padding:20px; font-size:0.8rem;">Select a customer to view details</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-pos-secondary" onclick="clearVipSelection()">Clear Selection</button>
+                <button class="btn-pos-secondary" onclick="closeVip()">Cancel</button>
+                <button class="btn-pos-success" id="btnSelectVip" onclick="confirmVipSelection()" disabled>
+                    <i class="fa-solid fa-check me-1"></i>Select Customer
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Phase 6.1 Cyber-HUD POS Engine (Zero-Overhead Vanilla JS + RESTful Async API)
-        let currentOrderId = null;
-        let currentBranchId = 1;
-        let isProcessing = false;
+        // ===================================================
+        // POS STATE — Branch scoped from auth claim (server-rendered)
+        // ===================================================
+        const POS_STATE = {
+            branchId: @(User.FindFirst("BranchId")?.Value ?? "null"),
+            branchName: '@(User.FindFirst("BranchName")?.Value?.Replace("'", "\\'") ?? "N/A")',
+            counterId: null, counterName: '',
+            shiftId: null, shiftStartTime: null,
+            userId: @(User.FindFirst("UserId")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0"),
+            activeTab: 0,
+            registers: [
+                { orderId: null, items: [], customerId: null, customerName: 'Walk-in Customer', orderType: 'retail' },
+                { orderId: null, items: [], customerId: null, customerName: 'Shipping Order', orderType: 'retail' },
+                { orderId: null, items: [], customerId: null, customerName: 'Held Draft', orderType: 'retail' }
+            ]
+        };
 
-        const skuInput = document.getElementById("skuInput");
-        const btnScanAction = document.getElementById("btnScanAction");
-        const itemsTableBody = document.getElementById("itemsTableBody");
-        const orderIdLabel = document.getElementById("orderIdLabel");
-        const lblGross = document.getElementById("lblGross");
-        const lblTax = document.getElementById("lblTax");
-        const lblDiscount = document.getElementById("lblDiscount");
-        const lblTotal = document.getElementById("lblTotal");
-        const btnCheckout = document.getElementById("btnCheckout");
-        const loadingProgress = document.getElementById("loadingProgress");
-        const stockAlertBox = document.getElementById("stockAlertBox");
-        const signalrStatus = document.getElementById("signalrStatus");
+        let catalogMeta = { categories: [], manufacturers: [], productTypes: [], units: [], customers: [] };
+        let selectedPaymentMethodId = null;
+        let selectedVipCustomer = null;
+        let lastCheckoutData = null;
 
-        // Initialize Draft Order on load
-        async function ensureActiveDraftOrder() {
-            if (currentOrderId !== null) return currentOrderId;
+        // ===================================================
+        // SETUP GATE — Branch from auth claim, only counter selection required
+        // ===================================================
+        async function initSetupGate() {
+            // Branch is already in POS_STATE from auth claim — just load counters + inventory
+            const cRes = await fetch(`/api/v1/POS/setup/branches/${POS_STATE.branchId}/counters`);
+            if (!cRes.ok) { alert('Failed to load counters. Check network.'); return; }
+            const counters = await cRes.json();
+            const cSel = document.getElementById('setupCounterSel');
+            cSel.innerHTML = counters.length
+                ? '<option value="">-- Select Counter --</option>'
+                : '<option value="">No counters available</option>';
+            counters.forEach(c => cSel.innerHTML += `<option value="${c.counterId}" data-name="${c.counterName}">${c.counterName}</option>`);
+            cSel.addEventListener('change', () => {
+                document.getElementById('btnStep1Next').disabled = !cSel.value;
+            });
+
+            // Load inventory summary for this branch
+            const iRes = await fetch(`/api/v1/POS/setup/branches/${POS_STATE.branchId}/inventory-summary`);
+            if (iRes.ok) {
+                const inv = await iRes.json();
+                document.getElementById('inventoryChips').innerHTML = `
+                    <span class="inv-chip good"><i class="fa-solid fa-box me-1"></i>${inv.totalProducts} In Stock</span>
+                    <span class="inv-chip warn"><i class="fa-solid fa-triangle-exclamation me-1"></i>${inv.lowStock} Low</span>
+                    <span class="inv-chip bad"><i class="fa-solid fa-xmark me-1"></i>${inv.outOfStock} Out</span>`;
+            }
+        }
+
+        async function confirmSetup() {
+            const cSel = document.getElementById('setupCounterSel');
+            if (!cSel.value) { alert('Please select a counter.'); return; }
+            POS_STATE.counterId = parseInt(cSel.value);
+            POS_STATE.counterName = cSel.options[cSel.selectedIndex].dataset.name;
+
+            document.getElementById('setupStep1').style.display = 'none';
+            document.getElementById('setupStep2').style.display = 'block';
+            document.getElementById('step1dot').className = 'step-dot done';
+            document.getElementById('step2dot').className = 'step-dot active';
+
+            // Persist counter to localStorage (branch always from auth cookie)
+            localStorage.setItem('posCounter', JSON.stringify({
+                counterId: POS_STATE.counterId, counterName: POS_STATE.counterName
+            }));
+
+            await enterPOS();
+        }
+
+        async function enterPOS() {
+            document.getElementById('setupProgressMsg').textContent = 'Loading catalog metadata...';
             try {
-                const res = await fetch("/api/v1/POS/retail-draft/create", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ BranchId: currentBranchId, ShiftId: 1, UserId: 1 })
+                const metaRes = await fetch('/api/v1/POS/catalog/metadata');
+                if (metaRes.ok) catalogMeta = await metaRes.json();
+            } catch (e) { console.warn('Metadata load failed'); }
+
+            document.getElementById('setupProgressMsg').textContent = 'Loading product catalog...';
+            await loadProductGrid();
+
+            document.getElementById('setupProgressMsg').textContent = 'Checking for active shift...';
+            await checkExistingShift();
+
+            document.getElementById('setupProgressMsg').textContent = 'Building category sidebar...';
+            buildSidebarCategories();
+
+            updateFooterContext();
+            startClock();
+            startPingMonitor();
+
+            document.getElementById('setupGate').style.display = 'none';
+            await loadPaymentMethods();
+        }
+
+        function updateFooterContext() {
+            document.getElementById('footerBranch').textContent = POS_STATE.branchName || '--';
+            document.getElementById('footerCounter').textContent = POS_STATE.counterName || '--';
+            document.getElementById('footerWarehouse').textContent = POS_STATE.branchId ? `WH-0${POS_STATE.branchId}` : '--';
+            document.getElementById('footerShift').textContent = POS_STATE.shiftId ? `#${POS_STATE.shiftId}` : 'Not Started';
+            document.getElementById('shiftBranchLabel').textContent = POS_STATE.branchName;
+            document.getElementById('shiftCounterLabel').textContent = POS_STATE.counterName;
+        }
+
+        // Restore counter from localStorage on refresh (branch always from auth cookie)
+        async function checkLocalSetup() {
+            const saved = localStorage.getItem('posCounter');
+            if (saved) {
+                try {
+                    const s = JSON.parse(saved);
+                    if (s.counterId) {
+                        POS_STATE.counterId = s.counterId;
+                        POS_STATE.counterName = s.counterName || '';
+                        document.getElementById('setupStep1').style.display = 'none';
+                        document.getElementById('setupStep2').style.display = 'block';
+                        document.getElementById('step1dot').className = 'step-dot done';
+                        document.getElementById('step2dot').className = 'step-dot active';
+                        await enterPOS();
+                        return;
+                    }
+                } catch (e) {}
+            }
+            initSetupGate();
+        }
+
+        // ===================================================
+        // SHIFT MANAGEMENT
+        // ===================================================
+        async function checkExistingShift() {
+            if (!POS_STATE.userId || !POS_STATE.counterId) return;
+            try {
+                const res = await fetch(`/api/v1/POS/shift/active?userId=${POS_STATE.userId}&counterId=${POS_STATE.counterId}`);
+                if (res.ok) {
+                    const shift = await res.json();
+                    POS_STATE.shiftId = shift.shiftId;
+                    POS_STATE.shiftStartTime = shift.startTime;
+                    updateShiftUI(true);
+                    updateFooterContext();
+                    await ensureActiveDraftOrder();
+                }
+            } catch (e) {}
+        }
+
+        function updateShiftUI(hasShift) {
+            const dot = document.getElementById('shiftDot');
+            const label = document.getElementById('shiftStatusLabel');
+            const ssBadge = document.getElementById('sidebarShiftStatus');
+            if (hasShift) {
+                dot.className = 'shift-dot active';
+                label.textContent = `Shift #${POS_STATE.shiftId} Active`;
+                label.style.color = 'var(--bio-emerald)';
+                ssBadge.className = 'shift-status-badge active-shift';
+                document.getElementById('btnPayment').disabled = false;
+            } else {
+                dot.className = 'shift-dot';
+                label.textContent = 'No Active Shift';
+                label.style.color = '';
+                ssBadge.className = 'shift-status-badge';
+                document.getElementById('btnPayment').disabled = true;
+            }
+        }
+
+        function openStartShift() {
+            document.getElementById('shiftStartTime').textContent = new Date().toLocaleString('en-GB');
+            document.getElementById('shiftBranchLabel').textContent = POS_STATE.branchName;
+            document.getElementById('shiftCounterLabel').textContent = POS_STATE.counterName;
+            buildDenomTable();
+            openModal('modalStartShift');
+        }
+
+        const DENOMS = [500000, 200000, 100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100];
+        function buildDenomTable() {
+            const tbody = document.getElementById('denomBody');
+            tbody.innerHTML = '';
+            DENOMS.forEach(d => {
+                tbody.innerHTML += `<tr>
+                    <td>${d.toLocaleString('en-US')} ₫</td>
+                    <td style="text-align:right;">
+                        <input type="number" class="denom-input" min="0" value="0" data-denom="${d}" oninput="recalcDenomTotal()" />
+                    </td>
+                    <td style="text-align:right;" id="denomRow_${d}" class="denom-total">0</td>
+                </tr>`;
+            });
+        }
+
+        function recalcDenomTotal() {
+            let total = 0;
+            document.querySelectorAll('.denom-input').forEach(inp => {
+                const cnt = parseInt(inp.value) || 0;
+                const denom = parseInt(inp.dataset.denom);
+                const rowTotal = cnt * denom;
+                document.getElementById(`denomRow_${denom}`).textContent = rowTotal.toLocaleString('en-US');
+                total += rowTotal;
+            });
+            document.getElementById('denomTotal').textContent = total.toLocaleString('en-US');
+        }
+
+        async function confirmStartShift() {
+            let startCash = 0;
+            document.querySelectorAll('.denom-input').forEach(inp => {
+                startCash += (parseInt(inp.value) || 0) * parseInt(inp.dataset.denom);
+            });
+
+            const payload = {
+                UserId: POS_STATE.userId,
+                BranchId: POS_STATE.branchId,
+                CounterId: POS_STATE.counterId,
+                StartCash: startCash
+            };
+
+            const res = await fetch('/api/v1/POS/shift/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                const shift = await res.json();
+                POS_STATE.shiftId = shift.shiftId;
+                POS_STATE.shiftStartTime = shift.startTime;
+                updateShiftUI(true);
+                updateFooterContext();
+                closeModal('modalStartShift');
+                await ensureActiveDraftOrder();
+            } else {
+                const err = await res.json();
+                alert(`Shift start failed: ${err.message || err.Message || 'Unknown error'}`);
+            }
+        }
+
+        // ===================================================
+        // PRODUCT CATALOG
+        // ===================================================
+        async function loadProductGrid(queryParams = '') {
+            const container = document.getElementById('productGrid');
+            container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#333;">
+                <i class="fa-solid fa-spinner fa-spin fa-2x" style="color:var(--holo-cyan);"></i>
+                <div style="margin-top:8px; font-size:0.78rem;">Querying inventory...</div></div>`;
+            try {
+                const branchParam = POS_STATE.branchId ? `branchId=${POS_STATE.branchId}` : 'branchId=1';
+                const res = await fetch(`/api/v1/POS/catalog/products?${branchParam}${queryParams}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    renderProductCards(data.products || data.Products || []);
+                    return;
+                }
+            } catch (e) {}
+            container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--crimson-danger);">
+                <i class="fa-solid fa-triangle-exclamation fa-2x"></i><div style="margin-top:8px;">Catalog unavailable</div></div>`;
+        }
+
+        function renderProductCards(products) {
+            const container = document.getElementById('productGrid');
+            if (!products || products.length === 0) {
+                container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#444;">No products found</div>`;
+                return;
+            }
+            container.innerHTML = '';
+            products.forEach(p => {
+                const stock = p.availableStock !== undefined ? p.availableStock : (p.AvailableStock || 0);
+                const stockClass = stock === 0 ? 'zero' : (stock <= 5 ? 'low' : '');
+                const card = document.createElement('div');
+                card.className = `prod-card${stock === 0 ? ' out-of-stock' : ''}`;
+                if (stock > 0) {
+                    card.onclick = () => addItemToOrder(p.productId || p.ProductId, p.sku || p.Sku, p.productName || p.ProductName, p.basePrice || p.BasePrice);
+                }
+                card.innerHTML = `
+                    <span class="prod-stock-chip ${stockClass}">${stock}</span>
+                    <div class="prod-sku">${p.sku || p.Sku}</div>
+                    <div class="prod-name">${p.productName || p.ProductName}</div>
+                    <div>
+                        <div class="prod-price">${Number(p.basePrice || p.BasePrice).toLocaleString('en-US')}</div>
+                        <div class="prod-unit">${p.unitName || p.UnitName || ''} &bull; ${p.categoryName || p.CategoryName || ''}</div>
+                    </div>`;
+                container.appendChild(card);
+            });
+        }
+
+        function buildSidebarCategories() {
+            const cats = catalogMeta.categories || catalogMeta.Categories || [];
+            const container = document.getElementById('sidebarCategories');
+            container.innerHTML = `<div class="sidebar-nav-item active" onclick="setPrimaryFilter('all', null)">
+                <i class="fa-solid fa-border-all"></i><span>All Products</span></div>`;
+            cats.forEach(c => {
+                container.innerHTML += `<div class="sidebar-nav-item" onclick="loadProductGrid('&categoryId=${c.categoryId || c.CategoryId}')">
+                    <i class="fa-solid fa-tag"></i><span>${c.categoryName || c.CategoryName}</span></div>`;
+            });
+        }
+
+        // Filters
+        function setPrimaryFilter(type, btn) {
+            document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            const strip = document.getElementById('subFilterStrip');
+            strip.innerHTML = '';
+
+            if (type === 'all') {
+                strip.innerHTML = `<span style="color:#333; font-size:0.7rem;">Showing all products</span>`;
+                loadProductGrid();
+                return;
+            }
+            let list = [], paramName = '';
+            if (type === 'category') { list = catalogMeta.categories || catalogMeta.Categories || []; paramName = 'categoryId'; }
+            else if (type === 'manufacturer') { list = catalogMeta.manufacturers || catalogMeta.Manufacturers || []; paramName = 'manufacturerId'; }
+            else if (type === 'productType') { list = catalogMeta.productTypes || catalogMeta.ProductTypes || []; paramName = 'productTypeId'; }
+            else if (type === 'unit') { list = catalogMeta.units || catalogMeta.Units || []; paramName = 'unitId'; }
+
+            if (list.length === 0) { strip.innerHTML = `<span style="color:var(--amber-warn); font-size:0.7rem;">No filter options available</span>`; return; }
+            list.forEach(item => {
+                const id = item.categoryId || item.CategoryId || item.manufacturerId || item.ManufacturerId || item.productTypeId || item.ProductTypeId || item.unitId || item.UnitId;
+                const name = item.categoryName || item.CategoryName || item.manufacturerName || item.ManufacturerName || item.typeName || item.TypeName || item.unitName || item.UnitName;
+                const tag = document.createElement('button');
+                tag.className = 'btn-sub-tag';
+                tag.textContent = name;
+                tag.onclick = () => {
+                    document.querySelectorAll('.btn-sub-tag').forEach(t => t.classList.remove('active'));
+                    tag.classList.add('active');
+                    loadProductGrid(`&${paramName}=${id}`);
+                };
+                strip.appendChild(tag);
+            });
+        }
+
+        function applySortFilter(sortType, btn) {
+            document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            loadProductGrid(`&filterType=${sortType}`);
+        }
+
+        function executeSearch() {
+            const q = document.getElementById('posSearchInput').value.trim();
+            loadProductGrid(`&query=${encodeURIComponent(q)}`);
+        }
+
+        // ===================================================
+        // DRAFT ORDER & CART MANAGEMENT
+        // ===================================================
+        async function ensureActiveDraftOrder() {
+            if (!POS_STATE.shiftId) {
+                document.getElementById('lblOrderNo').textContent = '---';
+                return null;
+            }
+            const reg = POS_STATE.registers[POS_STATE.activeTab];
+            if (reg.orderId) {
+                document.getElementById('lblOrderNo').textContent = `#${reg.orderId}`;
+                renderOrderTable();
+                return reg.orderId;
+            }
+            try {
+                const res = await fetch('/api/v1/POS/retail-draft/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ BranchId: POS_STATE.branchId, ShiftId: POS_STATE.shiftId, UserId: POS_STATE.userId })
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    currentOrderId = data.orderId;
-                    orderIdLabel.textContent = `ORDER #${currentOrderId} [ACTIVE]`;
-                    console.log(">>> [DRAFT_INITIALIZED]: Order #" + currentOrderId);
-                    return currentOrderId;
+                    reg.orderId = data.orderId || data.OrderId;
+                    document.getElementById('lblOrderNo').textContent = `#${reg.orderId}`;
+                    renderOrderTable();
+                    return reg.orderId;
                 }
-            } catch (err) {
-                console.error(">>> [DRAFT_ERROR]: Failed initiating SQL retail draft:", err);
-                stockAlertBox.style.color = "var(--crimson-danger)";
-                stockAlertBox.textContent = "ERR: SERVER UNREACHABLE / DRAFT FAILED.";
-            }
+                const err = await res.json();
+                if (err.error === 'INVALID_SHIFT') {
+                    document.getElementById('lblOrderNo').textContent = 'START SHIFT';
+                    document.getElementById('btnPayment').disabled = true;
+                }
+            } catch (e) {}
             return null;
         }
 
-        // Add or Increment Item via high-speed API
-        async function processScanItem() {
-            const sku = skuInput.value.trim();
-            if (!sku || isProcessing) return;
-            isProcessing = true;
-
+        async function addItemToOrder(productId, sku, name, unitPrice) {
             const orderId = await ensureActiveDraftOrder();
-            if (!orderId) {
-                isProcessing = false;
+            if (!orderId || !POS_STATE.shiftId) {
+                console.warn('>>> [OPERATOR_GATE_INTERCEPT]: Cashier must explicitly open work shift prior to processing retail sales.');
+                alert('>>> [MANDATORY_SHIFT_AUTHORITY]\nAn active work shift is strictly required before processing retail sales or modifying terminal inventory.\n\nOpening Shift Initiation Protocol...');
+                openStartShift();
                 return;
             }
-
             try {
-                // 1. O(1) Lookup
-                const lookupRes = await fetch(`/api/v1/POS/catalog/lookup?sku=${encodeURIComponent(sku)}&branchId=${currentBranchId}`);
-                if (!lookupRes.ok) {
-                    stockAlertBox.style.color = "var(--crimson-danger)";
-                    stockAlertBox.textContent = `[REJECTED]: SKU "${sku}" NOT REGULATED IN CATALOG.`;
-                    skuInput.value = "";
-                    isProcessing = false;
-                    return;
-                }
-                const productData = await lookupRes.json();
-
-                // 2. Add to Draft
-                const addRes = await fetch("/api/v1/POS/retail-draft/add-item", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        OrderId: orderId,
-                        ProductId: productData.productId,
-                        Quantity: 1,
-                        ClientScanId: crypto.randomUUID()
-                    })
-                });
-
-                if (addRes.ok) {
-                    const updateData = await addRes.json();
-                    renderTableItems(updateData.items);
-                    updateFinancials(updateData.totalAmount);
-                    skuInput.value = "";
-                    stockAlertBox.style.color = "var(--bio-emerald)";
-                    stockAlertBox.textContent = `[ADDED]: ${productData.productName} (${productData.unitName}) // STOCK: ${productData.availableStock}`;
-                } else {
-                    const errData = await addRes.json();
-                    stockAlertBox.style.color = "var(--crimson-danger)";
-                    stockAlertBox.textContent = `[STOCK_ALERT]: ${errData.error || 'CANNOT ADD ITEM'}`;
-                }
-            } catch (err) {
-                console.error(">>> [API_ERROR]:", err);
-            } finally {
-                isProcessing = false;
-                skuInput.focus();
-            }
-        }
-
-        async function removeLineItem(productId) {
-            if (!currentOrderId || isProcessing) return;
-            isProcessing = true;
-            try {
-                const res = await fetch("/api/v1/POS/retail-draft/remove-item", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ OrderId: currentOrderId, ProductId: productId })
+                const res = await fetch('/api/v1/POS/retail-draft/add-item', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ OrderId: orderId, ProductId: productId, Quantity: 1, ClientScanId: crypto.randomUUID() })
                 });
                 if (res.ok) {
-                    const data = await res.json();
-                    renderTableItems(data.items);
-                    updateFinancials(data.totalAmount);
-                    stockAlertBox.style.color = "var(--amber-warn)";
-                    stockAlertBox.textContent = `[ITEM_REMOVED]: Product ID #${productId} removed from session.`;
-                }
-            } catch (err) {
-                console.error(">>> [REMOVE_ERR]:", err);
-            } finally {
-                isProcessing = false;
-                skuInput.focus();
-            }
-        }
-
-        async function executeFlashCheckout() {
-            if (!currentOrderId || isProcessing || itemsTableBody.querySelectorAll(".line-item").length === 0) {
-                stockAlertBox.style.color = "var(--amber-warn)";
-                stockAlertBox.textContent = "[WARN]: DRAFT ORDER EMPTY. CANNOT AUTHORIZE ZERO TRANSACTION.";
-                return;
-            }
-            isProcessing = true;
-            loadingProgress.style.display = "block";
-            btnCheckout.disabled = true;
-
-            try {
-                const res = await fetch("/api/v1/POS/checkout/paid", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        OrderId: currentOrderId,
-                        PaymentMethodId: 1, // Cash / Bank Transfer Default
-                        CustomerId: null,
-                        IdempotencyKey: crypto.randomUUID()
-                    })
-                });
-
-                if (res.ok) {
-                    const result = await res.json();
-                    loadingProgress.textContent = ">>> COMMITTING ACID TX: [██████████] 100% SUCCESS!";
-                    loadingProgress.style.color = "var(--bio-emerald)";
-                    stockAlertBox.style.color = "var(--bio-emerald)";
-                    stockAlertBox.textContent = `[TRANSACTION AUTHORIZED]: INVOICE ${result.invoiceNumber} GENERATED & WORKER QUEUED.`;
-
-                    // Reset terminal after 1.5 seconds for next retail line
-                    setTimeout(() => {
-                        currentOrderId = null;
-                        renderTableItems([]);
-                        updateFinancials(0);
-                        orderIdLabel.textContent = "ORDER #-- [IDLE]";
-                        loadingProgress.style.display = "none";
-                        btnCheckout.disabled = false;
-                        ensureActiveDraftOrder();
-                        skuInput.focus();
-                    }, 1500);
+                    const update = await res.json();
+                    POS_STATE.registers[POS_STATE.activeTab].items = update.items || update.Items || [];
+                    renderOrderTable();
                 } else {
                     const err = await res.json();
-                    alert(">>> [ACID_TX_FAILURE]: " + (err.error || "Checkout error"));
-                    loadingProgress.style.display = "none";
-                    btnCheckout.disabled = false;
+                    if (err.error === 'OUT_OF_STOCK') alert(`Out of stock: ${err.productName}`);
+                    else alert(err.message || err.Message || 'Failed to add item');
                 }
-            } catch (err) {
-                console.error(">>> [CHECKOUT_FAULT]:", err);
-                loadingProgress.style.display = "none";
-                btnCheckout.disabled = false;
-            } finally {
-                isProcessing = false;
+            } catch (e) { console.error(e); }
+        }
+
+        async function removeItemFromOrder(productId) {
+            const reg = POS_STATE.registers[POS_STATE.activeTab];
+            if (!reg.orderId) return;
+            const res = await fetch('/api/v1/POS/retail-draft/remove-item', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ OrderId: reg.orderId, ProductId: productId })
+            });
+            if (res.ok) {
+                const update = await res.json();
+                reg.items = update.items || update.Items || [];
+                renderOrderTable();
             }
         }
 
-        function renderTableItems(items) {
-            if (!items || items.length === 0) {
-                itemsTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="6" style="text-align: center; color: #777777; padding: 40px 0;">
-                            <i class="fa-solid fa-crosshairs fa-2x mb-2" style="color:var(--holo-cyan); display:block;"></i>
-                            Awaiting laser hardware input. Press <strong>[F1]</strong> to activate scanner focus.
-                        </td>
-                    </tr>`;
+        function renderOrderTable() {
+            const reg = POS_STATE.registers[POS_STATE.activeTab];
+            const tbody = document.getElementById('orderTableBody');
+            document.getElementById('lblCustomer').textContent = reg.customerName.toUpperCase();
+            document.getElementById('payCustomerName').textContent = reg.customerName;
+
+            if (!reg.items || reg.items.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:#333;">
+                    <i class="fa-solid fa-crosshairs fa-2x" style="color:#1A1A1A; display:block; margin-bottom:8px;"></i>
+                    Awaiting product selection...</td></tr>`;
+                updateTotals(0, 0, 0);
                 return;
             }
-            let html = "";
-            items.forEach(item => {
-                html += `
-                    <tr class="line-item" data-product="${item.productId}">
-                        <td style="color:var(--holo-cyan);">${item.sku}</td>
-                        <td style="font-weight:700;">${item.productName}</td>
-                        <td>${(item.unitPrice || 0).toLocaleString()} VND</td>
-                        <td style="color:var(--bio-emerald); font-weight:bold;">x${item.quantity}</td>
-                        <td style="color:var(--bio-emerald); font-weight:bold;">${(item.lineTotal || 0).toLocaleString()} VND</td>
-                        <td>
-                            <button class="btn-del" onclick="removeLineItem(${item.productId})">VOID [X]</button>
-                        </td>
-                    </tr>`;
+
+            let gross = 0, vat = 0;
+            let html = '';
+            reg.items.forEach(item => {
+                const total = item.lineTotal || item.LineTotal || 0;
+                const unitPrice = item.unitPrice || item.UnitPrice || 0;
+                const qty = item.quantity || item.Quantity || 1;
+                const taxAmt = total - (qty * unitPrice);
+                gross += (qty * unitPrice);
+                vat += taxAmt;
+                html += `<tr>
+                    <td style="color:var(--holo-cyan); font-size:0.72rem; font-weight:bold;">${item.sku || item.Sku}</td>
+                    <td style="font-weight:600; font-size:0.8rem;">${item.productName || item.ProductName}</td>
+                    <td style="text-align:center;">
+                        <span style="color:var(--bio-emerald); font-weight:bold;">×${qty}</span>
+                    </td>
+                    <td style="text-align:right; color:var(--bio-emerald); font-weight:bold; font-family:var(--font-data);">${total.toLocaleString('en-US')}</td>
+                    <td style="text-align:center;"><button class="btn-void" onclick="removeItemFromOrder(${item.productId || item.ProductId})"><i class="fa-solid fa-xmark"></i></button></td>
+                </tr>`;
             });
-            itemsTableBody.innerHTML = html;
+            tbody.innerHTML = html;
+            const totalAmt = gross + vat;
+            updateTotals(gross, vat, totalAmt);
         }
 
-        function updateFinancials(total) {
-            const numTotal = total || 0;
-            const approxTax = numTotal * 0.08; // 8% Default VAT estimate projection
-            const approxGross = numTotal - approxTax;
-            lblGross.textContent = approxGross.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            lblTax.textContent = approxTax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            lblDiscount.textContent = "0.00";
-            lblTotal.innerHTML = `${numTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style="font-size:1.5rem; color:var(--holo-cyan);">VND</span>`;
+        function updateTotals(gross, vat, total) {
+            const fmt = n => n.toLocaleString('en-US');
+            document.getElementById('txtGross').textContent = `${fmt(gross)} ₫`;
+            document.getElementById('txtVat').textContent = `${fmt(vat)} ₫`;
+            document.getElementById('txtDiscount').textContent = `0 ₫`;
+            document.getElementById('txtTotal').textContent = fmt(total);
+            // Sync to payment modal
+            document.getElementById('paySub').textContent = `${fmt(gross)} ₫`;
+            document.getElementById('payVat').textContent = `${fmt(vat)} ₫`;
+            document.getElementById('payDiscount').textContent = `0 ₫`;
+            document.getElementById('payTotal').textContent = fmt(total);
         }
 
-        // Event Listeners & Hardware Hotkey Bindings
-        btnScanAction.addEventListener("click", processScanItem);
-        btnCheckout.addEventListener("click", executeFlashCheckout);
-        skuInput.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                processScanItem();
-            }
-        });
-
-        window.addEventListener("keydown", (e) => {
-            if (e.key === "F1") {
-                e.preventDefault();
-                skuInput.focus();
-                skuInput.select();
-            } else if (e.key === "F12") {
-                e.preventDefault();
-                executeFlashCheckout();
-            } else if (e.key === "Escape") {
-                e.preventDefault();
-                skuInput.value = "";
-                skuInput.focus();
-            }
-        });
-
-        // Initialize SignalR LAN Bridge
-        if (typeof signalR !== "undefined") {
-            const posConn = new signalR.HubConnectionBuilder()
-                .withUrl("/hubs/pos")
-                .withAutomaticReconnect()
-                .build();
-
-            posConn.on("OnStockChanged", (stockBalances) => {
-                console.log(">>> [LAN_STOCK_SYNC]: Stock updated via Hub:", stockBalances);
-                stockAlertBox.style.color = "var(--holo-cyan)";
-                stockAlertBox.textContent = ">>> [RADAR_SYNC]: BRANCH INVENTORY REBALANCED VIA REALTIME O(1) ENGINE.";
+        function switchTab(idx) {
+            POS_STATE.activeTab = idx;
+            ['tabNow','tabShip','tabTemp'].forEach((id, i) => {
+                document.getElementById(id).classList.toggle('active', i === idx);
             });
-
-            posConn.start().then(() => {
-                signalrStatus.textContent = "ONLINE [1ms]";
-                signalrStatus.style.color = "var(--bio-emerald)";
-                return posConn.invoke("JoinBranchGroup", currentBranchId);
-            }).catch(err => {
-                signalrStatus.textContent = "OFFLINE [LOCAL]";
-                signalrStatus.style.color = "var(--amber-warn)";
-            });
+            renderOrderTable();
+            if (POS_STATE.shiftId) ensureActiveDraftOrder();
         }
 
-        // Initialize on boot
-        window.onload = () => {
+        function holdCurrentOrder() {
+            const reg = POS_STATE.registers[POS_STATE.activeTab];
+            if (!reg.items || reg.items.length === 0) { alert('Cannot hold an empty order.'); return; }
+            POS_STATE.registers[2] = JSON.parse(JSON.stringify(reg));
+            POS_STATE.registers[POS_STATE.activeTab] = { orderId: null, items: [], customerId: null, customerName: 'Walk-in Customer' };
+            document.getElementById('tabTemp').textContent = '';
+            document.getElementById('tabTemp').innerHTML = `<i class="fa-solid fa-bookmark me-1"></i>Held (1)`;
+            renderOrderTable();
             ensureActiveDraftOrder();
-            skuInput.focus();
-        };
+        }
+
+        function markShippingOrder() {
+            const reg = POS_STATE.registers[POS_STATE.activeTab];
+            if (!reg.items || reg.items.length === 0) { alert('Cannot ship an empty order.'); return; }
+            POS_STATE.registers[1] = JSON.parse(JSON.stringify(reg));
+            POS_STATE.registers[1].customerName = 'Shipping Order';
+            POS_STATE.registers[POS_STATE.activeTab] = { orderId: null, items: [], customerId: null, customerName: 'Walk-in Customer' };
+            document.getElementById('tabShip').innerHTML = `<i class="fa-solid fa-truck me-1"></i>Ship (1)`;
+            renderOrderTable();
+            ensureActiveDraftOrder();
+        }
+
+        // ===================================================
+        // PAYMENT FLOW
+        // ===================================================
+        let paymentMethods = [];
+        async function loadPaymentMethods() {
+            const res = await fetch('/api/v1/POS/payment-methods');
+            if (res.ok) paymentMethods = await res.json();
+        }
+
+        function toggleOrderType(type) {
+            const reg = POS_STATE.registers[POS_STATE.activeTab];
+            reg.orderType = type;
+            const btnRetail = document.getElementById('btnOrderTypeRetail');
+            const btnB2B = document.getElementById('btnOrderTypeB2B');
+            const invoiceBlock = document.getElementById('b2bInvoiceBlock');
+            
+            if (type === 'b2b') {
+                btnB2B.className = 'btn-pos-primary';
+                btnRetail.className = 'btn-pos-secondary';
+                invoiceBlock.style.display = 'block';
+            } else {
+                btnRetail.className = 'btn-pos-primary';
+                btnB2B.className = 'btn-pos-secondary';
+                invoiceBlock.style.display = 'none';
+            }
+            validatePaymentState();
+        }
+
+        function validatePaymentState() {
+            const reg = POS_STATE.registers[POS_STATE.activeTab];
+            const confirmBtn = document.getElementById('btnConfirmPayment');
+            const warnBox = document.getElementById('b2bComplianceWarn');
+            
+            let isB2bValid = true;
+            if (reg.orderType === 'b2b') {
+                const taxCode = document.getElementById('payTaxCode').value.trim();
+                const compName = document.getElementById('payCompanyName').value.trim();
+                const hasVip = !!reg.customerId;
+                
+                warnBox.style.display = hasVip ? 'none' : 'block';
+                if (!hasVip || !taxCode || !compName) {
+                    isB2bValid = false;
+                }
+            } else {
+                warnBox.style.display = 'none';
+            }
+
+            confirmBtn.disabled = !(selectedPaymentMethodId && isB2bValid);
+        }
+
+        function openPayment() {
+            const reg = POS_STATE.registers[POS_STATE.activeTab];
+            if (!reg.orderId || !reg.items || reg.items.length === 0) {
+                alert('Add items to the order before processing payment.');
+                return;
+            }
+            if (!POS_STATE.shiftId) {
+                alert('>>> [OPERATOR_GATE]: Please explicitly Start Shift before payment execution.');
+                openStartShift();
+                return;
+            }
+            // Render payment methods
+            const grid = document.getElementById('paymentMethodGrid');
+            if (paymentMethods.length === 0) {
+                grid.innerHTML = `<div style="color:#333;">No payment methods available</div>`;
+            } else {
+                grid.innerHTML = '';
+                const icons = { 'Cash': 'fa-money-bill-wave', 'Card': 'fa-credit-card', 'QR': 'fa-qrcode', 'Transfer': 'fa-building-columns' };
+                paymentMethods.forEach(m => {
+                    const iconKey = Object.keys(icons).find(k => m.methodName.includes(k)) || 'Card';
+                    const btn = document.createElement('div');
+                    btn.className = 'payment-method-btn';
+                    btn.innerHTML = `<i class="fa-solid ${icons[iconKey] || 'fa-credit-card'}"></i>${m.methodName}`;
+                    btn.onclick = () => {
+                        document.querySelectorAll('.payment-method-btn').forEach(b => b.classList.remove('selected'));
+                        btn.classList.add('selected');
+                        selectedPaymentMethodId = m.paymentMethodId;
+                        validatePaymentState();
+                    };
+                    grid.appendChild(btn);
+                });
+            }
+            selectedPaymentMethodId = null;
+            document.getElementById('tenderedInput').value = '';
+            document.getElementById('changeDisplay').textContent = '0';
+            
+            // Initialize Order Nature to Retail or existing selection
+            toggleOrderType(reg.orderType || 'retail');
+            openModal('modalPayment');
+        }
+
+        function calcChange() {
+            const totalText = document.getElementById('txtTotal').textContent.replace(/,/g, '');
+            const total = parseFloat(totalText) || 0;
+            const tendered = parseFloat(document.getElementById('tenderedInput').value) || 0;
+            const change = Math.max(0, tendered - total);
+            document.getElementById('changeDisplay').textContent = change.toLocaleString('en-US');
+        }
+
+        async function confirmPayment() {
+            const reg = POS_STATE.registers[POS_STATE.activeTab];
+            if (!reg.orderId || !selectedPaymentMethodId) return;
+            
+            if (reg.orderType === 'b2b' && (!reg.customerId || !document.getElementById('payTaxCode').value.trim() || !document.getElementById('payCompanyName').value.trim())) {
+                alert('>>> [B2B_COMPLIANCE_ERROR]: B2B orders strictly require an authenticated Customer Entity, legal Company Name, and Tax Code (MST).');
+                return;
+            }
+
+            const totalText = document.getElementById('txtTotal').textContent.replace(/,/g, '');
+            const total = parseFloat(totalText) || 0;
+            const tendered = parseFloat(document.getElementById('tenderedInput').value) || total;
+
+            const payload = {
+                OrderId: reg.orderId,
+                PaymentMethodId: selectedPaymentMethodId,
+                CustomerId: reg.customerId || null,
+                TenderedAmount: tendered,
+                IdempotencyKey: crypto.randomUUID(),
+                DocType: reg.orderType === 'b2b' ? 'B2B_INVOICE' : 'POS_RETAIL',
+                CounterId: POS_STATE.counterId || null,
+                WarehouseId: POS_STATE.branchId || null,
+                BuyerTaxCode: reg.orderType === 'b2b' ? document.getElementById('payTaxCode').value.trim() : null,
+                BuyerLegalName: reg.orderType === 'b2b' ? document.getElementById('payCompanyName').value.trim() : (reg.customerName !== 'Walk-in Customer' ? reg.customerName : null)
+            };
+
+            document.getElementById('btnConfirmPayment').disabled = true;
+            document.getElementById('btnConfirmPayment').innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Processing...';
+
+            const res = await fetch('/api/v1/POS/checkout/paid', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                lastCheckoutData = data;
+                closeModal('modalPayment');
+
+                // Populate success modal with immutable Retail Document Serial (doc_no)
+                document.getElementById('successInvoice').textContent = data.docNo || data.DocNo || data.invoiceNumber || 'REC-XXXX';
+                document.getElementById('successTotal').textContent = `${total.toLocaleString('en-US')} ₫`;
+                document.getElementById('successTime').textContent = new Date(data.processedAt || data.ProcessedAt).toLocaleString('en-GB');
+                document.getElementById('successChange').textContent = `${(data.changeAmount || data.ChangeAmount || 0).toLocaleString('en-US')} ₫`;
+                document.getElementById('successMethod').textContent = paymentMethods.find(m => m.paymentMethodId === selectedPaymentMethodId)?.methodName || 'Cash';
+                openModal('modalPaySuccess');
+
+                // Reset register
+                POS_STATE.registers[POS_STATE.activeTab] = { orderId: null, items: [], customerId: null, customerName: 'Walk-in Customer', orderType: 'retail' };
+                renderOrderTable();
+            } else {
+                const err = await res.json();
+                alert(`Payment failed: ${err.error || err.Error || 'Unknown error'}`);
+                document.getElementById('btnConfirmPayment').disabled = false;
+                document.getElementById('btnConfirmPayment').innerHTML = '<i class="fa-solid fa-bolt me-1"></i>Confirm Payment';
+            }
+        }
+
+        function closePaySuccess() {
+            closeModal('modalPaySuccess');
+            if (POS_STATE.shiftId) ensureActiveDraftOrder();
+        }
+
+        function viewInvoice() { /* TODO: open invoice preview */ }
+        function printInvoice() { window.print(); }
+
+        // ===================================================
+        // ORDERS TODAY
+        // ===================================================
+        async function openOrdersToday() {
+            openModal('modalOrdersToday');
+            await loadOrdersToday(true);
+        }
+
+        async function loadOrdersToday(reset = false) {
+            if (reset) document.getElementById('todayFilterInvoice').value = '';
+            const invoiceFilter = document.getElementById('todayFilterInvoice').value;
+            const tbody = document.getElementById('ordersTodayBody');
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#333; padding:16px;"><i class="fa-solid fa-spinner fa-spin"></i></td></tr>`;
+
+            const params = new URLSearchParams({ branchId: POS_STATE.branchId || 1 });
+            if (POS_STATE.shiftId) params.append('shiftId', POS_STATE.shiftId);
+            if (invoiceFilter) params.append('invoiceNo', invoiceFilter);
+
+            const res = await fetch(`/api/v1/POS/orders/today?${params}`);
+            if (!res.ok) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--crimson-danger); padding:16px;">Failed to load orders</td></tr>`; return; }
+
+            const data = await res.json();
+            const orders = data.orders || data.Orders || [];
+            if (orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#333; padding:16px;">No orders found today</td></tr>`;
+            } else {
+                tbody.innerHTML = orders.map(o => `<tr>
+                    <td style="color:var(--holo-cyan); font-weight:bold; font-family:var(--font-hdr); font-size:0.75rem;">${o.invoiceNumber || o.InvoiceNumber || 'N/A'}</td>
+                    <td style="color:#888; font-size:0.75rem;">${new Date(o.createdAt || o.CreatedAt).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', second:'2-digit'})}</td>
+                    <td>${o.snapshotCustomerName || o.SnapshotCustomerName || 'Walk-in'}</td>
+                    <td style="text-align:right; color:var(--bio-emerald); font-family:var(--font-data);">${(o.totalAmount || o.TotalAmount || 0).toLocaleString('en-US')} ₫</td>
+                    <td style="color:#888;">${o.paymentMethod || o.PaymentMethod || 'Cash'}</td>
+                    <td style="text-align:center; color:#888;">${o.itemCount || o.ItemCount || 0}</td>
+                </tr>`).join('');
+            }
+            const totalRev = data.totalRevenue || data.TotalRevenue || 0;
+            const totalOrd = data.totalOrders || data.TotalOrders || 0;
+            document.getElementById('ordersTodaySummary').innerHTML = `
+                <span>${totalOrd} orders today</span>
+                <span style="color:var(--bio-emerald); font-family:var(--font-data);">Total: ${totalRev.toLocaleString('en-US')} ₫</span>`;
+        }
+
+        // ===================================================
+        // DASHBOARD
+        // ===================================================
+        async function openDashboard() {
+            openModal('modalDashboard');
+            await loadDashboard();
+        }
+
+        async function loadDashboard() {
+            const params = new URLSearchParams({ branchId: POS_STATE.branchId || 1 });
+            if (POS_STATE.shiftId) params.append('shiftId', POS_STATE.shiftId);
+            const res = await fetch(`/api/v1/POS/dashboard/summary?${params}`);
+            if (!res.ok) return;
+            const data = await res.json();
+            const fmt = n => n ? n.toLocaleString('en-US') : '0';
+            document.getElementById('kpiRevenue').textContent = fmt(data.todayRevenue || data.TodayRevenue);
+            document.getElementById('kpiOrders').textContent = fmt(data.todayOrders || data.TodayOrders);
+            document.getElementById('kpiAvg').textContent = fmt(data.avgOrderValue || data.AvgOrderValue);
+            const prods = data.topProducts || data.TopProducts || [];
+            document.getElementById('topProductsBody').innerHTML = prods.length ? prods.map((p, i) => `<tr>
+                <td style="color:#555;">${i + 1}</td>
+                <td>${p.productName || p.ProductName}</td>
+                <td style="text-align:right; color:var(--holo-cyan);">${p.totalQty || p.TotalQty}</td>
+                <td style="text-align:right; color:var(--bio-emerald); font-family:var(--font-data);">${(p.totalRevenue || p.TotalRevenue || 0).toLocaleString('en-US')} ₫</td>
+            </tr>`).join('') : `<tr><td colspan="4" style="text-align:center; color:#333; padding:12px;">No sales data yet</td></tr>`;
+        }
+
+        // ===================================================
+        // VIP CUSTOMER
+        // ===================================================
+        function openVip() {
+            openModal('modalVip');
+            renderVipList(catalogMeta.customers || catalogMeta.Customers || []);
+        }
+        function closeVip() { closeModal('modalVip'); }
+
+        function renderVipList(customers) {
+            const list = document.getElementById('vipList');
+            if (!customers || customers.length === 0) {
+                list.innerHTML = `<div style="padding:20px; text-align:center; color:#333; font-size:0.8rem;">No customers found</div>`;
+                return;
+            }
+            list.innerHTML = customers.map(c => `
+                <div class="vip-list-item" data-id="${c.customerId || c.CustomerId}" onclick="selectVipCustomer(${JSON.stringify(c).replace(/"/g, '&quot;')})">
+                    <div class="vip-code">VIP-${String(c.customerId || c.CustomerId || 0).padStart(10, '0')}</div>
+                    <div class="vip-name">${c.fullName || c.FullName || 'Unknown'}</div>
+                    <div class="vip-phone">${c.phoneNumber || c.PhoneNumber || '--'}</div>
+                </div>`).join('');
+        }
+
+        function filterVipList() {
+            const q = document.getElementById('vipSearchInput').value.toLowerCase();
+            const customers = catalogMeta.customers || catalogMeta.Customers || [];
+            const filtered = customers.filter(c =>
+                (c.fullName || c.FullName || '').toLowerCase().includes(q) ||
+                (c.phoneNumber || c.PhoneNumber || '').includes(q) ||
+                String(c.customerId || c.CustomerId || '').includes(q));
+            renderVipList(filtered);
+        }
+
+        function selectVipCustomer(customer) {
+            selectedVipCustomer = customer;
+            document.querySelectorAll('.vip-list-item').forEach(el => el.classList.remove('selected'));
+            const id = customer.customerId || customer.CustomerId;
+            const el = document.querySelector(`.vip-list-item[data-id="${id}"]`);
+            if (el) el.classList.add('selected');
+            document.getElementById('btnSelectVip').disabled = false;
+
+            // Show detail
+            const pts = customer.rewardPoints || customer.RewardPoints || 0;
+            document.getElementById('vipDetail').innerHTML = `
+                <div class="vip-detail-row"><label>Customer ID</label><span>VIP-${String(id).padStart(10,'0')}</span></div>
+                <div class="vip-detail-row"><label>Full Name</label><span>${customer.fullName || customer.FullName}</span></div>
+                <div class="vip-detail-row"><label>Phone</label><span>${customer.phoneNumber || customer.PhoneNumber || '--'}</span></div>
+                <div class="vip-detail-row"><label>Type</label><span>${customer.typeName || customer.TypeName || 'VIP'}</span></div>
+                <div style="text-align:center; margin-top:12px;">
+                    <div style="font-size:0.65rem; color:#555; text-transform:uppercase; letter-spacing:1px;">Reward Points</div>
+                    <div class="reward-points">${pts.toLocaleString('en-US')}</div>
+                </div>`;
+        }
+
+        function confirmVipSelection() {
+            if (!selectedVipCustomer) return;
+            const id = selectedVipCustomer.customerId || selectedVipCustomer.CustomerId;
+            const name = selectedVipCustomer.fullName || selectedVipCustomer.FullName;
+            POS_STATE.registers[POS_STATE.activeTab].customerId = id;
+            POS_STATE.registers[POS_STATE.activeTab].customerName = name;
+            document.getElementById('lblCustomer').textContent = name.toUpperCase();
+            document.getElementById('payCustomerName').textContent = name;
+            closeModal('modalVip');
+        }
+
+        function clearVipSelection() {
+            selectedVipCustomer = null;
+            POS_STATE.registers[POS_STATE.activeTab].customerId = null;
+            POS_STATE.registers[POS_STATE.activeTab].customerName = 'Walk-in Customer';
+            document.getElementById('lblCustomer').textContent = 'WALK-IN CUSTOMER';
+            document.getElementById('payCustomerName').textContent = 'Walk-in Customer';
+            document.querySelectorAll('.vip-list-item').forEach(el => el.classList.remove('selected'));
+            document.getElementById('btnSelectVip').disabled = true;
+            document.getElementById('vipDetail').innerHTML = `<div style="text-align:center; color:#333; padding:20px; font-size:0.8rem;">Select a customer to view details</div>`;
+        }
+
+        // ===================================================
+        // HAMBURGER MENU
+        // ===================================================
+        document.getElementById('btnHamburger').addEventListener('click', () => {
+            document.getElementById('sideMenu').classList.toggle('show');
+            document.getElementById('sideMenuOverlay').classList.toggle('show');
+        });
+        function closeSideMenu() {
+            document.getElementById('sideMenu').classList.remove('show');
+            document.getElementById('sideMenuOverlay').classList.remove('show');
+        }
+
+        // ===================================================
+        // MODAL HELPERS
+        // ===================================================
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+        // ===================================================
+        // TELEMETRY: CLOCK + REAL PING
+        // ===================================================
+        function startClock() {
+            function tick() {
+                const now = new Date();
+                const pad = (n, w = 2) => String(n).padStart(w, '0');
+                const ms = pad(now.getMilliseconds(), 3);
+                const ts = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}.${ms} UTC+7`;
+                document.getElementById('footerClock').textContent = ts;
+            }
+            tick();
+            setInterval(tick, 100);
+        }
+
+        async function startPingMonitor() {
+            async function doPing() {
+                const t0 = performance.now();
+                try {
+                    const res = await fetch('/api/v1/POS/health/ping', { cache: 'no-store' });
+                    const t1 = performance.now();
+                    const rtt = Math.round(t1 - t0);
+                    document.getElementById('footerPing').textContent = `${rtt}ms`;
+                    document.getElementById('footerPing').style.color = rtt < 10 ? 'var(--bio-emerald)' : rtt < 50 ? 'var(--amber-warn)' : 'var(--crimson-danger)';
+                    if (res.ok) {
+                        document.getElementById('statusLabel').textContent = 'ONLINE';
+                        document.getElementById('statusLabel').style.color = 'var(--bio-emerald)';
+                        document.getElementById('statusDot').className = 'status-dot';
+                    }
+                } catch (e) {
+                    document.getElementById('statusLabel').textContent = 'OFFLINE';
+                    document.getElementById('statusLabel').style.color = 'var(--crimson-danger)';
+                    document.getElementById('statusDot').className = 'status-dot offline';
+                    document.getElementById('footerPing').textContent = 'ERR';
+                }
+            }
+            await doPing();
+            setInterval(doPing, 5000);
+        }
+
+        // ===================================================
+        // KEYBOARD SHORTCUTS
+        // ===================================================
+        window.addEventListener('keydown', e => {
+            if (e.key === 'F1') { e.preventDefault(); document.getElementById('posSearchInput').focus(); }
+            else if (e.key === 'F5') { e.preventDefault(); holdCurrentOrder(); }
+            else if (e.key === 'F6') { e.preventDefault(); markShippingOrder(); }
+            else if (e.key === 'F12') { e.preventDefault(); openPayment(); }
+            else if (e.key === 'Escape') { closeSideMenu(); }
+        });
+
+        document.getElementById('posSearchInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); executeSearch(); }
+        });
+
+        // ===================================================
+        // BOOT
+        // ===================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            checkLocalSetup();
+        });
     </script>
 </body>
 </html>

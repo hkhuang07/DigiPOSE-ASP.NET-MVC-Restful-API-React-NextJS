@@ -51,6 +51,11 @@
                     <span asp-validation-for="ProductTypeId" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
                 </div>
                 <div class="col-md-6 mb-2">
+                    <label asp-for="ItemNatureId" class="form-cyber-label">@Html.DisplayNameFor(model => model.ItemNatureId) <span style="color:#FF3333;">*</span></label>
+                    <select asp-for="ItemNatureId" class="form-select form-cyber-control" asp-items="ViewBag.ItemNatureId"><option value="">-- SELECT --</option></select>
+                    <span asp-validation-for="ItemNatureId" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                </div>
+                <div class="col-md-6 mb-2">
                     <label asp-for="UnitId" class="form-cyber-label">@Html.DisplayNameFor(model => model.UnitId) <span style="color:#FF3333;">*</span></label>
                     <select asp-for="UnitId" class="form-select form-cyber-control" asp-items="ViewBag.UnitId"><option value="">-- SELECT --</option></select>
                     <span asp-validation-for="UnitId" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
@@ -60,7 +65,7 @@
                     <select asp-for="TaxTypeId" class="form-select form-cyber-control" asp-items="ViewBag.TaxTypeId"><option value="">-- SELECT --</option></select>
                     <span asp-validation-for="TaxTypeId" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
                 </div>
-                <div class="col-12 mb-2">
+                <div class="col-md-6 mb-2">
                     <label asp-for="ManufacturerId" class="form-cyber-label"></label>
                     <select asp-for="ManufacturerId" class="form-select form-cyber-control" asp-items="ViewBag.ManufacturerId"><option value="">-- NONE --</option></select>
                     <span asp-validation-for="ManufacturerId" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>

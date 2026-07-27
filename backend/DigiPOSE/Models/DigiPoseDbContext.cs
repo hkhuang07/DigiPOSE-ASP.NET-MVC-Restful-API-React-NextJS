@@ -45,6 +45,7 @@ namespace DigiPOSE.Models
         public DbSet<JobQueueItem> JobQueue { get; set; }
         public DbSet<StorefrontCart> StorefrontCarts { get; set; }
         public DbSet<StorefrontCartItem> StorefrontCartItems { get; set; }
+        public DbSet<Retail> Retails { get; set; } // >>> [ENTERPRISE_POS_ACCOUNTING]: Immutable retail trade documents & B2B vouchers
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -52,7 +53,7 @@ namespace DigiPOSE.Models
 
             // ====================================================================
             // 0. EXPLICIT TABLE MAPPING (ARCHITECTURE STANDARDS)
-            // Đảm bảo chính xác 28 Bảng trong Model hiện tại, không phụ thuộc Convention
+            // Đảm bảo chính xác 29 Bảng trong Model hiện tại, không phụ thuộc Convention
             // ====================================================================
             modelBuilder.Entity<Branch>().ToTable("Branches");
             modelBuilder.Entity<Role>().ToTable("Roles");
@@ -93,9 +94,13 @@ namespace DigiPOSE.Models
             modelBuilder.Entity<JobQueueItem>().ToTable("JobQueue");
             modelBuilder.Entity<StorefrontCart>().ToTable("StorefrontCarts");
             modelBuilder.Entity<StorefrontCartItem>().ToTable("StorefrontCartItems");
+            modelBuilder.Entity<Retail>().ToTable("Retails");
 
-            // >>> [CRITICAL_IDEMPOTENCY_INDEX]: Enforces DB-level unique constraint against double-billing
+            // >>> [CRITICAL_IDEMPOTENCY_INDEX]: Enforces DB-level unique constraint against double-billing & duplicate trade vouchers
             modelBuilder.Entity<Order>().HasIndex(o => o.IdempotencyKey).IsUnique().HasDatabaseName("IX_Orders_IdempotencyKey");
+            modelBuilder.Entity<Retail>().HasIndex(r => r.IdempotencyKey).IsUnique().HasDatabaseName("IX_Retails_IdempotencyKey");
+            modelBuilder.Entity<Retail>().HasIndex(r => r.DocNo).IsUnique().HasDatabaseName("IX_Retails_DocNo");
+            modelBuilder.Entity<Retail>().HasIndex(r => new { r.BranchId, r.EndDate }).HasDatabaseName("IX_Retails_Branch_Date");
 
             // >>> [APPEND_ONLY_OPTIMIZATION]: Indexed purely for read aggregate speed, zero lock contention
             modelBuilder.Entity<InventoryTransaction>().HasIndex(e => new { e.ProductId, e.CreatedAt }).HasDatabaseName("IX_InventoryTx_Product_Date");

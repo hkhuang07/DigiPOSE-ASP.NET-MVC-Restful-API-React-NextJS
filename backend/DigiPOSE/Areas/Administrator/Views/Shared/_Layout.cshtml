@@ -54,11 +54,12 @@
                 </a>
             </div>
 
-            <!-- Right Navbar Actions (Icon Only Buttons) -->
+            <!-- Right Navbar Actions -->
             <div class="hud-navbar-right">
-                <!-- Language Selector (Icon Only) -->
-                <button type="button" class="hud-nav-icon-btn" id="langToggleBtn" title="Switch Language (EN/VI)">
+                <!-- Language Selector (Icon + Text) -->
+                <button type="button" class="hud-lang-btn" id="langToggleBtn" title="Switch Language (English / Tiếng Việt)">
                     <i class="fa-solid fa-globe"></i>
+                    <span id="langText">English</span>
                 </button>
 
                 <!-- Dark / Light Mode Switcher (Icon Only) -->
@@ -88,7 +89,7 @@
                             <span class="hud-user-name">@(User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "COMMANDER")</span>
                             <span class="hud-user-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "SYSTEM ADMIN")</span>
                         </div>
-                        <i class="fa-solid fa-caret-down text-cyan ms-2" style="font-size: 0.7rem;"></i>
+                        <i class="fa-solid fa-caret-down text-cyan ms-2" id="hudProfileCaret" style="font-size: 0.75rem; transition: transform 0.2s ease;"></i>
                     </div>
                     <ul class="dropdown-menu dropdown-menu-end hud-dropdown-menu" aria-labelledby="profileDropdown">
                         <li><a class="dropdown-item" href="#"><i class="fa-solid fa-id-card me-2"></i> User Profile</a></li>

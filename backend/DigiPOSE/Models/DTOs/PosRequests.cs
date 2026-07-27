@@ -54,19 +54,39 @@ namespace DigiPOSE.Models.DTOs
         public decimal TenderedAmount { get; set; } = 0;
 
         // >>> [CRITICAL_IDEMPOTENCY]: Khóa duy nhất từ máy thu ngân.
-        // Nạp đi nạp lại 100 lần vẫn chỉ tạo đúng 1 Đơn, không bao giờ chia đôi hóa đơn!
         [Required]
         public Guid IdempotencyKey { get; set; }
+
+        // >>> [ENTERPRISE RETAIL DOCUMENT CLASSIFICATION]: Standardized domain trade document specifications
+        public string DocType { get; set; } = "POS_RETAIL"; // e.g., "POS_RETAIL" (B2C), "B2B_INVOICE" (Corporate)
+        public int? CounterId { get; set; }
+        public int? WarehouseId { get; set; }
+        public string? BuyerTaxCode { get; set; }
+        public string? BuyerLegalName { get; set; }
+        public string? BuyerAddress { get; set; }
+        public string? BuyerEmail { get; set; }
+        public string? Notes { get; set; }
     }
 
-    // >>> [HIGH_EFFECT_UI_DTO]: Response gửi trả khi Checkout xong, giúp POS UI nảy số tồn kho lập tức!
+    // >>> [HIGH_EFFECT_UI_DTO]: Response gửi trả khi Checkout xong, cung cấp đầy đủ mã số chứng từ Retail và cập nhật tồn kho tức thì!
     public record CheckoutResponseDto(
         int OrderId,
+        int RetailId,
         string InvoiceNumber,
+        string DocNo,
+        string DocType,
         DateTime ProcessedAt,
         bool IsReplay, // True nếu đây là phản hồi lặp lại do Retry (đã chốt trước đó)
         Dictionary<int, int> LiveStockBalances,
         decimal TenderedAmount = 0,
         decimal ChangeAmount = 0
     );
+
+    public class StartShiftRequest
+    {
+        [Required] public int UserId { get; set; }
+        [Required] public int BranchId { get; set; }
+        [Required] public int CounterId { get; set; }
+        [Range(0, (double)decimal.MaxValue)] public decimal StartCash { get; set; } = 0;
+    }
 }
