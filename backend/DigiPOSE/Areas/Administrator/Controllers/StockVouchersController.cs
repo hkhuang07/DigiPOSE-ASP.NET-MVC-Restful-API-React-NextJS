@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DigiPOSE.Models;
 
+using DigiPOSE.Services;
 using System.Linq.Dynamic.Core;
 
 namespace DigiPOSE.Areas.Administrator.Controllers
@@ -12,7 +13,13 @@ namespace DigiPOSE.Areas.Administrator.Controllers
     public class StockVouchersController : Controller
     {
         private readonly DigiPoseDbContext _context;
-        public StockVouchersController(DigiPoseDbContext context) { _context = context; }
+        private readonly IInventoryLedgerService _ledgerService;
+
+        public StockVouchersController(DigiPoseDbContext context, IInventoryLedgerService ledgerService) 
+        { 
+            _context = context; 
+            _ledgerService = ledgerService;
+        }
 
         public async Task<IActionResult> Index()
         {
@@ -123,7 +130,17 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(StockVoucher model)
         {
-            if (ModelState.IsValid) { _context.Add(model); await _context.SaveChangesAsync(); return Json(new { success = true, message = "Stock voucher created." }); }
+            if (ModelState.IsValid) 
+            { 
+                if (string.IsNullOrWhiteSpace(model.VoucherCode))
+                {
+                    model.VoucherCode = $"POV-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 4).ToUpper()}";
+                }
+                model.Status = VoucherStatus.Draft;
+                _context.Add(model); 
+                await _context.SaveChangesAsync(); 
+                return Json(new { success = true, message = "Stock voucher created in Draft status." }); 
+            }
             LoadViewBags(model.BranchId, model.UserId, model.SupplierId);
             return PartialView("_CreateOrEditPartial", model);
         }
@@ -133,6 +150,10 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             if (id == null) return NotFound();
             var item = await _context.StockVouchers.FindAsync(id);
             if (item == null) return NotFound();
+            if (item.Status == VoucherStatus.Posted)
+            {
+                return BadRequest(">>> [IMMUTABLE_AUDIT_ERROR]: Posted inventory vouchers cannot be edited.");
+            }
             LoadViewBags(item.BranchId, item.UserId, item.SupplierId);
             return PartialView("_CreateOrEditPartial", item);
         }
@@ -141,6 +162,11 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         public async Task<IActionResult> Edit(int id, StockVoucher model)
         {
             if (id != model.VoucherId) return Json(new { success = false, message = "ID mismatch." });
+            var existing = await _context.StockVouchers.AsNoTracking().FirstOrDefaultAsync(v => v.VoucherId == id);
+            if (existing != null && existing.Status == VoucherStatus.Posted)
+            {
+                return Json(new { success = false, message = ">>> [IMMUTABLE_AUDIT_ERROR]: Cannot edit an already posted stock voucher." });
+            }
             if (ModelState.IsValid)
             {
                 try { _context.Update(model); await _context.SaveChangesAsync(); return Json(new { success = true, message = "Stock voucher updated." }); }
@@ -148,6 +174,16 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
             LoadViewBags(model.BranchId, model.UserId, model.SupplierId);
             return PartialView("_CreateOrEditPartial", model);
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> PostVoucher(int id)
+        {
+            int? userId = null;
+            if (int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out int uid)) userId = uid;
+
+            var res = await _ledgerService.PostVoucherAsync(id, userId ?? 0);
+            return Json(new { success = res.Success, message = res.Message });
         }
 
         public async Task<IActionResult> Delete(int? id)
@@ -163,7 +199,15 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var item = await _context.StockVouchers.FindAsync(id);
-            if (item != null) { _context.StockVouchers.Remove(item); await _context.SaveChangesAsync(); }
+            if (item != null) 
+            { 
+                if (item.Status == VoucherStatus.Posted)
+                {
+                    return Json(new { success = false, message = ">>> [IMMUTABLE_AUDIT_ERROR]: Cannot delete an already posted inventory voucher." });
+                }
+                _context.StockVouchers.Remove(item); 
+                await _context.SaveChangesAsync(); 
+            }
             return Json(new { success = true, message = "Stock voucher deleted." });
         }
 

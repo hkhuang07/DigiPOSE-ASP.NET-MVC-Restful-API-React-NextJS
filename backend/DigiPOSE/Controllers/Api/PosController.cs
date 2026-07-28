@@ -25,6 +25,7 @@ namespace DigiPOSE.Controllers.Api
         private readonly IMemoryCache _cache;
         private readonly IHubContext<PosRealtimeHub> _hubContext;
         private readonly IVatBalancingEngine _vatBalancingEngine;
+        private readonly IInventoryLedgerService _ledgerService;
 
         public POSController(
             DigiPoseDbContext context, 
@@ -32,7 +33,8 @@ namespace DigiPOSE.Controllers.Api
             Channel<JobQueueItem> jobChannel,
             IMemoryCache cache,
             IHubContext<PosRealtimeHub> hubContext,
-            IVatBalancingEngine vatBalancingEngine)
+            IVatBalancingEngine vatBalancingEngine,
+            IInventoryLedgerService ledgerService)
         {
             _context = context;
             _inventoryRam = inventoryRam;
@@ -40,6 +42,7 @@ namespace DigiPOSE.Controllers.Api
             _cache = cache;
             _hubContext = hubContext;
             _vatBalancingEngine = vatBalancingEngine;
+            _ledgerService = ledgerService;
         }
 
         // >>> [LAN TELEMETRY]: Fast SKU/Barcode real-time lookup in O(1) database index & RAM Engine
@@ -263,6 +266,171 @@ namespace DigiPOSE.Controllers.Api
                 UserId = shift.UserId,
                 UserName = shift.User?.FullName ?? shift.User?.UserName
             });
+        }
+
+        // >>> [SHIFT MANAGEMENT]: Close the active work shift — sets EndTime, EndCash, StatusId = 2
+        [HttpPost("shift/close")]
+        public async Task<IActionResult> CloseShift([FromBody] CloseShiftRequest request)
+        {
+            var shift = await _context.Shifts
+                .FirstOrDefaultAsync(s => s.ShiftId == request.ShiftId && s.StatusId == 1);
+            if (shift == null)
+                return NotFound(new { Error = "NO_ACTIVE_SHIFT", Message = $"Shift #{request.ShiftId} is not active or does not exist." });
+
+            // Aggregate completed orders in this shift for closing summary
+            var shiftSummary = await _context.Orders.AsNoTracking()
+                .Where(o => o.ShiftId == request.ShiftId && o.StatusId == 1)
+                .GroupBy(o => o.ShiftId)
+                .Select(g => new { TotalRevenue = g.Sum(o => o.TotalAmount), OrderCount = g.Count() })
+                .FirstOrDefaultAsync();
+
+            shift.EndTime = DateTime.Now;
+            shift.EndCash = request.EndCash;
+            shift.StatusId = 2; // 2: Closed
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                ShiftId = shift.ShiftId,
+                Message = "Shift closed successfully.",
+                StartTime = shift.StartTime,
+                EndTime = shift.EndTime,
+                StartCash = shift.StartCash,
+                EndCash = shift.EndCash,
+                TotalRevenue = shiftSummary?.TotalRevenue ?? 0,
+                OrderCount = shiftSummary?.OrderCount ?? 0
+            });
+        }
+
+        // >>> [DASHBOARD ANALYTICS]: Extended date-range analytics for Chart.js dashboard
+        [HttpGet("dashboard/analytics")]
+        public async Task<IActionResult> GetAnalytics([FromQuery] int branchId, [FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null)
+        {
+            var fromDate = from?.Date ?? DateTime.Today.AddDays(-29);
+            var toDate = (to?.Date ?? DateTime.Today).AddDays(1);
+
+            var completedOrders = await _context.Orders.AsNoTracking()
+                .Include(o => o.OrderDetails!)
+                .Include(o => o.PaymentMethod)
+                .Where(o => o.BranchId == branchId && o.StatusId == 1
+                    && o.CreatedAt >= fromDate && o.CreatedAt < toDate)
+                .ToListAsync();
+
+            // Revenue by day
+            var revenueByDay = completedOrders
+                .GroupBy(o => o.CreatedAt.Date)
+                .Select(g => new { Date = g.Key.ToString("yyyy-MM-dd"), Revenue = g.Sum(o => o.TotalAmount), Orders = g.Count() })
+                .OrderBy(x => x.Date)
+                .ToList();
+
+            // Revenue by hour (today)
+            var todayOrders = completedOrders.Where(o => o.CreatedAt.Date == DateTime.Today).ToList();
+            var revenueByHour = todayOrders
+                .GroupBy(o => o.CreatedAt.Hour)
+                .Select(g => new { Hour = g.Key, Revenue = g.Sum(o => o.TotalAmount), Orders = g.Count() })
+                .OrderBy(x => x.Hour)
+                .ToList();
+
+            // Payment method breakdown
+            var paymentBreakdown = completedOrders
+                .GroupBy(o => o.PaymentMethod?.MethodName ?? "Cash")
+                .Select(g => new { Method = g.Key, Revenue = g.Sum(o => o.TotalAmount), Count = g.Count() })
+                .ToList();
+
+            // Top 20 products by qty sold
+            var topProducts = completedOrders
+                .SelectMany(o => o.OrderDetails ?? new List<OrderDetail>())
+                .GroupBy(d => new { d.ProductId, d.ProductName })
+                .Select(g => new { g.Key.ProductId, g.Key.ProductName, TotalQty = g.Sum(d => d.Quantity), TotalRevenue = g.Sum(d => d.TotalAmount) })
+                .OrderByDescending(x => x.TotalQty)
+                .Take(20)
+                .ToList();
+
+            // Top 20 orders by amount
+            var topOrders = completedOrders
+                .OrderByDescending(o => o.TotalAmount)
+                .Take(20)
+                .Select(o => new {
+                    o.OrderId, o.InvoiceNumber, o.TotalAmount,
+                    o.CreatedAt, ItemCount = o.OrderDetails?.Count ?? 0,
+                    Customer = o.SnapshotCustomerName ?? "Walk-in"
+                })
+                .ToList();
+
+            var totalRevenue = completedOrders.Sum(o => o.TotalAmount);
+            var totalOrders = completedOrders.Count;
+            var avgOrder = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+            return Ok(new {
+                FromDate = fromDate.ToString("yyyy-MM-dd"),
+                ToDate = to?.Date.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"),
+                TotalRevenue = totalRevenue,
+                TotalOrders = totalOrders,
+                AvgOrderValue = avgOrder,
+                RevenueByDay = revenueByDay,
+                RevenueByHour = revenueByHour,
+                PaymentBreakdown = paymentBreakdown,
+                TopProducts = topProducts,
+                TopOrders = topOrders
+            });
+        }
+
+        // >>> [VIP CUSTOMER MANAGEMENT]: Create new VIP customer from POS
+        [HttpPost("customers")]
+        public async Task<IActionResult> CreateCustomer([FromBody] CreateCustomerRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.FullName))
+                return BadRequest(new { Error = "Full name is required." });
+
+            var customer = new Customer
+            {
+                FullName = request.FullName,
+                PhoneNumber = request.PhoneNumber,
+                Email = request.Email,
+                Address = request.Address,
+                CustomeTypeId = request.CustomerTypeId ?? 1,
+                RewardPoints = 0
+            };
+            _context.Customers.Add(customer);
+            await _context.SaveChangesAsync();
+            return Ok(new { CustomerId = customer.CustomerId, FullName = customer.FullName, Message = "Customer created." });
+        }
+
+        // >>> [VIP CUSTOMER MANAGEMENT]: Update VIP customer from POS
+        [HttpPut("customers/{id}")]
+        public async Task<IActionResult> UpdateCustomer(int id, [FromBody] CreateCustomerRequest request)
+        {
+            var customer = await _context.Customers.FindAsync(id);
+            if (customer == null) return NotFound(new { Error = "Customer not found." });
+            customer.FullName = request.FullName ?? customer.FullName;
+            customer.PhoneNumber = request.PhoneNumber ?? customer.PhoneNumber;
+            customer.Email = request.Email ?? customer.Email;
+            customer.Address = request.Address ?? customer.Address;
+            if (request.CustomerTypeId.HasValue) customer.CustomeTypeId = request.CustomerTypeId.Value;
+            await _context.SaveChangesAsync();
+            return Ok(new { CustomerId = customer.CustomerId, Message = "Customer updated." });
+        }
+
+        // >>> [VIP CUSTOMER MANAGEMENT]: Delete VIP customer from POS
+        [HttpDelete("customers/{id}")]
+        public async Task<IActionResult> DeleteCustomer(int id)
+        {
+            var customer = await _context.Customers.FindAsync(id);
+            if (customer == null) return NotFound(new { Error = "Customer not found." });
+            _context.Customers.Remove(customer);
+            await _context.SaveChangesAsync();
+            return Ok(new { Message = "Customer deleted." });
+        }
+
+        // >>> [REWARD POINTS]: Add reward points to VIP customer
+        [HttpPost("customers/{id}/add-points")]
+        public async Task<IActionResult> AddRewardPoints(int id, [FromBody] AddPointsRequest request)
+        {
+            var customer = await _context.Customers.FindAsync(id);
+            if (customer == null) return NotFound(new { Error = "Customer not found." });
+            customer.RewardPoints += request.Points;
+            await _context.SaveChangesAsync();
+            return Ok(new { CustomerId = id, TotalPoints = customer.RewardPoints, Added = request.Points });
         }
 
         // >>> [TODAY'S ORDERS]: Real-time order list for current branch/shift — no mock
@@ -619,18 +787,18 @@ namespace DigiPOSE.Controllers.Api
                 foreach (var detail in order.OrderDetails!)
                 {
                     productIds.Add(detail.ProductId);
-                    if (detail.NatureId == 1) // Physical Product - Insert append-only transaction ledger
+                    if (detail.NatureId == 1) // Physical Product - Delegate to Enterprise DDD Ledger Service
                     {
-                        var txLog = new InventoryTransaction
-                        {
-                            ProductId = detail.ProductId,
-                            BranchId = order.BranchId,
-                            QuantityDelta = -detail.Quantity, // Negative delta for sales deduction
-                            TxType = InventoryTxType.PosSale,
-                            ReferenceOrderId = order.OrderId,
-                            CreatedAt = DateTime.Now
-                        };
-                        _context.InventoryTransactions.Add(txLog);
+                        await _ledgerService.RecordTransactionAsync(
+                            order.BranchId,
+                            detail.ProductId,
+                            -detail.Quantity, // Negative delta for sales deduction
+                            InventoryTxType.PosSale,
+                            order.OrderId,
+                            retailDoc.DocNo,
+                            order.UserId,
+                            detail.UnitPrice,
+                            $"POS Retail transaction {retailDoc.DocNo}");
                     }
                     else if (detail.NatureId == 2 && request.CustomerId != null) // SaaS / Digital
                     {

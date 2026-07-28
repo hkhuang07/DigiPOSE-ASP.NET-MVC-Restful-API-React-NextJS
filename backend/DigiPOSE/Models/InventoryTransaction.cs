@@ -9,7 +9,13 @@ namespace DigiPOSE.Models
         Restock = 2,
         Adjustment = 3,
         Return = 4,
-        WebSale = 5 // Dedicated ledger code for Online Storefront E-Commerce fulfillment
+        WebSale = 5,
+        VoucherIn = 6,
+        VoucherOut = 7,
+        TransferOut = 8,
+        TransferIn = 9,
+        StockAudit = 10,
+        EmergencyOverride = 11 // Mandatory justification & Super Admin RBAC enforcement
     }
 
     public class InventoryTransaction
@@ -30,6 +36,27 @@ namespace DigiPOSE.Models
         [Display(Name = "Quantity Delta")]
         public int QuantityDelta { get; set; } // Negative for sale deduction, positive for addition
 
+        [Display(Name = "Before Quantity")]
+        public int BeforeQuantity { get; set; }
+
+        [Display(Name = "After Quantity")]
+        public int AfterQuantity { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        [Display(Name = "Unit Cost")]
+        public decimal UnitCost { get; set; } = 0;
+
+        [Display(Name = "Operator User ID")]
+        public int? OperatorUserId { get; set; }
+
+        [StringLength(500)]
+        [Display(Name = "Notes / Justification")]
+        public string? Notes { get; set; }
+
+        [StringLength(100)]
+        [Display(Name = "Reference Document No")]
+        public string? ReferenceDocumentNo { get; set; }
+
         [Required]
         [Display(Name = "Transaction Type")]
         public InventoryTxType TxType { get; set; }
@@ -44,5 +71,7 @@ namespace DigiPOSE.Models
 
         public Product? Product { get; set; }
         public Branch? Branch { get; set; }
+        [ForeignKey("OperatorUserId")]
+        public User? OperatorUser { get; set; }
     }
 }

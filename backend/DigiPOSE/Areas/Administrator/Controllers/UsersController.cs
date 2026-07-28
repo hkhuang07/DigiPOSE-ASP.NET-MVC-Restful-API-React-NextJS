@@ -13,7 +13,13 @@ namespace DigiPOSE.Areas.Administrator.Controllers
     public class UsersController : Controller
     {
         private readonly DigiPoseDbContext _context;
-        public UsersController(DigiPoseDbContext context) { _context = context; }
+        private readonly IWebHostEnvironment _env;
+
+        public UsersController(DigiPoseDbContext context, IWebHostEnvironment env) 
+        { 
+            _context = context; 
+            _env = env;
+        }
 
         public async Task<IActionResult> Index()
         {
@@ -69,6 +75,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                     PhoneNumber = m.PhoneNumber,
                     RoleName = m.Role != null ? m.Role.RoleName : "",
                     BranchName = m.Branch != null ? m.Branch.BranchName : "",
+                    ImageUrl = m.ImageUrl ?? "",
                     IsActive = m.IsActive
                 }).ToList();
 
@@ -132,6 +139,9 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         public async Task<IActionResult> Create(User model)
         {
             ModelState.Remove("PasswordHash");
+            ModelState.Remove("ImageUpload");
+            ModelState.Remove("ImageUrl");
+
             if (!ModelState.IsValid)
             {
                 ViewBag.BranchId = new SelectList(_context.Branches.Where(b => b.IsActive), "BranchId", "BranchName", model.BranchId);
@@ -142,6 +152,23 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             // Hash the raw password before saving
             if (!string.IsNullOrWhiteSpace(model.PasswordHash))
                 model.PasswordHash = BC.HashPassword(model.PasswordHash);
+
+            if (model.ImageUpload != null && model.ImageUpload.Length > 0)
+            {
+                string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "avatars");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+                
+                string fileExtension = Path.GetExtension(model.ImageUpload.FileName).ToLowerInvariant();
+                string fileName = $"usr-{Guid.NewGuid():N}{fileExtension}";
+                string physicalPath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(physicalPath, FileMode.Create))
+                {
+                    await model.ImageUpload.CopyToAsync(stream);
+                }
+                model.ImageUrl = fileName;
+            }
 
             model.IsActive = true;
             _context.Add(model);
@@ -167,6 +194,8 @@ namespace DigiPOSE.Areas.Administrator.Controllers
 
             ModelState.Remove("PasswordHash");
             ModelState.Remove("NewPassword");
+            ModelState.Remove("ImageUpload");
+            ModelState.Remove("ImageUrl");
 
             if (!ModelState.IsValid)
             {
@@ -185,6 +214,36 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 model.PasswordHash = !string.IsNullOrWhiteSpace(NewPassword)
                     ? BC.HashPassword(NewPassword)
                     : existing.PasswordHash;
+
+                if (model.ImageUpload != null && model.ImageUpload.Length > 0)
+                {
+                    string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "avatars");
+                    if (!Directory.Exists(uploadsFolder))
+                        Directory.CreateDirectory(uploadsFolder);
+                    
+                    string fileExtension = Path.GetExtension(model.ImageUpload.FileName).ToLowerInvariant();
+                    string fileName = $"usr-{model.UserId}-{Guid.NewGuid():N}{fileExtension}";
+                    string physicalPath = Path.Combine(uploadsFolder, fileName);
+
+                    using (var stream = new FileStream(physicalPath, FileMode.Create))
+                    {
+                        await model.ImageUpload.CopyToAsync(stream);
+                    }
+                    // Clean up replaced image from physical storage
+                    if (!string.IsNullOrEmpty(existing.ImageUrl))
+                    {
+                        string oldPhysicalPath = Path.Combine(uploadsFolder, existing.ImageUrl);
+                        if (System.IO.File.Exists(oldPhysicalPath))
+                        {
+                            try { System.IO.File.Delete(oldPhysicalPath); } catch { }
+                        }
+                    }
+                    model.ImageUrl = fileName;
+                }
+                else
+                {
+                    model.ImageUrl = existing.ImageUrl;
+                }
 
                 _context.Update(model);
                 await _context.SaveChangesAsync();
@@ -212,6 +271,16 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         {
             var item = await _context.Users.FindAsync(id);
             if (item == null) return Json(new { success = false, message = "Record not found." });
+
+            if (!string.IsNullOrEmpty(item.ImageUrl))
+            {
+                string oldPhysicalPath = Path.Combine(_env.WebRootPath, "uploads", "avatars", item.ImageUrl);
+                if (System.IO.File.Exists(oldPhysicalPath))
+                {
+                    try { System.IO.File.Delete(oldPhysicalPath); } catch { }
+                }
+            }
+
             _context.Users.Remove(item);
             await _context.SaveChangesAsync();
             return Json(new { success = true, message = "User permanently deleted." });

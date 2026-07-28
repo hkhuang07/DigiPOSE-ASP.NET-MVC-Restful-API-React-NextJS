@@ -8,6 +8,8 @@
     <form class="ajax-modal-form" asp-action="@(Model.OrderId == 0 ? "Create" : "Edit")" asp-controller="Orders" >
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="OrderId" />
+        <input type="hidden" asp-for="IdempotencyKey" />
+        <input type="hidden" asp-for="CreatedAt" />
         <div class="modal-body">
             <div class="mb-3">
                 <label asp-for="BranchId" class="form-cyber-label">@Html.DisplayNameFor(model => model.BranchId) <span style="color:#FF3333;">*</span></label>

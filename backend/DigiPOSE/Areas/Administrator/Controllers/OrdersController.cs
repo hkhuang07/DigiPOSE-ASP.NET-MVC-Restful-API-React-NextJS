@@ -16,12 +16,14 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         private readonly DigiPoseDbContext _context;
         private readonly IInventoryRAMService _inventoryRam;
         private readonly IHubContext<PosRealtimeHub> _hubContext;
+        private readonly IInventoryLedgerService _ledgerService;
 
-        public OrdersController(DigiPoseDbContext context, IInventoryRAMService inventoryRam, IHubContext<PosRealtimeHub> hubContext) 
+        public OrdersController(DigiPoseDbContext context, IInventoryRAMService inventoryRam, IHubContext<PosRealtimeHub> hubContext, IInventoryLedgerService ledgerService) 
         { 
             _context = context; 
             _inventoryRam = inventoryRam;
             _hubContext = hubContext;
+            _ledgerService = ledgerService;
         }
 
         public async Task<IActionResult> Index()
@@ -187,6 +189,15 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             {
                 try
                 {
+                    // >>> [IMMUTABLE_FIELD_GUARD]: Fetch original record to preserve IdempotencyKey (unique index) and CreatedAt timestamp
+                    var original = await _context.Orders.AsNoTracking()
+                        .FirstOrDefaultAsync(o => o.OrderId == id);
+                    if (original == null) return Json(new { success = false, message = "Order not found." });
+
+                    // Preserve immutable fields that must NOT change after order creation
+                    model.IdempotencyKey = original.IdempotencyKey;
+                    model.CreatedAt = original.CreatedAt;
+
                     using var transaction = await _context.Database.BeginTransactionAsync();
                     try {
                     _context.Update(model);
@@ -198,7 +209,10 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                     }
                     return Json(new { success = true, message = "Updated successfully." });
                 }
-                catch (DbUpdateConcurrencyException) { }
+                catch (DbUpdateConcurrencyException)
+                {
+                    return Json(new { success = false, message = "Concurrency conflict. Please reload and try again." });
+                }
             }
             LoadViewBags(model.BranchId, model.ShiftId, model.UserId, model.CustomerId, model.StatusId, model.PaymentMethodId);
             return PartialView("_CreateOrEditPartial", model);
@@ -222,19 +236,22 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                     {
                         foreach (var detail in item.OrderDetails)
                         {
-                            if (detail.NatureId == 1) // Physical good -> restore stock to shelves
+                            if (detail.NatureId == 1) // Physical good -> restore stock to shelves via Enterprise DDD Ledger Service
                             {
-                                var txLog = new InventoryTransaction
-                                {
-                                    ProductId = detail.ProductId,
-                                    BranchId = item.BranchId,
-                                    QuantityDelta = detail.Quantity, // Positive delta to put items back on shelves
-                                    TxType = InventoryTxType.Adjustment,
-                                    ReferenceOrderId = item.OrderId,
-                                    CreatedAt = DateTime.Now
-                                };
-                                _context.InventoryTransactions.Add(txLog);
-                                _inventoryRam.RestoreStock(item.BranchId, detail.ProductId, detail.Quantity);
+                                int? userId = null;
+                                if (int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out int uid)) userId = uid;
+
+                                await _ledgerService.RecordTransactionAsync(
+                                    item.BranchId,
+                                    detail.ProductId,
+                                    detail.Quantity, // Positive delta to put items back on shelves
+                                    InventoryTxType.Return,
+                                    item.OrderId,
+                                    $"RET-ORD-{item.OrderId}",
+                                    userId,
+                                    detail.UnitPrice,
+                                    $"Stock restored upon deleting order #{item.OrderId}");
+
                                 restoredProducts.Add(detail.ProductId);
                             }
                         }

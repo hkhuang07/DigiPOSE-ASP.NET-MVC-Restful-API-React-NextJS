@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DigiPOSE.Models;
+using DigiPOSE.Services;
 
 using System.Linq.Dynamic.Core;
 
@@ -12,7 +13,15 @@ namespace DigiPOSE.Areas.Administrator.Controllers
     public class ProductInventoriesController : Controller
     {
         private readonly DigiPoseDbContext _context;
-        public ProductInventoriesController(DigiPoseDbContext context) { _context = context; }
+        private readonly IInventoryRAMService _ramService;
+        private readonly IInventoryLedgerService _ledgerService;
+
+        public ProductInventoriesController(DigiPoseDbContext context, IInventoryRAMService ramService, IInventoryLedgerService ledgerService)
+        {
+            _context = context;
+            _ramService = ramService;
+            _ledgerService = ledgerService;
+        }
 
         public async Task<IActionResult> Index()
         {
@@ -110,7 +119,27 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ProductInventory model)
         {
-            if (ModelState.IsValid) { _context.Add(model); await _context.SaveChangesAsync(); return Json(new { success = true, message = "Inventory record created." }); }
+            if (ModelState.IsValid)
+            {
+                int? userId = null;
+                if (int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out int uid)) userId = uid;
+
+                var res = await _ledgerService.RecordTransactionAsync(
+                    model.BranchId,
+                    model.ProductId,
+                    model.StockQuantity,
+                    InventoryTxType.Restock,
+                    0,
+                    "INIT-OPENING-STOCK",
+                    userId,
+                    0,
+                    "Initial opening stock setup via Administration Console");
+
+                if (res.Success)
+                    return Json(new { success = true, message = "Inventory record created and initial stock balance established." });
+                
+                return Json(new { success = false, message = res.Message });
+            }
             ViewBag.BranchId = new SelectList(_context.Branches.Where(b => b.IsActive), "BranchId", "BranchName", model.BranchId);
             ViewBag.ProductId = new SelectList(_context.Products.Where(p => p.IsActive), "ProductId", "ProductName", model.ProductId);
             return PartialView("_CreateOrEditPartial", model);
@@ -127,13 +156,53 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         }
 
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, ProductInventory model)
+        public async Task<IActionResult> Edit(int id, ProductInventory model, string? mandatoryReason)
         {
             if (id != model.InventoryId) return Json(new { success = false, message = "ID mismatch." });
             if (ModelState.IsValid)
             {
-                try { _context.Update(model); await _context.SaveChangesAsync(); return Json(new { success = true, message = "Inventory updated." }); }
-                catch (DbUpdateConcurrencyException) { }
+                var currentInv = await _context.ProductInventories.AsNoTracking().FirstOrDefaultAsync(e => e.InventoryId == id);
+                if (currentInv == null) return Json(new { success = false, message = "Record no longer exists." });
+
+                int? userId = null;
+                if (int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out int uid)) userId = uid;
+
+                // If StockQuantity is being altered directly, enforce Emergency Override Protocol ("Bất Khả Khang")
+                if (currentInv.StockQuantity != model.StockQuantity)
+                {
+                    if (!User.IsInRole("Super Admin") && !User.IsInRole("Chief Accountant") && !User.IsInRole("Administrator"))
+                    {
+                        return Json(new { success = false, message = ">>> [ACCESS_DENIED]: Direct inventory balance adjustment requires Super Admin or Chief Accountant authorization." });
+                    }
+
+                    var overrideRes = await _ledgerService.ExecuteEmergencyOverrideAsync(
+                        id,
+                        model.StockQuantity,
+                        model.MinStockLevel,
+                        userId ?? 0,
+                        mandatoryReason ?? "");
+
+                    if (!overrideRes.Success)
+                    {
+                        return Json(new { success = false, message = overrideRes.Message });
+                    }
+
+                    return Json(new { success = true, message = overrideRes.Message });
+                }
+
+                try 
+                { 
+                    currentInv.MinStockLevel = model.MinStockLevel;
+                    _context.Update(currentInv); 
+                    await _context.SaveChangesAsync(); 
+                    return Json(new { success = true, message = "Min Stock Level updated successfully." }); 
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!_context.ProductInventories.Any(e => e.InventoryId == id))
+                        return Json(new { success = false, message = "Record no longer exists." });
+                    return Json(new { success = false, message = "Concurrency conflict. Please reload and try again." });
+                }
             }
             ViewBag.BranchId = new SelectList(_context.Branches.Where(b => b.IsActive), "BranchId", "BranchName", model.BranchId);
             ViewBag.ProductId = new SelectList(_context.Products.Where(p => p.IsActive), "ProductId", "ProductName", model.ProductId);
@@ -152,7 +221,13 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var item = await _context.ProductInventories.FindAsync(id);
-            if (item != null) { _context.ProductInventories.Remove(item); await _context.SaveChangesAsync(); }
+            if (item != null)
+            {
+                _context.ProductInventories.Remove(item);
+                await _context.SaveChangesAsync();
+                // >>> [O(1) CACHE PURGE]: Reset live RAM stock balance to 0 for deleted record
+                _ramService.InitializeOrUpdateStock(item.BranchId, item.ProductId, 0);
+            }
             return Json(new { success = true, message = "Inventory record deleted." });
         }
     }

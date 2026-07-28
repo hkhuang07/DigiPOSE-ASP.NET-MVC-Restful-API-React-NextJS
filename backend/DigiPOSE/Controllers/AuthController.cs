@@ -67,7 +67,8 @@ namespace DigiPOSE.Controllers
                     new System.Security.Claims.Claim("FullName", user.FullName ?? user.UserName),
                     new System.Security.Claims.Claim("BranchId", user.BranchId.ToString()),
                     new System.Security.Claims.Claim("BranchName", user.Branch?.BranchName ?? "N/A"),
-                    new System.Security.Claims.Claim(ClaimTypes.Role, user.Role?.RoleName ?? "User")
+                    new System.Security.Claims.Claim(ClaimTypes.Role, user.Role?.RoleName ?? "User"),
+                    new System.Security.Claims.Claim("AvatarUrl", user.ImageUrl ?? "")
                 };
 
                 // Load permission claims for Policy-based authorization

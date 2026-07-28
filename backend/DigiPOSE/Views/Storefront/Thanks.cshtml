@@ -1,0 +1,69 @@
+@model DigiPOSE.Models.Order?
+@{
+    Layout = "~/Views/Shared/_StorefrontLayout.cshtml";
+    ViewData["Title"] = "Transaction Confirmed // Order Deployed";
+    string invoiceNumber = ViewData["InvoiceNumber"]?.ToString() ?? $"WEB-{(Model?.OrderId ?? 0)}";
+    decimal totalCharged = ViewData["TotalCharged"] != null ? Convert.ToDecimal(ViewData["TotalCharged"]) : (Model?.TotalAmount ?? 0);
+}
+
+<div class="container my-5 py-4" style="max-width: 950px;">
+    <div class="p-5 text-center" style="background: var(--cyber-surface); border: 2px solid var(--cyber-emerald); box-shadow: 0 0 35px rgba(0, 255, 102, 0.25); border-radius: 0; position: relative;">
+        <!-- Top Tech Reticles -->
+        <div style="position:absolute; top:8px; left:12px; font-family:'VT323'; font-size:1.1rem; color:var(--cyber-emerald);">[ SYSTEM STATUS: ACID READ_COMMITTED // OK ]</div>
+        <div style="position:absolute; top:8px; right:12px; font-family:'VT323'; font-size:1.1rem; color:var(--cyber-cyan);">[ LEDGER SYNCED ]</div>
+
+        <div class="my-4">
+            <div style="width: 100px; height: 100px; border: 2px solid var(--cyber-emerald); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(0, 255, 102, 0.1); box-shadow: 0 0 25px var(--cyber-emerald);">
+                <i class="fa-solid fa-check" style="font-size: 3.5rem; color: var(--cyber-emerald);"></i>
+            </div>
+        </div>
+
+        <h1 style="font-family:'Orbitron'; font-weight:900; color:#FFFFFF; font-size:2.5rem; text-shadow:0 0 15px rgba(0,255,102,0.5); margin-bottom:10px;">
+            TRANSACTION SUCCESSFULLY REGISTERED
+        </h1>
+        <p style="font-family:'Roboto Mono'; font-size:1.05rem; color:var(--cyber-muted); max-width: 680px; margin: 0 auto 30px;">
+            Your hardware assets & software license keys have been reserved in O(1) RAM cache and officially registered into the immutable corporate inventory ledger.
+        </p>
+
+        <!-- Digital Receipt Summary Box -->
+        <div class="p-4 mb-5 text-start" style="background: #000; border: 1px dashed var(--cyber-cyan); max-width: 640px; margin: 0 auto;">
+            <div class="d-flex justify-content-between mb-2 pb-2" style="border-bottom:1px solid rgba(0,229,255,0.2);">
+                <span style="font-family:'Orbitron'; font-weight:bold; color:var(--cyber-cyan); font-size:0.9rem;">INVOICE REFERENCE NUMBER:</span>
+                <span style="font-family:'VT323'; font-size:1.6rem; color:#FFF;">@invoiceNumber</span>
+            </div>
+            @if(Model != null) {
+                <div class="d-flex justify-content-between mb-2">
+                    <span style="font-family:'Roboto Mono'; color:var(--cyber-muted); font-size:0.88rem;">SYSTEM ORDER ID:</span>
+                    <span style="font-family:'VT323'; font-size:1.4rem; color:var(--cyber-amber);">#@Model.OrderId</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span style="font-family:'Roboto Mono'; color:var(--cyber-muted); font-size:0.88rem;">SETTLEMENT METHOD:</span>
+                    <span style="font-family:'Orbitron'; font-weight:bold; color:var(--cyber-emerald); font-size:0.9rem;">@(Model.PaymentMethod?.MethodName ?? "Verified Digital Settlement")</span>
+                </div>
+            }
+            <div class="d-flex justify-content-between pt-2 mt-2" style="border-top:1px dashed var(--cyber-border);">
+                <span style="font-family:'Orbitron'; font-weight:900; color:var(--cyber-emerald);">TOTAL CHARGED:</span>
+                <span style="font-family:'VT323'; font-size:2.2rem; font-weight:bold; color:var(--cyber-emerald);">@totalCharged.ToString("N0") VND</span>
+            </div>
+        </div>
+
+        <!-- Telemetry Audit Note -->
+        <div class="p-3 mb-4" style="background:rgba(0,229,255,0.04); border-left:4px solid var(--cyber-cyan); font-family:'Roboto Mono'; font-size:0.85rem; color:var(--cyber-text); text-align:left;">
+            <i class="fa-solid fa-satellite-dish text-cyan me-2"></i>
+            <strong>TELEMETRY RADAR ACTIVE:</strong> An official digital invoice PDF and asset calibration blueprint have been queued into the automated delivery worker. You may track real-time fulfillment via your Commander Dashboard.
+        </div>
+
+        <!-- Action Navigation Buttons -->
+        <div class="d-flex justify-content-center gap-4 mt-4 flex-wrap">
+            <a href="/Profile/Index#orders-tab" class="btn px-5 py-3" style="background:var(--cyber-cyan); color:#000; font-family:'Orbitron'; font-weight:900; border-radius:0; text-transform:uppercase;">
+                <i class="fa-solid fa-boxes-stacked me-2"></i> [ VIEW MY ORDERS ]
+            </a>
+            <a href="/Storefront/Index" class="btn btn-outline-light px-5 py-3" style="font-family:'Orbitron'; font-weight:bold; border-radius:0;">
+                <i class="fa-solid fa-shop me-2"></i> [ CONTINUE ACQUISITION ]
+            </a>
+            <a href="/Home/DashboardRouter" class="btn btn-outline-success px-5 py-3" style="font-family:'Orbitron'; font-weight:bold; border-radius:0;">
+                <i class="fa-solid fa-gauge-high me-2"></i> [ ACCESS POS CLUSTER ]
+            </a>
+        </div>
+    </div>
+</div>

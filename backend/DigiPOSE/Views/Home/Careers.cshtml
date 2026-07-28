@@ -1,0 +1,132 @@
+@{
+    Layout = "~/Views/Shared/_StorefrontLayout.cshtml";
+    ViewData["Title"] = "Tuyển dụng — Engineering & Telemetry Careers";
+}
+
+<div class="container-fluid px-5 my-5" style="max-width: 1700px;">
+    <!-- Careers Header Banner -->
+    <div style="background: linear-gradient(90deg, rgba(0,255,102,0.1) 0%, rgba(0,0,0,0) 100%); border-left: 5px solid var(--cyber-emerald); padding: 40px; margin-bottom: 60px;">
+        <div style="font-family:'VT323'; color:var(--cyber-emerald); font-size:1.3rem; letter-spacing:2px;">> RECRUITMENT_MATRIX // NODE: TALENT_ACQUISITION_PROTOCOL _</div>
+        <h1 style="font-family:'Orbitron'; font-weight:900; font-size:3.2rem; color:#FFFFFF; margin: 10px 0 15px 0; text-shadow:0 0 15px rgba(0,255,102,0.5);">
+            <i class="fa-solid fa-users-gear text-success me-3"></i> JOIN THE DIGIPOSE ENGINEERING FORCE
+        </h1>
+        <p style="color:var(--cyber-muted); font-size:1.15rem; max-width:1000px; line-height:1.7;">
+            We are continuously seeking elite software architects, distributed systems developers, and cybersecurity analysts to engineer the next generation of cloud POS telemetry and low-latency point-of-sale firmware.
+        </p>
+    </div>
+
+    <!-- Culture & Benefits Summary -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div style="background:var(--cyber-surface); border:1px solid var(--cyber-border); padding:30px; height:100%;">
+                <i class="fa-solid fa-laptop-code text-cyan mb-3" style="font-size:2.5rem;"></i>
+                <h4 style="font-family:'Orbitron'; color:#FFF; font-size:1.1rem; font-weight:700;">HYBRID R&D CLONING</h4>
+                <p style="color:var(--cyber-muted); font-size:0.9rem; margin-top:10px;">Work remotely or deploy directly from our 24th-floor Cyber-Tech NOC Headquarters with cutting-edge engineering hardware.</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div style="background:var(--cyber-surface); border:1px solid var(--cyber-border); padding:30px; height:100%;">
+                <i class="fa-solid fa-coins text-amber mb-3" style="font-size:2.5rem; color:var(--cyber-amber);"></i>
+                <h4 style="font-family:'Orbitron'; color:#FFF; font-size:1.1rem; font-weight:700;">ELITE COMPENSATION</h4>
+                <p style="color:var(--cyber-muted); font-size:0.9rem; margin-top:10px;">Top-tier competitive packages paid out in cash or equity, supplemented with annual achievement performance dividends.</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div style="background:var(--cyber-surface); border:1px solid var(--cyber-border); padding:30px; height:100%;">
+                <i class="fa-solid fa-heart-pulse text-danger mb-3" style="font-size:2.5rem; color:var(--cyber-danger);"></i>
+                <h4 style="font-family:'Orbitron'; color:#FFF; font-size:1.1rem; font-weight:700;">COMPREHENSIVE BIOLOGY CARE</h4>
+                <p style="color:var(--cyber-muted); font-size:0.9rem; margin-top:10px;">Premium VIP healthcare coverage for employees and immediate family members across top private hospitals.</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div style="background:var(--cyber-surface); border:1px solid var(--cyber-border); padding:30px; height:100%;">
+                <i class="fa-solid fa-rocket text-success mb-3" style="font-size:2.5rem;"></i>
+                <h4 style="font-family:'Orbitron'; color:#FFF; font-size:1.1rem; font-weight:700;">UNLIMITED UPGRADE PATH</h4>
+                <p style="color:var(--cyber-muted); font-size:0.9rem; margin-top:10px;">Dedicated $3,000 annual budget per engineer for technical certifications, textbooks, and international developer summits.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Open Positions Matrix -->
+    <h2 style="font-family:'Rajdhani'; font-weight:700; color:var(--cyber-cyan); font-size:2.4rem; letter-spacing:3px; margin: 60px 0 30px 0; text-transform:uppercase;">
+        // CURRENT ACTIVE MISSION OPENINGS //
+    </h2>
+
+    <div class="table-responsive">
+        <table class="table table-dark table-hover" style="background: var(--cyber-surface); border: 1px solid var(--cyber-cyan); font-family:'Roboto Mono';">
+            <thead style="background: rgba(0, 229, 255, 0.15); border-bottom: 2px solid var(--cyber-cyan);">
+                <tr>
+                    <th class="py-4 px-4" style="font-family:'Orbitron'; color:var(--cyber-cyan); text-transform:uppercase;">MISSION CODE / ROLE TITLE</th>
+                    <th class="py-4 px-4" style="font-family:'Orbitron'; color:var(--cyber-cyan); text-transform:uppercase;">DOMAIN</th>
+                    <th class="py-4 px-4" style="font-family:'Orbitron'; color:var(--cyber-cyan); text-transform:uppercase;">LOCATION CLUSTER</th>
+                    <th class="py-4 px-4 text-center" style="font-family:'Orbitron'; color:var(--cyber-cyan); text-transform:uppercase;">STATUS</th>
+                    <th class="py-4 px-4 text-end" style="font-family:'Orbitron'; color:var(--cyber-cyan); text-transform:uppercase;">ACTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Job 1 -->
+                <tr style="border-bottom: 1px solid var(--cyber-border);">
+                    <td class="p-4">
+                        <div style="font-family:'VT323'; color:var(--cyber-amber); font-size:1.1rem;">ENG-REQ-801</div>
+                        <strong style="font-family:'Orbitron'; font-size:1.25rem; color:#FFF;">Principal .NET Core Distributed Architect</strong>
+                    </td>
+                    <td class="p-4 align-middle" style="color:var(--cyber-emerald); font-weight:bold;">Cloud ERP / Backend Telemetry</td>
+                    <td class="p-4 align-middle">Silicon Quad NOC / Hybrid</td>
+                    <td class="p-4 align-middle text-center">
+                        <span class="badge" style="background:#000; border:1px solid var(--cyber-emerald); color:var(--cyber-emerald); padding:6px 12px; font-family:'VT323'; font-size:1.1rem; border-radius:0;">ACTIVE_RECRUITMENT</span>
+                    </td>
+                    <td class="p-4 align-middle text-end">
+                        <button onclick="applyJob('ENG-REQ-801')" class="btn btn-sm btn-outline-info px-4 py-2" style="font-family:'Orbitron'; font-weight:bold; border-radius:0; border-color:var(--cyber-cyan); color:var(--cyber-cyan);">
+                            [ APPLY NOW ] <i class="fa-solid fa-arrow-right ms-1"></i>
+                        </button>
+                    </td>
+                </tr>
+                <!-- Job 2 -->
+                <tr style="border-bottom: 1px solid var(--cyber-border);">
+                    <td class="p-4">
+                        <div style="font-family:'VT323'; color:var(--cyber-amber); font-size:1.1rem;">UIX-REQ-305</div>
+                        <strong style="font-family:'Orbitron'; font-size:1.25rem; color:#FFF;">Cyber-Cinematic HUD Frontend Engineer (Vue/Blazor)</strong>
+                    </td>
+                    <td class="p-4 align-middle" style="color:var(--cyber-cyan); font-weight:bold;">Frontend / Medical-Military UI</td>
+                    <td class="p-4 align-middle">Silicon Quad NOC / Hybrid</td>
+                    <td class="p-4 align-middle text-center">
+                        <span class="badge" style="background:#000; border:1px solid var(--cyber-emerald); color:var(--cyber-emerald); padding:6px 12px; font-family:'VT323'; font-size:1.1rem; border-radius:0;">ACTIVE_RECRUITMENT</span>
+                    </td>
+                    <td class="p-4 align-middle text-end">
+                        <button onclick="applyJob('UIX-REQ-305')" class="btn btn-sm btn-outline-info px-4 py-2" style="font-family:'Orbitron'; font-weight:bold; border-radius:0; border-color:var(--cyber-cyan); color:var(--cyber-cyan);">
+                            [ APPLY NOW ] <i class="fa-solid fa-arrow-right ms-1"></i>
+                        </button>
+                    </td>
+                </tr>
+                <!-- Job 3 -->
+                <tr style="border-bottom: 1px solid var(--cyber-border);">
+                    <td class="p-4">
+                        <div style="font-family:'VT323'; color:var(--cyber-amber); font-size:1.1rem;">IOT-REQ-412</div>
+                        <strong style="font-family:'Orbitron'; font-size:1.25rem; color:#FFF;">Embedded Firmware Specialist (Thermal Printers / Scanners)</strong>
+                    </td>
+                    <td class="p-4 align-middle" style="color:var(--cyber-amber); font-weight:bold;">Hardware / IoT Driver Edge</td>
+                    <td class="p-4 align-middle">On-site Hardware Lab HQ</td>
+                    <td class="p-4 align-middle text-center">
+                        <span class="badge" style="background:#000; border:1px solid var(--cyber-emerald); color:var(--cyber-emerald); padding:6px 12px; font-family:'VT323'; font-size:1.1rem; border-radius:0;">ACTIVE_RECRUITMENT</span>
+                    </td>
+                    <td class="p-4 align-middle text-end">
+                        <button onclick="applyJob('IOT-REQ-412')" class="btn btn-sm btn-outline-info px-4 py-2" style="font-family:'Orbitron'; font-weight:bold; border-radius:0; border-color:var(--cyber-cyan); color:var(--cyber-cyan);">
+                            [ APPLY NOW ] <i class="fa-solid fa-arrow-right ms-1"></i>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function applyJob(code) {
+            const email = prompt(">>> [SYSTEM_TALENT_RECRUITMENT]: Please enter your secure communication email or GitHub profile link for mission code: " + code);
+            if (email && email.trim() !== "") {
+                alert(">>> [SUBMISSION_CONFIRMED]: Your deployment credentials for mission " + code + " have been securely encrypted and routed to Talent Command HQ. An engineering interviewer will contact you within 24 hours.");
+            }
+        }
+    </script>
+}

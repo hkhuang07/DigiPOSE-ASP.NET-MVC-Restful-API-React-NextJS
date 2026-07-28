@@ -4,9 +4,10 @@
         <h5 class="modal-title"><i class="fa-solid fa-user-pen text-cyan me-2"></i> EDIT USER</h5>
         <button type="button" class="btn-close-cyber" data-bs-dismiss="modal"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <form class="ajax-modal-form" asp-action="Edit" asp-controller="Users" method="post">
+    <form class="ajax-modal-form" asp-action="Edit" asp-controller="Users" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="UserId" />
+        <input type="hidden" asp-for="ImageUrl" />
         <div class="modal-body">
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3" style="font-family:'Roboto Mono'; font-size:0.85rem;"></div>
             <div class="row g-3">
@@ -47,6 +48,18 @@
                     <label asp-for="PhoneNumber" class="form-cyber-label"></label>
                     <input asp-for="PhoneNumber" class="form-control form-cyber-control" placeholder="Phone number" />
                     <span asp-validation-for="PhoneNumber" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label asp-for="ImageUpload" class="form-cyber-label"><i class="fa-solid fa-camera me-1 text-cyan"></i> AVATAR UPLOAD</label>
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    {
+                        <div class="mb-2 d-flex align-items-center gap-2" style="background:#0A0A0A; border:1px solid rgba(0,229,255,0.3); padding:4px;">
+                            <img src="~/uploads/avatars/@Model.ImageUrl" width="48" height="48" style="object-fit:cover; border:1px solid #00E5FF;" />
+                            <small style="font-family:'Roboto Mono'; font-size:0.75rem; color:#00FF66;">[CURRENT BIOMETRIC AVATAR PREVIEW]</small>
+                        </div>
+                    }
+                    <input asp-for="ImageUpload" type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="form-control form-cyber-control" />
+                    <span asp-validation-for="ImageUpload" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
                 </div>
                 <div class="col-12 mb-2">
                     <div class="form-check">

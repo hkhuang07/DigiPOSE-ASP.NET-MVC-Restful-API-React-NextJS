@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/lib/font-awesome/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@600;700&family=Roboto+Mono:wght@400;500;700&family=VT323&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --true-black: #000000;
@@ -20,10 +21,10 @@
             --crimson-danger: #FF3333;
             --font-hdr: 'Orbitron', 'Rajdhani', sans-serif;
             --font-data: 'VT323', 'Roboto Mono', monospace;
-            --sidebar-w: 200px;
+            --operator-menu-w: 220px;
             --header-h: 48px;
             --footer-h: 32px;
-            --register-w: 380px;
+            --register-w: 400px;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -142,66 +143,75 @@
             overflow: hidden;
         }
 
-        /* -------  LEFT SIDEBAR  ------- */
-        .pos-sidebar {
-            width: var(--sidebar-w);
+        /* -------  LEFT: OPERATOR MENU SIDEBAR  ------- */
+        .pos-operator-menu {
+            width: var(--operator-menu-w);
             background: #050505;
-            border-right: 1px solid #222;
+            border-right: 1px solid #1A1A1A;
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
             overflow-y: auto;
-            transition: transform 0.2s ease;
+            transition: width 0.2s ease;
         }
+        .pos-operator-menu.collapsed { width: 0; overflow: hidden; }
+        .pos-operator-menu::-webkit-scrollbar { width: 3px; }
+        .pos-operator-menu::-webkit-scrollbar-thumb { background: #1A1A1A; }
 
-        .sidebar-section-title {
+        .op-menu-header {
+            padding: 10px 14px;
             font-family: var(--font-hdr);
-            font-size: 0.6rem;
-            color: #444;
+            font-size: 0.65rem;
+            color: var(--holo-cyan);
             text-transform: uppercase;
             letter-spacing: 2px;
-            padding: 10px 12px 4px;
             border-bottom: 1px solid #111;
+            display: flex; align-items: center; gap: 6px;
         }
 
-        .sidebar-nav-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 14px;
-            color: #AAA;
+        .op-menu-section { padding: 8px 14px 4px; font-size: 0.6rem; color: #333; text-transform: uppercase; letter-spacing: 2px; }
+        .op-menu-divider { height: 1px; background: #0D0D0D; margin: 4px 0; }
+
+        .op-menu-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 14px;
+            color: #888;
             cursor: pointer;
             text-decoration: none;
             font-size: 0.82rem;
             border-left: 2px solid transparent;
-            transition: all 0.15s;
+            transition: all 0.12s;
+            white-space: nowrap;
         }
-        .sidebar-nav-item:hover, .sidebar-nav-item.active {
-            background: rgba(0,229,255,0.06);
-            color: var(--holo-cyan);
-            border-left-color: var(--holo-cyan);
-        }
-        .sidebar-nav-item i { width: 16px; text-align: center; font-size: 0.9rem; }
+        .op-menu-item:hover { background: rgba(0,229,255,0.06); color: var(--holo-cyan); border-left-color: var(--holo-cyan); }
+        .op-menu-item.active { color: var(--bio-emerald); border-left-color: var(--bio-emerald); background: rgba(0,255,102,0.04); }
+        .op-menu-item i { width: 16px; text-align: center; font-size: 0.85rem; }
 
-        .sidebar-divider { height: 1px; background: #111; margin: 4px 0; }
-
-        /* Shift status badge in sidebar */
+        /* Shift status in operator menu */
         .shift-status-badge {
             display: flex; align-items: center; gap: 6px;
-            padding: 6px 14px;
-            font-size: 0.72rem;
-            color: #666;
+            padding: 6px 14px 2px;
+            font-size: 0.7rem; color: #555;
         }
         .shift-status-badge.active-shift { color: var(--bio-emerald); }
-        .shift-dot { width: 6px; height: 6px; border-radius: 50%; background: #333; flex-shrink: 0; }
+        .shift-dot { width: 6px; height: 6px; border-radius: 50%; background: #222; flex-shrink: 0; }
         .shift-dot.active { background: var(--bio-emerald); box-shadow: 0 0 6px var(--bio-emerald); }
 
-        /* -------  CENTER: CATALOG  ------- */
+        /* -------  CENTER-LEFT: ORDER REGISTER  ------- */
+        .pos-register {
+            width: var(--register-w);
+            display: flex;
+            flex-direction: column;
+            background: #050505;
+            border-right: 1px solid #1A1A1A;
+            flex-shrink: 0;
+        }
+
+        /* -------  CENTER-RIGHT: CATALOG  ------- */
         .pos-catalog {
             flex: 1;
             display: flex;
             flex-direction: column;
-            border-right: 1px solid #222;
             min-width: 0;
         }
 
@@ -372,14 +382,7 @@
         }
         .prod-unit { font-size: 0.65rem; color: #666; }
 
-        /* -------  RIGHT: ORDER REGISTER  ------- */
-        .pos-register {
-            width: var(--register-w);
-            display: flex;
-            flex-direction: column;
-            background: #050505;
-            flex-shrink: 0;
-        }
+        /* Right register moved to left — styles now in layout section above */
 
         /* Customer row */
         .register-customer-row {
@@ -971,73 +974,6 @@
     </div>
 
     <!-- ====================================================
-         HAMBURGER SIDE MENU
-         Navigation ORDER mirrors main _Layout.cshtml MODULE structure
-    ==================================================== -->
-    <div class="side-menu-overlay" id="sideMenuOverlay" onclick="closeSideMenu()"></div>
-    <div class="side-menu" id="sideMenu">
-        <div class="side-menu-header">
-            <i class="fa-solid fa-terminal"></i>
-            OPERATOR MENU
-        </div>
-
-        <!-- POS Operations -->
-        <div class="side-menu-section">POS Operations</div>
-        <div class="side-menu-item" onclick="openDashboard(); closeSideMenu();">
-            <i class="fa-solid fa-chart-line" style="color:var(--holo-cyan);"></i>
-            Dashboard
-        </div>
-        <div class="side-menu-item" onclick="openStartShift(); closeSideMenu();">
-            <i class="fa-solid fa-clock-rotate-left" style="color:var(--amber-warn);"></i>
-            Start / Close Shift
-        </div>
-        <div class="side-menu-item" onclick="openVip(); closeSideMenu();">
-            <i class="fa-solid fa-id-badge" style="color:var(--bio-emerald);"></i>
-            VIP Customer
-        </div>
-        <div class="side-menu-item" onclick="openOrdersToday(); closeSideMenu();">
-            <i class="fa-solid fa-receipt" style="color:#CCC;"></i>
-            Orders Today
-        </div>
-
-        <div class="side-menu-divider"></div>
-        <!-- Catalog Filters -->
-        <div class="side-menu-section">Catalog</div>
-        <div class="side-menu-item" onclick="setPrimaryFilter('all',null); closeSideMenu();">
-            <i class="fa-solid fa-border-all"></i> All Products
-        </div>
-        <div class="side-menu-item" onclick="setPrimaryFilter('category',null); closeSideMenu();">
-            <i class="fa-solid fa-tags"></i> By Category
-        </div>
-        <div class="side-menu-item" onclick="setPrimaryFilter('manufacturer',null); closeSideMenu();">
-            <i class="fa-solid fa-industry"></i> By Manufacturer
-        </div>
-
-        @if (User.IsInRole("Super Admin") || User.IsInRole("Branch Manager"))
-        {
-            <div class="side-menu-divider"></div>
-            <!-- MODULE 4: Sales & Billing (Admin only) -->
-            <div class="side-menu-section">Admin: Sales</div>
-            <a class="side-menu-item" href="/Administrator/Orders/Index">
-                <i class="fa-solid fa-receipt"></i> Sales Orders
-            </a>
-            <a class="side-menu-item" href="/Administrator/Home/Index">
-                <i class="fa-solid fa-gauge-high"></i> Admin Panel
-            </a>
-        }
-
-        <div class="side-menu-divider"></div>
-        <!-- MODULE 5: Links & Terminals (matches main layout bottom section) -->
-        <div class="side-menu-section">Links &amp; Terminals</div>
-        <a class="side-menu-item" href="/Storefront/Index" style="color:var(--holo-cyan); border-left-color:var(--holo-cyan);">
-            <i class="fa-solid fa-cart-shopping" style="color:var(--holo-cyan);"></i> Online Storefront
-        </a>
-        <a class="side-menu-item" href="/Home/Index" style="color:#888;">
-            <i class="fa-solid fa-gauge-high"></i> HUD Dashboard
-        </a>
-    </div>
-
-    <!-- ====================================================
          TOP HEADER
     ==================================================== -->
     <header class="pos-header">
@@ -1094,78 +1030,84 @@
     </header>
 
     <!-- ====================================================
-         MAIN WORKSPACE
+         MAIN WORKSPACE: [OPERATOR MENU] [REGISTER] [CATALOG]
     ==================================================== -->
     <div class="pos-workspace">
 
-        <!-- LEFT SIDEBAR: Category quick-nav -->
-        <aside class="pos-sidebar" id="posSidebar">
-            <!-- Shift status -->
+        <!-- LEFTMOST: OPERATOR MENU (toggle with hamburger) -->
+        <aside class="pos-operator-menu" id="posOperatorMenu">
+            <div class="op-menu-header">
+                <i class="fa-solid fa-terminal"></i>
+                OPERATOR MENU
+            </div>
+
+            <!-- Shift status indicator -->
             <div class="shift-status-badge" id="sidebarShiftStatus">
                 <div class="shift-dot" id="shiftDot"></div>
                 <span id="shiftStatusLabel">No Active Shift</span>
             </div>
-            <div class="sidebar-divider"></div>
+            <div class="op-menu-divider"></div>
 
-            <div class="sidebar-section-title">Categories</div>
-            <div id="sidebarCategories">
-                <div class="sidebar-nav-item" onclick="setPrimaryFilter('all', null)">
-                    <i class="fa-solid fa-border-all"></i>
-                    <span>All Products</span>
-                </div>
+            <!-- POS Operations -->
+            <div class="op-menu-section">POS Operations</div>
+            <div class="op-menu-item" onclick="openDashboard()">
+                <i class="fa-solid fa-chart-line" style="color:var(--holo-cyan);"></i> Dashboard
             </div>
-            <div class="sidebar-divider"></div>
-            <div class="sidebar-section-title">Sort By</div>
-            <div class="sidebar-nav-item" onclick="applySortFilter('newest', this)">
-                <i class="fa-solid fa-star" style="color:var(--bio-emerald);"></i> New Arrivals
+            <div class="op-menu-item" id="opMenuStartShift" onclick="openStartShift()">
+                <i class="fa-solid fa-clock-rotate-left" style="color:var(--amber-warn);"></i> Start Shift
             </div>
-            <div class="sidebar-nav-item" onclick="applySortFilter('bestseller', this)">
-                <i class="fa-solid fa-fire" style="color:var(--amber-warn);"></i> Best Sellers
+            <div class="op-menu-item" id="opMenuCloseShift" onclick="openCloseShift()" style="display:none;">
+                <i class="fa-solid fa-door-open" style="color:var(--crimson-danger);"></i> Close Shift
             </div>
-            <div class="sidebar-nav-item" onclick="applySortFilter('promo', this)">
-                <i class="fa-solid fa-tag" style="color:var(--holo-cyan);"></i> Promotions
+            <div class="op-menu-item" onclick="openVip()">
+                <i class="fa-solid fa-id-badge" style="color:var(--bio-emerald);"></i> VIP Customer
             </div>
+            <div class="op-menu-item" onclick="openOrdersToday()">
+                <i class="fa-solid fa-receipt" style="color:#CCC;"></i> Orders Today
+            </div>
+            <div class="op-menu-item" onclick="switchCounter()">
+                <i class="fa-solid fa-desktop" style="color:var(--holo-cyan);"></i> Switch Counter
+            </div>
+
+            <div class="op-menu-divider"></div>
+            <!-- Catalog Filters -->
+            <div class="op-menu-section">Catalog</div>
+            <div class="op-menu-item" onclick="setPrimaryFilter('all', null)">
+                <i class="fa-solid fa-border-all"></i> All Products
+            </div>
+            <div class="op-menu-item" onclick="setPrimaryFilter('category', null)">
+                <i class="fa-solid fa-tags"></i> By Category
+            </div>
+            <div class="op-menu-item" onclick="setPrimaryFilter('manufacturer', null)">
+                <i class="fa-solid fa-industry"></i> By Manufacturer
+            </div>
+            <div id="sidebarCategories"></div>
+
+            @if (User.IsInRole("Super Admin") || User.IsInRole("Branch Manager"))
+            {
+                <div class="op-menu-divider"></div>
+                <div class="op-menu-section">Admin: Sales</div>
+                <a class="op-menu-item" href="/Administrator/Orders/Index">
+                    <i class="fa-solid fa-receipt"></i> Sales Orders
+                </a>
+                <a class="op-menu-item" href="/Administrator/Retails/Index">
+                    <i class="fa-solid fa-file-invoice"></i> Retail Docs
+                </a>
+                <a class="op-menu-item" href="/Administrator/Home/Index">
+                    <i class="fa-solid fa-gauge-high"></i> Admin Panel
+                </a>
+            }
+            <div class="op-menu-divider"></div>
+            <div class="op-menu-section">Links</div>
+            <a class="op-menu-item" href="/Storefront/Index" style="color:var(--holo-cyan);">
+                <i class="fa-solid fa-cart-shopping" style="color:var(--holo-cyan);"></i> Online Storefront
+            </a>
+            <a class="op-menu-item" href="/Home/Index">
+                <i class="fa-solid fa-gauge-high"></i> HUD Dashboard
+            </a>
         </aside>
 
-        <!-- CENTER: CATALOG -->
-        <section class="pos-catalog">
-            <!-- Toolbar -->
-            <div class="catalog-toolbar">
-                <div class="search-row">
-                    <span style="background:#000; border:1px solid #333; border-right:none; padding:0 10px; display:flex; align-items:center;">
-                        <i class="fa-solid fa-barcode" style="color:var(--holo-cyan);"></i>
-                    </span>
-                    <input type="text" id="posSearchInput" class="pos-search-input" placeholder="SKU / Barcode / Product Name  [F1]" autocomplete="off" />
-                    <button class="btn-search" onclick="executeSearch()">SEARCH</button>
-                </div>
-                <div class="filter-tags-row">
-                    <button class="btn-filter active" id="btnFltAll" onclick="setPrimaryFilter('all', this)">All</button>
-                    <button class="btn-filter" id="btnFltCate" onclick="setPrimaryFilter('category', this)">Category</button>
-                    <button class="btn-filter" id="btnFltManu" onclick="setPrimaryFilter('manufacturer', this)">Manufacturer</button>
-                    <button class="btn-filter" id="btnFltType" onclick="setPrimaryFilter('productType', this)">Type</button>
-                    <button class="btn-filter" id="btnFltUnit" onclick="setPrimaryFilter('unit', this)">Unit</button>
-                    <span style="border-left:1px solid #222; margin:0 4px; height:18px; align-self:center;"></span>
-                    <button class="btn-filter sort-tag" onclick="applySortFilter('newest', this)"><i class="fa-solid fa-star me-1"></i>New</button>
-                    <button class="btn-filter sort-tag" onclick="applySortFilter('bestseller', this)"><i class="fa-solid fa-fire me-1"></i>Best</button>
-                    <button class="btn-filter sort-tag" onclick="applySortFilter('promo', this)"><i class="fa-solid fa-tag me-1"></i>Promo</button>
-                </div>
-            </div>
-
-            <!-- Sub-filter strip -->
-            <div class="sub-filter-strip" id="subFilterStrip">
-                <span style="color:#333; font-size:0.7rem;">Select a filter above to narrow catalog</span>
-            </div>
-
-            <!-- Product grid -->
-            <div class="product-grid" id="productGrid">
-                <div style="grid-column:1/-1; text-align:center; padding:40px; color:#333;">
-                    <i class="fa-solid fa-gear fa-spin fa-2x" style="color:var(--holo-cyan);"></i>
-                    <div style="margin-top:10px; font-family:var(--font-hdr); font-size:0.8rem;">Loading catalog...</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- RIGHT: ORDER REGISTER -->
+        <!-- CENTER-LEFT: ORDER REGISTER -->
         <section class="pos-register">
             <!-- Customer row -->
             <div class="register-customer-row">
@@ -1253,8 +1195,45 @@
                 </button>
             </div>
         </section>
-    </div>
 
+        <!-- CENTER-RIGHT: PRODUCT CATALOG -->
+        <section class="pos-catalog">
+            <!-- Toolbar -->
+            <div class="catalog-toolbar">
+                <div class="search-row">
+                    <span style="background:#000; border:1px solid #333; border-right:none; padding:0 10px; display:flex; align-items:center;">
+                        <i class="fa-solid fa-barcode" style="color:var(--holo-cyan);"></i>
+                    </span>
+                    <input type="text" id="posSearchInput" class="pos-search-input" placeholder="SKU / Barcode / Product Name  [F1]" autocomplete="off" />
+                    <button class="btn-search" onclick="executeSearch()">SEARCH</button>
+                </div>
+                <div class="filter-tags-row">
+                    <button class="btn-filter active" id="btnFltAll" onclick="setPrimaryFilter('all', this)">All</button>
+                    <button class="btn-filter" id="btnFltCate" onclick="setPrimaryFilter('category', this)">Category</button>
+                    <button class="btn-filter" id="btnFltManu" onclick="setPrimaryFilter('manufacturer', this)">Manufacturer</button>
+                    <button class="btn-filter" id="btnFltType" onclick="setPrimaryFilter('productType', this)">Type</button>
+                    <button class="btn-filter" id="btnFltUnit" onclick="setPrimaryFilter('unit', this)">Unit</button>
+                    <span style="border-left:1px solid #222; margin:0 4px; height:18px; align-self:center;"></span>
+                    <button class="btn-filter sort-tag" onclick="applySortFilter('newest', this)"><i class="fa-solid fa-star me-1"></i>New</button>
+                    <button class="btn-filter sort-tag" onclick="applySortFilter('bestseller', this)"><i class="fa-solid fa-fire me-1"></i>Best</button>
+                    <button class="btn-filter sort-tag" onclick="applySortFilter('promo', this)"><i class="fa-solid fa-tag me-1"></i>Promo</button>
+                </div>
+            </div>
+
+            <!-- Sub-filter strip -->
+            <div class="sub-filter-strip" id="subFilterStrip">
+                <span style="color:#333; font-size:0.7rem;">Select a filter above to narrow catalog</span>
+            </div>
+
+            <!-- Product grid -->
+            <div class="product-grid" id="productGrid">
+                <div style="grid-column:1/-1; text-align:center; padding:40px; color:#333;">
+                    <i class="fa-solid fa-gear fa-spin fa-2x" style="color:var(--holo-cyan);"></i>
+                    <div style="margin-top:10px; font-family:var(--font-hdr); font-size:0.8rem;">Loading catalog...</div>
+                </div>
+            </div>
+        </section>
+    </div>
     <!-- ====================================================
          FOOTER TELEMETRY
     ==================================================== -->
@@ -1515,33 +1494,49 @@
     </div>
 
     <!-- ====================================================
-         MODAL: POS DASHBOARD
+         MODAL: POS DASHBOARD (WITH CHART.JS)
     ==================================================== -->
     <div class="pos-modal-bg" id="modalDashboard">
-        <div class="pos-modal" style="max-width:620px;">
+        <div class="pos-modal" style="max-width:820px; max-height:90vh; overflow-y:auto;">
             <div class="modal-hdr">
-                <span class="modal-title"><i class="fa-solid fa-chart-line me-2"></i>POS Dashboard</span>
+                <span class="modal-title"><i class="fa-solid fa-chart-line me-2"></i>POS Realtime Analytics & Dashboard</span>
                 <button class="btn-close-modal" onclick="closeModal('modalDashboard')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
+                <div style="display:flex; gap:10px; margin-bottom:14px; align-items:center;">
+                    <button class="btn-pos-secondary" id="btnDashToday" onclick="loadDashboardRange(0)" style="padding:4px 12px; font-size:0.75rem;">Today</button>
+                    <button class="btn-pos-secondary" id="btnDash7D" onclick="loadDashboardRange(7)" style="padding:4px 12px; font-size:0.75rem;">Last 7 Days</button>
+                    <button class="btn-pos-secondary" id="btnDash30D" onclick="loadDashboardRange(30)" style="padding:4px 12px; font-size:0.75rem;">Last 30 Days</button>
+                    <span style="margin-left:auto; color:#666; font-size:0.75rem; font-family:var(--font-mono);" id="dashDateRangeLabel">---</span>
+                </div>
                 <div class="kpi-grid">
                     <div class="kpi-card">
-                        <div class="kpi-label">Today Revenue</div>
+                        <div class="kpi-label">Total Revenue</div>
                         <div class="kpi-value" id="kpiRevenue">--</div>
                         <div class="kpi-sub">₫</div>
                     </div>
                     <div class="kpi-card">
-                        <div class="kpi-label">Orders</div>
+                        <div class="kpi-label">Completed Orders</div>
                         <div class="kpi-value" id="kpiOrders" style="color:var(--bio-emerald);">--</div>
-                        <div class="kpi-sub">completed</div>
+                        <div class="kpi-sub">orders</div>
                     </div>
                     <div class="kpi-card">
-                        <div class="kpi-label">Avg. Order</div>
+                        <div class="kpi-label">Avg. Order Value</div>
                         <div class="kpi-value" id="kpiAvg" style="color:var(--amber-warn);">--</div>
                         <div class="kpi-sub">₫</div>
                     </div>
                 </div>
-                <div class="form-label" style="margin-bottom:8px; color:#555;">Top Products Today</div>
+                <div style="display:grid; grid-template-columns: 1.6fr 1fr; gap:14px; margin-top:16px; margin-bottom:16px;">
+                    <div style="background:#080808; border:1px solid #1A1A1A; padding:12px;">
+                        <div style="font-size:0.7rem; color:var(--holo-cyan); font-family:var(--font-hdr); text-transform:uppercase; margin-bottom:8px;">Revenue Trend (VND)</div>
+                        <div style="height:220px; position:relative;"><canvas id="chartRevenue"></canvas></div>
+                    </div>
+                    <div style="background:#080808; border:1px solid #1A1A1A; padding:12px;">
+                        <div style="font-size:0.7rem; color:var(--holo-cyan); font-family:var(--font-hdr); text-transform:uppercase; margin-bottom:8px;">Payment Breakdown</div>
+                        <div style="height:220px; position:relative;"><canvas id="chartPayment"></canvas></div>
+                    </div>
+                </div>
+                <div class="form-label" style="margin-bottom:8px; color:#555;">Top Products Sold</div>
                 <table class="top-products-table">
                     <thead>
                         <tr><th>#</th><th>Product</th><th style="text-align:right;">Qty Sold</th><th style="text-align:right;">Revenue</th></tr>
@@ -1552,19 +1547,62 @@
                 </table>
             </div>
             <div class="modal-footer">
-                <button class="btn-pos-primary" onclick="loadDashboard()"><i class="fa-solid fa-rotate me-1"></i>Refresh</button>
+                <button class="btn-pos-primary" onclick="loadDashboardRange(currentDashDays)"><i class="fa-solid fa-rotate me-1"></i>Refresh Data</button>
             </div>
         </div>
     </div>
 
     <!-- ====================================================
-         MODAL: VIP CUSTOMER
+         MODAL: CLOSE SHIFT
+    ==================================================== -->
+    <div class="pos-modal-bg" id="modalCloseShift">
+        <div class="pos-modal" style="max-width:520px;">
+            <div class="modal-hdr" style="border-bottom-color:var(--crimson-danger);">
+                <span class="modal-title" style="color:var(--crimson-danger);"><i class="fa-solid fa-door-open me-2"></i>Close Work Shift</span>
+                <button class="btn-close-modal" onclick="closeModal('modalCloseShift')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="background:#1A0A0A; border:1px solid var(--crimson-danger); padding:12px; margin-bottom:16px; font-family:var(--font-mono); font-size:0.8rem; color:#FFAAA0;">
+                    <i class="fa-solid fa-triangle-exclamation me-1" style="color:var(--crimson-danger);"></i>
+                    Closing the shift will terminate current cashier terminal session and require re-opening for subsequent transactions.
+                </div>
+                <div class="shift-info-grid">
+                    <div class="shift-info-item">
+                        <label>Shift Number</label>
+                        <span id="closeShiftIdLabel" style="color:var(--holo-cyan);">#--</span>
+                    </div>
+                    <div class="shift-info-item">
+                        <label>Start Time</label>
+                        <span id="closeShiftStartTime">--</span>
+                    </div>
+                </div>
+                <div class="form-row" style="margin-top:14px;">
+                    <label class="form-label">End Cash in Drawer (VND) *</label>
+                    <input type="number" id="inpCloseEndCash" class="pos-input" placeholder="Enter total physical cash in register..." min="0" step="1000" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-pos-secondary" onclick="closeModal('modalCloseShift')">Cancel</button>
+                <button class="btn-pos-primary" style="background:var(--crimson-danger); color:#000; font-weight:700;" onclick="confirmCloseShift()">
+                    <i class="fa-solid fa-lock me-1"></i>Confirm Close Shift
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================
+         MODAL: VIP CUSTOMER & REWARD POINTS
     ==================================================== -->
     <div class="pos-modal-bg" id="modalVip">
-        <div class="pos-modal" style="max-width:660px;">
+        <div class="pos-modal" style="max-width:760px;">
             <div class="modal-hdr">
-                <span class="modal-title"><i class="fa-solid fa-id-badge me-2"></i>VIP Customer</span>
-                <button class="btn-close-modal" onclick="closeVip()"><i class="fa-solid fa-xmark"></i></button>
+                <span class="modal-title"><i class="fa-solid fa-id-badge me-2"></i>VIP Customers & Rewards</span>
+                <div>
+                    <button class="btn-pos-primary" onclick="openVipCreate()" style="padding:4px 10px; font-size:0.75rem; margin-right:12px;">
+                        <i class="fa-solid fa-user-plus me-1"></i>New Customer
+                    </button>
+                    <button class="btn-close-modal" onclick="closeVip()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
             </div>
             <div class="modal-body">
                 <div class="form-row">
@@ -1575,7 +1613,7 @@
                         <div style="padding:20px; text-align:center; color:#333;">Loading customers...</div>
                     </div>
                     <div class="vip-detail" id="vipDetail">
-                        <div style="text-align:center; color:#333; padding:20px; font-size:0.8rem;">Select a customer to view details</div>
+                        <div style="text-align:center; color:#333; padding:20px; font-size:0.8rem;">Select a customer to view details & manage points</div>
                     </div>
                 </div>
             </div>
@@ -1583,8 +1621,65 @@
                 <button class="btn-pos-secondary" onclick="clearVipSelection()">Clear Selection</button>
                 <button class="btn-pos-secondary" onclick="closeVip()">Cancel</button>
                 <button class="btn-pos-success" id="btnSelectVip" onclick="confirmVipSelection()" disabled>
-                    <i class="fa-solid fa-check me-1"></i>Select Customer
+                    <i class="fa-solid fa-check me-1"></i>Apply to Order
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUB-MODAL: CREATE / EDIT VIP CUSTOMER -->
+    <div class="pos-modal-bg" id="modalVipEdit">
+        <div class="pos-modal" style="max-width:480px; z-index:9999;">
+            <div class="modal-hdr">
+                <span class="modal-title" id="vipEditTitle">Create VIP Customer</span>
+                <button class="btn-close-modal" onclick="closeModal('modalVipEdit')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editVipId" value="0" />
+                <div class="form-row">
+                    <label class="form-label">Full Name *</label>
+                    <input type="text" id="editVipName" class="pos-input" placeholder="Enter full name..." required />
+                </div>
+                <div class="form-row">
+                    <label class="form-label">Phone Number</label>
+                    <input type="text" id="editVipPhone" class="pos-input" placeholder="Enter mobile phone..." />
+                </div>
+                <div class="form-row">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="editVipEmail" class="pos-input" placeholder="Enter email address..." />
+                </div>
+                <div class="form-row">
+                    <label class="form-label">Address</label>
+                    <input type="text" id="editVipAddress" class="pos-input" placeholder="Enter shipping/billing address..." />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-pos-secondary" onclick="closeModal('modalVipEdit')">Cancel</button>
+                <button class="btn-pos-success" onclick="saveVipCustomer()"><i class="fa-solid fa-floppy-disk me-1"></i>Save Customer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUB-MODAL: ADD REWARD POINTS -->
+    <div class="pos-modal-bg" id="modalVipPoints">
+        <div class="pos-modal" style="max-width:400px; z-index:9999;">
+            <div class="modal-hdr">
+                <span class="modal-title"><i class="fa-solid fa-award me-2"></i>Add Reward Points</span>
+                <button class="btn-close-modal" onclick="closeModal('modalVipPoints')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="pointsVipId" value="0" />
+                <div style="margin-bottom:12px; font-size:0.8rem; color:#CCC;">
+                    Adding reward points for: <strong id="pointsVipName" style="color:var(--holo-cyan);"></strong>
+                </div>
+                <div class="form-row">
+                    <label class="form-label">Points to Add *</label>
+                    <input type="number" id="inpPointsToAdd" class="pos-input" min="1" step="1" value="100" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-pos-secondary" onclick="closeModal('modalVipPoints')">Cancel</button>
+                <button class="btn-pos-success" onclick="confirmAddPoints()"><i class="fa-solid fa-plus me-1"></i>Add Points</button>
             </div>
         </div>
     </div>
@@ -1737,18 +1832,24 @@
             const dot = document.getElementById('shiftDot');
             const label = document.getElementById('shiftStatusLabel');
             const ssBadge = document.getElementById('sidebarShiftStatus');
+            const startBtn = document.getElementById('opMenuStartShift');
+            const closeBtn = document.getElementById('opMenuCloseShift');
             if (hasShift) {
                 dot.className = 'shift-dot active';
                 label.textContent = `Shift #${POS_STATE.shiftId} Active`;
                 label.style.color = 'var(--bio-emerald)';
                 ssBadge.className = 'shift-status-badge active-shift';
                 document.getElementById('btnPayment').disabled = false;
+                if (startBtn) startBtn.style.display = 'none';
+                if (closeBtn) closeBtn.style.display = 'flex';
             } else {
                 dot.className = 'shift-dot';
                 label.textContent = 'No Active Shift';
                 label.style.color = '';
                 ssBadge.className = 'shift-status-badge';
                 document.getElementById('btnPayment').disabled = true;
+                if (startBtn) startBtn.style.display = 'flex';
+                if (closeBtn) closeBtn.style.display = 'none';
             }
         }
 
@@ -1820,6 +1921,44 @@
             }
         }
 
+        function switchCounter() {
+            localStorage.removeItem('posCounter');
+            location.reload();
+        }
+
+        function openCloseShift() {
+            if (!POS_STATE.shiftId) { alert('No active shift to close.'); return; }
+            document.getElementById('closeShiftIdLabel').textContent = `#${POS_STATE.shiftId}`;
+            document.getElementById('closeShiftStartTime').textContent = new Date(POS_STATE.shiftStartTime || Date.now()).toLocaleString('en-GB');
+            document.getElementById('inpCloseEndCash').value = '';
+            openModal('modalCloseShift');
+        }
+
+        async function confirmCloseShift() {
+            const endCashVal = document.getElementById('inpCloseEndCash').value;
+            if (endCashVal === '' || isNaN(endCashVal) || Number(endCashVal) < 0) {
+                alert('Please enter a valid non-negative End Cash amount.');
+                return;
+            }
+            const res = await fetch('/api/v1/POS/shift/close', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ shiftId: POS_STATE.shiftId, endCash: Number(endCashVal) })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                alert(`Shift #${data.shiftId} closed successfully!\nTotal Orders: ${data.orderCount}\nRevenue: ${(data.totalRevenue||0).toLocaleString('en-US')} ₫`);
+                POS_STATE.shiftId = null;
+                POS_STATE.shiftStartTime = null;
+                closeModal('modalCloseShift');
+                updateShiftUI(false);
+                updateFooterContext();
+            } else {
+                const err = await res.json();
+                alert(`Error closing shift: ${err.message || err.Error || 'Unknown error'}`);
+            }
+        }
+
         // ===================================================
         // PRODUCT CATALOG
         // ===================================================
@@ -1871,11 +2010,11 @@
         function buildSidebarCategories() {
             const cats = catalogMeta.categories || catalogMeta.Categories || [];
             const container = document.getElementById('sidebarCategories');
-            container.innerHTML = `<div class="sidebar-nav-item active" onclick="setPrimaryFilter('all', null)">
-                <i class="fa-solid fa-border-all"></i><span>All Products</span></div>`;
+            if (!container) return;
+            container.innerHTML = '';
             cats.forEach(c => {
-                container.innerHTML += `<div class="sidebar-nav-item" onclick="loadProductGrid('&categoryId=${c.categoryId || c.CategoryId}')">
-                    <i class="fa-solid fa-tag"></i><span>${c.categoryName || c.CategoryName}</span></div>`;
+                container.innerHTML += `<div class="op-menu-item" onclick="loadProductGrid('&categoryId=${c.categoryId || c.CategoryId}')">
+                    <i class="fa-solid fa-angle-right" style="color:#555;"></i><span>${c.categoryName || c.CategoryName}</span></div>`;
             });
         }
 
@@ -2246,8 +2385,93 @@
             if (POS_STATE.shiftId) ensureActiveDraftOrder();
         }
 
-        function viewInvoice() { /* TODO: open invoice preview */ }
-        function printInvoice() { window.print(); }
+        function viewInvoice() {
+            if (!lastCheckoutData) return;
+            const reg = POS_STATE.registers.find(r => r._lastCheckoutData) || POS_STATE.registers[POS_STATE.activeTab];
+            const inv = lastCheckoutData.docNo || lastCheckoutData.DocNo || 'REC-XXXX';
+            const total = document.getElementById('successTotal').textContent;
+            const time = document.getElementById('successTime').textContent;
+            const method = document.getElementById('successMethod').textContent;
+            const change = document.getElementById('successChange').textContent;
+            const customer = document.getElementById('payCustomerName')?.textContent || 'Walk-in Customer';
+            const branch = POS_STATE.branchName || '--';
+            const counter = POS_STATE.counterName || '--';
+            
+            const receipt = window.open('', '_blank', 'width=400,height=600');
+            receipt.document.write(`
+<!DOCTYPE html><html><head>
+<meta charset="utf-8">
+<title>Receipt ${inv}</title>
+<style>
+body { font-family: 'Courier New', monospace; font-size: 11px; margin: 0; padding: 16px; background: #fff; color: #000; }
+.center { text-align: center; }
+.line { border-top: 1px dashed #000; margin: 6px 0; }
+.bold { font-weight: bold; }
+.big { font-size: 14px; }
+.total { font-size: 16px; font-weight: bold; }
+table { width: 100%; }
+td { padding: 1px 2px; }
+td:last-child { text-align: right; }
+</style>
+</head><body>
+<div class="center big bold">DigiPOS</div>
+<div class="center">${branch} | ${counter}</div>
+<div class="center">${time}</div>
+<div class="line"></div>
+<div><span class="bold">Doc No:</span> ${inv}</div>
+<div><span class="bold">Customer:</span> ${customer}</div>
+<div><span class="bold">Payment:</span> ${method}</div>
+<div class="line"></div>
+<div class="center bold">TOTAL: ${total}</div>
+<div>Change: ${change}</div>
+<div class="line"></div>
+<div class="center">Thank you for your purchase!</div>
+<div class="center">DigiPOS v1.0</div>
+</body></html>`);
+            receipt.document.close();
+        }
+
+        function printInvoice() {
+            if (!lastCheckoutData) return;
+            const inv = lastCheckoutData.docNo || lastCheckoutData.DocNo || 'REC-XXXX';
+            const total = document.getElementById('successTotal').textContent;
+            const time = document.getElementById('successTime').textContent;
+            const method = document.getElementById('successMethod').textContent;
+            const change = document.getElementById('successChange').textContent;
+            const customer = document.getElementById('payCustomerName')?.textContent || 'Walk-in Customer';
+            const branch = POS_STATE.branchName || '--';
+            const counter = POS_STATE.counterName || '--';
+
+            const printWin = window.open('', '_blank', 'width=400,height=600');
+            printWin.document.write(`
+<!DOCTYPE html><html><head>
+<meta charset="utf-8">
+<title>Print Receipt</title>
+<style>
+body { font-family: 'Courier New', monospace; font-size: 12px; margin: 0; padding: 16px; }
+.center { text-align: center; }
+.line { border-top: 1px dashed #000; margin: 6px 0; }
+.bold { font-weight: bold; }
+@@media print { body { margin: 0; } }
+</style>
+</head><body>
+<div class="center bold" style="font-size:16px;">DigiPOS</div>
+<div class="center">${branch} | ${counter}</div>
+<div class="center">${time}</div>
+<div class="line"></div>
+<div><b>Doc No:</b> ${inv}</div>
+<div><b>Customer:</b> ${customer}</div>
+<div><b>Payment:</b> ${method}</div>
+<div class="line"></div>
+<div class="center bold" style="font-size:16px;">TOTAL: ${total}</div>
+<div>Change: ${change}</div>
+<div class="line"></div>
+<div class="center">Thank you!</div>
+</body></html>`);
+            printWin.document.close();
+            printWin.focus();
+            setTimeout(() => { printWin.print(); printWin.close(); }, 300);
+        }
 
         // ===================================================
         // ORDERS TODAY
@@ -2292,34 +2516,120 @@
         }
 
         // ===================================================
-        // DASHBOARD
+        // DASHBOARD WITH CHART.JS REALTIME ANALYTICS
         // ===================================================
+        let currentDashDays = 0;
+        let chartRevInstance = null;
+        let chartPayInstance = null;
+
         async function openDashboard() {
             openModal('modalDashboard');
-            await loadDashboard();
+            await loadDashboardRange(0);
         }
 
-        async function loadDashboard() {
-            const params = new URLSearchParams({ branchId: POS_STATE.branchId || 1 });
-            if (POS_STATE.shiftId) params.append('shiftId', POS_STATE.shiftId);
-            const res = await fetch(`/api/v1/POS/dashboard/summary?${params}`);
+        async function loadDashboard() { await loadDashboardRange(currentDashDays); }
+
+        async function loadDashboardRange(days) {
+            currentDashDays = days;
+            document.getElementById('btnDashToday').className = days === 0 ? 'btn-pos-primary' : 'btn-pos-secondary';
+            document.getElementById('btnDash7D').className = days === 7 ? 'btn-pos-primary' : 'btn-pos-secondary';
+            document.getElementById('btnDash30D').className = days === 30 ? 'btn-pos-primary' : 'btn-pos-secondary';
+
+            const now = new Date();
+            let fromDate = new Date();
+            if (days > 0) fromDate.setDate(fromDate.getDate() - days);
+            
+            const fromStr = fromDate.toISOString().split('T')[0];
+            const toStr = now.toISOString().split('T')[0];
+            document.getElementById('dashDateRangeLabel').textContent = `${fromStr} to ${toStr}`;
+
+            const params = new URLSearchParams({ branchId: POS_STATE.branchId || 1, from: fromStr, to: toStr });
+            const res = await fetch(`/api/v1/POS/dashboard/analytics?${params}`);
             if (!res.ok) return;
             const data = await res.json();
-            const fmt = n => n ? n.toLocaleString('en-US') : '0';
-            document.getElementById('kpiRevenue').textContent = fmt(data.todayRevenue || data.TodayRevenue);
-            document.getElementById('kpiOrders').textContent = fmt(data.todayOrders || data.TodayOrders);
-            document.getElementById('kpiAvg').textContent = fmt(data.avgOrderValue || data.AvgOrderValue);
-            const prods = data.topProducts || data.TopProducts || [];
+
+            const fmt = n => n ? Number(n).toLocaleString('en-US') : '0';
+            document.getElementById('kpiRevenue').textContent = fmt(data.totalRevenue);
+            document.getElementById('kpiOrders').textContent = fmt(data.totalOrders);
+            document.getElementById('kpiAvg').textContent = fmt(data.avgOrderValue);
+
+            const prods = data.topProducts || [];
             document.getElementById('topProductsBody').innerHTML = prods.length ? prods.map((p, i) => `<tr>
                 <td style="color:#555;">${i + 1}</td>
                 <td>${p.productName || p.ProductName}</td>
                 <td style="text-align:right; color:var(--holo-cyan);">${p.totalQty || p.TotalQty}</td>
-                <td style="text-align:right; color:var(--bio-emerald); font-family:var(--font-data);">${(p.totalRevenue || p.TotalRevenue || 0).toLocaleString('en-US')} ₫</td>
-            </tr>`).join('') : `<tr><td colspan="4" style="text-align:center; color:#333; padding:12px;">No sales data yet</td></tr>`;
+                <td style="text-align:right; color:var(--bio-emerald); font-family:var(--font-data);">${fmt(p.totalRevenue || p.TotalRevenue)} ₫</td>
+            </tr>`).join('') : `<tr><td colspan="4" style="text-align:center; color:#333; padding:16px;">No sales recorded in period</td></tr>`;
+
+            renderCharts(data);
+        }
+
+        function renderCharts(data) {
+            if (!window.Chart) return;
+            const revCtx = document.getElementById('chartRevenue')?.getContext('2d');
+            const payCtx = document.getElementById('chartPayment')?.getContext('2d');
+            if (!revCtx || !payCtx) return;
+
+            if (chartRevInstance) chartRevInstance.destroy();
+            if (chartPayInstance) chartPayInstance.destroy();
+
+            let labels = [], revValues = [];
+            if (currentDashDays === 0 && data.revenueByHour) {
+                labels = data.revenueByHour.map(x => `${x.hour || x.Hour}:00`);
+                revValues = data.revenueByHour.map(x => x.revenue || x.Revenue);
+            } else if (data.revenueByDay) {
+                labels = data.revenueByDay.map(x => x.date || x.Date);
+                revValues = data.revenueByDay.map(x => x.revenue || x.Revenue);
+            }
+
+            Chart.defaults.color = '#888';
+            Chart.defaults.borderColor = '#1a1a1a';
+
+            chartRevInstance = new Chart(revCtx, {
+                type: currentDashDays === 0 ? 'bar' : 'line',
+                data: {
+                    labels: labels.length ? labels : ['No Data'],
+                    datasets: [{
+                        label: 'Revenue (VND)',
+                        data: revValues.length ? revValues : [0],
+                        borderColor: '#00E5FF',
+                        backgroundColor: 'rgba(0, 229, 255, 0.15)',
+                        borderWidth: 2,
+                        tension: 0.2,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            const payBreakdown = data.paymentBreakdown || [];
+            const payLabels = payBreakdown.map(x => x.method || x.Method);
+            const payVals = payBreakdown.map(x => x.revenue || x.Revenue);
+
+            chartPayInstance = new Chart(payCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: payLabels.length ? payLabels : ['Cash'],
+                    datasets: [{
+                        data: payVals.length ? payVals : [1],
+                        backgroundColor: ['#00FF66', '#00E5FF', '#FFB000', '#FF3333'],
+                        borderColor: '#000',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } } }
+                }
+            });
         }
 
         // ===================================================
-        // VIP CUSTOMER
+        // VIP CUSTOMER CRUD & REWARD POINTS
         // ===================================================
         function openVip() {
             openModal('modalVip');
@@ -2359,16 +2669,22 @@
             if (el) el.classList.add('selected');
             document.getElementById('btnSelectVip').disabled = false;
 
-            // Show detail
             const pts = customer.rewardPoints || customer.RewardPoints || 0;
+            const name = (customer.fullName || customer.FullName || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             document.getElementById('vipDetail').innerHTML = `
                 <div class="vip-detail-row"><label>Customer ID</label><span>VIP-${String(id).padStart(10,'0')}</span></div>
                 <div class="vip-detail-row"><label>Full Name</label><span>${customer.fullName || customer.FullName}</span></div>
                 <div class="vip-detail-row"><label>Phone</label><span>${customer.phoneNumber || customer.PhoneNumber || '--'}</span></div>
-                <div class="vip-detail-row"><label>Type</label><span>${customer.typeName || customer.TypeName || 'VIP'}</span></div>
-                <div style="text-align:center; margin-top:12px;">
-                    <div style="font-size:0.65rem; color:#555; text-transform:uppercase; letter-spacing:1px;">Reward Points</div>
-                    <div class="reward-points">${pts.toLocaleString('en-US')}</div>
+                <div class="vip-detail-row"><label>Email</label><span>${customer.email || customer.Email || '--'}</span></div>
+                <div class="vip-detail-row"><label>Address</label><span>${customer.address || customer.Address || '--'}</span></div>
+                <div style="text-align:center; margin-top:12px; margin-bottom:14px;">
+                    <div style="font-size:0.65rem; color:#555; text-transform:uppercase; letter-spacing:1px;">Reward Points Balance</div>
+                    <div class="reward-points">${Number(pts).toLocaleString('en-US')}</div>
+                </div>
+                <div style="display:flex; gap:8px; justify-content:center; border-top:1px solid #1A1A1A; padding-top:12px;">
+                    <button class="btn-pos-secondary" onclick="editVipCustomer(${id})" style="padding:4px 10px; font-size:0.75rem;"><i class="fa-solid fa-pen-to-square me-1"></i>Edit</button>
+                    <button class="btn-pos-secondary" onclick="openAddPoints(${id}, '${name}')" style="padding:4px 10px; font-size:0.75rem; border-color:var(--bio-emerald); color:var(--bio-emerald);"><i class="fa-solid fa-gift me-1"></i>+ Points</button>
+                    <button class="btn-pos-secondary" onclick="deleteVipCustomer(${id}, event)" style="padding:4px 10px; font-size:0.75rem; border-color:var(--crimson-danger); color:var(--crimson-danger);"><i class="fa-solid fa-trash"></i></button>
                 </div>`;
         }
 
@@ -2391,20 +2707,114 @@
             document.getElementById('payCustomerName').textContent = 'Walk-in Customer';
             document.querySelectorAll('.vip-list-item').forEach(el => el.classList.remove('selected'));
             document.getElementById('btnSelectVip').disabled = true;
-            document.getElementById('vipDetail').innerHTML = `<div style="text-align:center; color:#333; padding:20px; font-size:0.8rem;">Select a customer to view details</div>`;
+            document.getElementById('vipDetail').innerHTML = `<div style="text-align:center; color:#333; padding:20px; font-size:0.8rem;">Select a customer to view details & manage points</div>`;
+        }
+
+        function openVipCreate() {
+            document.getElementById('vipEditTitle').textContent = 'Create VIP Customer';
+            document.getElementById('editVipId').value = '0';
+            document.getElementById('editVipName').value = '';
+            document.getElementById('editVipPhone').value = '';
+            document.getElementById('editVipEmail').value = '';
+            document.getElementById('editVipAddress').value = '';
+            openModal('modalVipEdit');
+        }
+
+        function editVipCustomer(id) {
+            const cust = (catalogMeta.customers || catalogMeta.Customers || []).find(c => (c.customerId || c.CustomerId) === id);
+            if (!cust) return;
+            document.getElementById('vipEditTitle').textContent = `Edit VIP Customer (#${id})`;
+            document.getElementById('editVipId').value = id;
+            document.getElementById('editVipName').value = cust.fullName || cust.FullName || '';
+            document.getElementById('editVipPhone').value = cust.phoneNumber || cust.PhoneNumber || '';
+            document.getElementById('editVipEmail').value = cust.email || cust.Email || '';
+            document.getElementById('editVipAddress').value = cust.address || cust.Address || '';
+            openModal('modalVipEdit');
+        }
+
+        async function saveVipCustomer() {
+            const id = Number(document.getElementById('editVipId').value || 0);
+            const fullName = document.getElementById('editVipName').value.trim();
+            if (!fullName) { alert('Full Name is required.'); return; }
+
+            const payload = {
+                FullName: fullName,
+                PhoneNumber: document.getElementById('editVipPhone').value.trim(),
+                Email: document.getElementById('editVipEmail').value.trim(),
+                Address: document.getElementById('editVipAddress').value.trim()
+            };
+
+            const url = id === 0 ? '/api/v1/POS/customers' : `/api/v1/POS/customers/${id}`;
+            const method = id === 0 ? 'POST' : 'PUT';
+
+            const res = await fetch(url, {
+                method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                closeModal('modalVipEdit');
+                await refreshCatalogMetadata();
+                filterVipList();
+            } else {
+                const err = await res.json();
+                alert(`Failed to save customer: ${err.Error || 'Error occurred'}`);
+            }
+        }
+
+        async function deleteVipCustomer(id, event) {
+            if (event) event.stopPropagation();
+            if (!confirm('Are you sure you want to delete this customer?')) return;
+            const res = await fetch(`/api/v1/POS/customers/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                if (selectedVipCustomer && (selectedVipCustomer.customerId || selectedVipCustomer.CustomerId) === id) {
+                    clearVipSelection();
+                }
+                await refreshCatalogMetadata();
+                filterVipList();
+            } else {
+                alert('Could not delete customer.');
+            }
+        }
+
+        function openAddPoints(id, name) {
+            document.getElementById('pointsVipId').value = id;
+            document.getElementById('pointsVipName').textContent = name;
+            document.getElementById('inpPointsToAdd').value = '100';
+            openModal('modalVipPoints');
+        }
+
+        async function confirmAddPoints() {
+            const id = Number(document.getElementById('pointsVipId').value || 0);
+            const pts = Number(document.getElementById('inpPointsToAdd').value || 0);
+            if (pts <= 0 || isNaN(pts)) { alert('Points must be at least 1.'); return; }
+
+            const res = await fetch(`/api/v1/POS/customers/${id}/add-points`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ points: pts })
+            });
+            if (res.ok) {
+                closeModal('modalVipPoints');
+                await refreshCatalogMetadata();
+                filterVipList();
+                const updated = (catalogMeta.customers || catalogMeta.Customers || []).find(c => (c.customerId || c.CustomerId) === id);
+                if (updated) selectVipCustomer(updated);
+            } else {
+                alert('Failed to add reward points.');
+            }
+        }
+
+        async function refreshCatalogMetadata() {
+            try {
+                const metaRes = await fetch('/api/v1/POS/catalog/metadata');
+                if (metaRes.ok) catalogMeta = await metaRes.json();
+            } catch(e){}
         }
 
         // ===================================================
         // HAMBURGER MENU
         // ===================================================
         document.getElementById('btnHamburger').addEventListener('click', () => {
-            document.getElementById('sideMenu').classList.toggle('show');
-            document.getElementById('sideMenuOverlay').classList.toggle('show');
+            const menu = document.getElementById('posOperatorMenu');
+            menu.classList.toggle('collapsed');
         });
-        function closeSideMenu() {
-            document.getElementById('sideMenu').classList.remove('show');
-            document.getElementById('sideMenuOverlay').classList.remove('show');
-        }
 
         // ===================================================
         // MODAL HELPERS

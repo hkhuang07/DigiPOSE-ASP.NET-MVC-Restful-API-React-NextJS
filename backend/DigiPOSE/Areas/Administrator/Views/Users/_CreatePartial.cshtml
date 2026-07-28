@@ -4,7 +4,7 @@
         <h5 class="modal-title"><i class="fa-solid fa-user-plus text-cyan me-2"></i> ADD NEW USER</h5>
         <button type="button" class="btn-close-cyber" data-bs-dismiss="modal"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <form class="ajax-modal-form" asp-action="Create" asp-controller="Users" method="post">
+    <form class="ajax-modal-form" asp-action="Create" asp-controller="Users" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
         <div class="modal-body">
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3" style="font-family:'Roboto Mono'; font-size:0.85rem;"></div>
@@ -47,6 +47,11 @@
                     <label asp-for="PhoneNumber" class="form-cyber-label"></label>
                     <input asp-for="PhoneNumber" class="form-control form-cyber-control" placeholder="Phone number" />
                     <span asp-validation-for="PhoneNumber" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label asp-for="ImageUpload" class="form-cyber-label"><i class="fa-solid fa-camera me-1 text-cyan"></i> @Html.DisplayNameFor(model => model.ImageUpload)</label>
+                    <input asp-for="ImageUpload" type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="form-control form-cyber-control" />
+                    <span asp-validation-for="ImageUpload" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
                 </div>
                 <div class="col-12 mb-2">
                     <div class="form-check">

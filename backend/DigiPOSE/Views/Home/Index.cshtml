@@ -1,375 +1,331 @@
 @{
-    Layout = null; // No admin layout for the landing page
-    ViewData["Title"] = "DigiPOSE - Enterprise ERP & POS System";
+    Layout = "~/Views/Shared/_StorefrontLayout.cshtml";
+    ViewData["Title"] = "Enterprise POS & Telemetry Ecosystem";
 }
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"]</title>
-    <!-- CSS Dependencies -->
-    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/lib/font-awesome/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&family=VT323&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        body {
-            background-color: #000;
-            color: #00E5FF;
-            font-family: 'Roboto Mono', monospace;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-        }
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 2px, 3px 100%;
-            pointer-events: none;
-            z-index: 9999;
-        }
-        
-        /* Cyber Navbar */
-        .cyber-nav {
-            background: rgba(0, 0, 0, 0.85);
-            border-bottom: 1px solid #00E5FF;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            backdrop-filter: blur(10px);
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            z-index: 1000;
-        }
-        .cyber-brand {
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
-            font-size: 1.5rem;
-            color: #00E5FF;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
-            text-decoration: none;
-        }
-        .cyber-btn {
-            background: transparent;
-            color: #00FF66;
-            border: 1px solid #00FF66;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: bold;
-            letter-spacing: 1px;
-            padding: 8px 20px;
-            text-transform: uppercase;
-            text-decoration: none;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-        .cyber-btn:hover {
-            background: #00FF66;
-            color: #000;
-            box-shadow: 0 0 15px #00FF66;
-        }
-        .cyber-btn-outline {
-            color: #00E5FF;
-            border: 1px solid #00E5FF;
-        }
-        .cyber-btn-outline:hover {
-            background: #00E5FF;
-            color: #000;
-            box-shadow: 0 0 15px #00E5FF;
-        }
 
-        /* Hero Section */
+@section Styles {
+    <style>
         .hero-section {
-            min-height: 100vh;
+            min-height: 85vh;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding-top: 80px;
-            background: radial-gradient(circle at center, rgba(0, 229, 255, 0.1) 0%, #000 70%);
+            padding: 80px 20px;
+            background: radial-gradient(circle at center, rgba(0, 229, 255, 0.12) 0%, var(--cyber-bg) 70%);
             position: relative;
+            border-bottom: 2px solid var(--cyber-cyan);
         }
         .hero-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 4.5rem;
-            font-weight: 700;
-            color: #FFF;
-            text-shadow: 0 0 20px #00E5FF;
+            font-size: 5rem;
+            font-weight: 900;
+            color: var(--cyber-text);
+            text-shadow: 0 0 25px rgba(0, 229, 255, 0.6);
             margin-bottom: 20px;
-            letter-spacing: 4px;
+            letter-spacing: 5px;
         }
         .hero-subtitle {
             font-family: 'VT323', monospace;
-            font-size: 2rem;
-            color: #00FF66;
-            margin-bottom: 40px;
+            font-size: 2.2rem;
+            color: var(--cyber-emerald);
+            margin-bottom: 45px;
+            letter-spacing: 2px;
         }
         .reticle {
             position: absolute;
-            color: #FFB000;
+            color: var(--cyber-amber);
             font-weight: bold;
+            font-size: 1.5rem;
+            font-family: 'Roboto Mono';
         }
         .reticle-tl { top: 20px; left: 20px; }
         .reticle-tr { top: 20px; right: 20px; }
         .reticle-bl { bottom: 20px; left: 20px; }
         .reticle-br { bottom: 20px; right: 20px; }
 
-        /* Sections */
-        .section-container {
-            padding: 100px 15px;
-            border-top: 1px solid rgba(0, 229, 255, 0.2);
-            position: relative;
-        }
         .section-header {
             font-family: 'Rajdhani', sans-serif;
-            font-size: 3rem;
+            font-size: 3.2rem;
             font-weight: 700;
-            color: #00E5FF;
+            color: var(--cyber-cyan);
             text-align: center;
             text-transform: uppercase;
-            margin-bottom: 60px;
-            letter-spacing: 3px;
+            margin: 80px 0 50px 0;
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
         }
         
-        /* Grid Cards */
         .feature-card {
-            background: rgba(10, 10, 10, 0.8);
-            border: 1px solid rgba(0, 229, 255, 0.3);
-            padding: 30px;
+            background: var(--cyber-surface);
+            border: 1px solid var(--cyber-border);
+            padding: 35px 30px;
             height: 100%;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
+            border-radius: 0;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.05);
         }
         .feature-card:hover {
-            border-color: #00E5FF;
-            box-shadow: 0 0 20px rgba(0, 229, 255, 0.2) inset;
+            border-color: var(--cyber-emerald);
+            box-shadow: 0 0 25px rgba(0, 255, 102, 0.25);
+            transform: translateY(-5px);
         }
         .feature-icon {
-            font-size: 2.5rem;
-            color: #FFB000;
-            margin-bottom: 20px;
+            font-size: 3rem;
+            margin-bottom: 25px;
+            display: inline-block;
         }
         .feature-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 1.2rem;
-            color: #FFF;
+            font-size: 1.35rem;
+            color: var(--cyber-text);
+            font-weight: 700;
             margin-bottom: 15px;
+            letter-spacing: 1px;
         }
         .feature-desc {
-            font-size: 0.9rem;
-            color: #A0C0CE;
-            line-height: 1.6;
+            font-size: 0.95rem;
+            color: var(--cyber-muted);
+            line-height: 1.7;
         }
-
-        /* Pricing Table */
-        .price-card {
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid #333;
-            padding: 40px 30px;
-            text-align: center;
-            transition: all 0.3s;
-        }
-        .price-card.featured {
-            border: 1px solid #00FF66;
-            box-shadow: 0 0 20px rgba(0, 255, 102, 0.2);
-            transform: scale(1.05);
-            background: rgba(0, 255, 102, 0.05);
-        }
-        .price-title {
+        
+        .cta-btn-primary {
+            background: var(--cyber-emerald);
+            color: #000000;
+            border: 1px solid var(--cyber-emerald);
             font-family: 'Orbitron', sans-serif;
-            color: #FFF;
-            margin-bottom: 20px;
+            font-weight: 900;
+            font-size: 1.15rem;
+            padding: 16px 40px;
+            text-transform: uppercase;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.4);
+            border-radius: 0;
         }
-        .price-value {
-            font-family: 'VT323', monospace;
-            font-size: 3.5rem;
-            color: #00E5FF;
-            margin-bottom: 30px;
-        }
-        .price-card.featured .price-value {
-            color: #00FF66;
-        }
-        .price-list {
-            list-style: none;
-            padding: 0;
-            margin: 0 0 30px 0;
-            text-align: left;
-            color: #A0C0CE;
-        }
-        .price-list li {
-            margin-bottom: 12px;
-            border-bottom: 1px dashed rgba(255,255,255,0.1);
-            padding-bottom: 12px;
-        }
-        .price-list li i {
-            color: #FFB000;
-            margin-right: 10px;
+        .cta-btn-primary:hover {
+            background: #FFFFFF;
+            border-color: #FFFFFF;
+            color: #000000;
+            box-shadow: 0 0 30px #FFFFFF;
+            transform: scale(1.03);
         }
 
-        /* Footer */
-        .cyber-footer {
-            background: #050505;
-            border-top: 1px solid #00E5FF;
-            padding: 40px 0;
-            text-align: center;
-            font-size: 0.85rem;
+        .cta-btn-outline {
+            background: transparent;
+            color: var(--cyber-cyan);
+            border: 2px solid var(--cyber-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.15rem;
+            padding: 15px 38px;
+            text-transform: uppercase;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            border-radius: 0;
+        }
+        .cta-btn-outline:hover {
+            background: var(--cyber-cyan);
+            color: #000000;
+            box-shadow: 0 0 25px var(--cyber-cyan);
+            transform: scale(1.03);
+        }
+
+        .digital-banner {
+            background: linear-gradient(135deg, rgba(0, 229, 255, 0.1) 0%, rgba(0, 255, 102, 0.05) 100%);
+            border: 1px solid var(--cyber-cyan);
+            padding: 50px;
+            margin: 80px 0;
+            position: relative;
         }
     </style>
-</head>
-<body>
+}
 
-    <!-- Navigation -->
-    <nav class="cyber-nav">
-        <a href="/" class="cyber-brand">
-            <i class="fa-solid fa-microchip me-2"></i> DigiPOSE
-        </a>
-        <div>
-            @if (ViewBag.IsAuthenticated == true)
-            {
-                <a href="/Home/DashboardRouter" class="cyber-btn"><i class="fa-solid fa-gauge-high"></i> ACCESS DASHBOARD</a>
-            }
-            else
-            {
-                <a href="/Auth/Login" class="cyber-btn cyber-btn-outline me-3"><i class="fa-solid fa-terminal"></i> LOGIN</a>
-                <a href="/Auth/Register" class="cyber-btn"><i class="fa-solid fa-user-plus"></i> INITIALIZE</a>
-            }
-        </div>
-    </nav>
-
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <span class="reticle reticle-tl">+</span>
-        <span class="reticle reticle-tr">+</span>
-        <span class="reticle reticle-bl">+</span>
-        <span class="reticle reticle-br">+</span>
-        
-        <div class="container">
-            <div style="font-family:'VT323'; color:#00E5FF; margin-bottom:10px;">> SYSTEM STATUS: ONLINE _</div>
-            <h1 class="hero-title">ENTERPRISE<br/>RESOURCE GRID</h1>
-            <div class="hero-subtitle">NEXT-GEN POINT OF SALE & INVENTORY ARCHITECTURE</div>
-            
-            <div class="mt-5">
-                <a href="#pricing" class="cyber-btn me-3" style="font-size: 1.1rem; padding: 15px 40px;">
-                    [ DEPLOY INSTANCE ]
-                </a>
-                <a href="#features" class="cyber-btn cyber-btn-outline" style="font-size: 1.1rem; padding: 15px 40px;">
-                    [ SCAN FEATURES ]
-                </a>
-            </div>
-            
-            <div style="margin-top: 80px; font-size: 0.8rem; color: #666; letter-spacing: 2px;">
-                POWERED BY ASP.NET CORE | SQL SERVER CLUSTER | BIOMETRIC SECURED
-            </div>
-        </div>
-    </section>
-
-    <!-- Core Modules Section -->
-    <section id="features" class="section-container">
-        <div class="container">
-            <h2 class="section-header">CORE TELEMETRY MODULES</h2>
-            <div class="row g-4">
-                <div class="col-lg-3 col-md-6">
-                    <div class="feature-card">
-                        <i class="fa-solid fa-cash-register feature-icon text-cyan"></i>
-                        <h3 class="feature-title">SMART P.O.S</h3>
-                        <p class="feature-desc">High-speed transaction processing node. Supports offline queueing, multiple payment gateways, and real-time receipt generation.</p>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="feature-card">
-                        <i class="fa-solid fa-warehouse feature-icon" style="color: #00FF66;"></i>
-                        <h3 class="feature-title">WAREHOUSE</h3>
-                        <p class="feature-desc">Dynamic inventory tracking. Automated stock vouchers, low-stock alerts, and multi-branch inventory transfers.</p>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="feature-card">
-                        <i class="fa-solid fa-chart-line feature-icon text-warning"></i>
-                        <h3 class="feature-title">FINANCE CRM</h3>
-                        <p class="feature-desc">Deep-dive financial telemetry. Track cash flow, supplier debts, customer loyalty tiers, and invoice statuses.</p>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="feature-card">
-                        <i class="fa-solid fa-shield-halved feature-icon" style="color: #FF3333;"></i>
-                        <h3 class="feature-title">SECURE R.B.A.C</h3>
-                        <p class="feature-desc">Military-grade Role-Based Access Control. Granular permissions strictly isolating operators from administrative core functions.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Pricing Section -->
-    <section id="pricing" class="section-container" style="background: rgba(0,229,255,0.02);">
-        <div class="container">
-            <h2 class="section-header">DEPLOYMENT PROTOCOLS</h2>
-            <div class="row justify-content-center g-4">
-                <div class="col-lg-4 col-md-6">
-                    <div class="price-card">
-                        <h3 class="price-title">NODE.ALPHA</h3>
-                        <div class="price-value">$49<span style="font-size:1rem; color:#666;">/MO</span></div>
-                        <ul class="price-list">
-                            <li><i class="fa-solid fa-check"></i> 1 Active Branch</li>
-                            <li><i class="fa-solid fa-check"></i> 3 POS Operator Accounts</li>
-                            <li><i class="fa-solid fa-check"></i> Standard Inventory</li>
-                            <li><i class="fa-solid fa-xmark" style="color:#FF3333;"></i> No API Access</li>
-                        </ul>
-                        <a href="/Auth/Register" class="cyber-btn cyber-btn-outline w-100">INITIALIZE ALPHA</a>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6">
-                    <div class="price-card featured">
-                        <div style="color:#00FF66; font-size:0.8rem; margin-bottom:10px; font-weight:bold;">[ RECOMMENDED ]</div>
-                        <h3 class="price-title">NODE.PRIME</h3>
-                        <div class="price-value">$129<span style="font-size:1rem; color:#666;">/MO</span></div>
-                        <ul class="price-list">
-                            <li><i class="fa-solid fa-check"></i> Up to 5 Branches</li>
-                            <li><i class="fa-solid fa-check"></i> Unlimited Accounts</li>
-                            <li><i class="fa-solid fa-check"></i> Advanced Finance & CRM</li>
-                            <li><i class="fa-solid fa-check"></i> 24/7 Priority Support</li>
-                        </ul>
-                        <a href="/Auth/Register" class="cyber-btn w-100">INITIALIZE PRIME</a>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6">
-                    <div class="price-card">
-                        <h3 class="price-title">NODE.OMEGA</h3>
-                        <div class="price-value">CUSTOM</div>
-                        <ul class="price-list">
-                            <li><i class="fa-solid fa-check"></i> Unlimited Branches</li>
-                            <li><i class="fa-solid fa-check"></i> Dedicated Cloud Server</li>
-                            <li><i class="fa-solid fa-check"></i> Custom Hardware Integration</li>
-                            <li><i class="fa-solid fa-check"></i> Full GraphQL/REST APIs</li>
-                        </ul>
-                        <a href="mailto:admin@digipose.com" class="cyber-btn cyber-btn-outline w-100">CONTACT HQ</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+<!-- Hero Section -->
+<section class="hero-section">
+    <span class="reticle reticle-tl">+</span>
+    <span class="reticle reticle-tr">+</span>
+    <span class="reticle reticle-bl">+</span>
+    <span class="reticle reticle-br">+</span>
     
-    <!-- Footer -->
-    <footer class="cyber-footer">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-6 text-md-start mb-3 mb-md-0">
-                    <div style="font-family:'Orbitron'; font-size:1.2rem; font-weight:bold; color:#00E5FF;">DigiPOSE CORE</div>
-                    <div style="color:#666; margin-top:5px;">&copy; 2026. ALL SYSTEMS NOMINAL.</div>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <a href="#" style="color:#00E5FF; text-decoration:none; margin-left:15px;"><i class="fa-brands fa-github"></i> REPOSITORY</a>
-                    <a href="#" style="color:#00E5FF; text-decoration:none; margin-left:15px;"><i class="fa-solid fa-shield"></i> SEC-OPS</a>
-                    <a href="#" style="color:#00E5FF; text-decoration:none; margin-left:15px;"><i class="fa-solid fa-envelope"></i> COMMS</a>
-                </div>
+    <div class="container">
+        <div style="font-family:'VT323'; color:var(--cyber-cyan); font-size:1.4rem; margin-bottom:15px;">> DIGIPOSE_MASTER_GRID // NODE: NOMINAL_ONLINE_STATE _</div>
+        <h1 class="hero-title">CYBER POS<br/>ARCHITECTURE</h1>
+        <div class="hero-subtitle">NEXT-GEN RETAIL CLOUD & LOW-LATENCY EDGE COMPUTING</div>
+        
+        <div class="d-flex justify-content-center gap-4 mt-5">
+            <a href="/Home/Product" class="cta-btn-primary">
+                <i class="fa-solid fa-rocket me-2"></i> [ EXPLORE DIGITAL POS PACKAGES ]
+            </a>
+            <a href="/Home/Introduce" class="cta-btn-outline">
+                <i class="fa-solid fa-microchip me-2"></i> [ ARCHITECTURE GUIDELINES ]
+            </a>
+        </div>
+        
+        <div style="margin-top: 70px; font-size: 0.85rem; color: var(--cyber-muted); letter-spacing: 3px; text-transform: uppercase;">
+            <i class="fa-solid fa-shield-halved text-success me-2"></i> POWERED BY ASP.NET CORE 8 | OPTIMISTIC CONCURRENCY ROW-VERSIONING | O(1) RAM CACHE
+        </div>
+    </div>
+</section>
+
+<!-- Core Ecosystem Modules -->
+<div class="container-fluid px-5" style="max-width: 1700px;">
+    <h2 class="section-header">// ENTERPRISE RETAIL TELEMETRY MODULES //</h2>
+    
+    <div class="row g-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="feature-card">
+                <i class="fa-solid fa-cash-register feature-icon" style="color: var(--cyber-cyan);"></i>
+                <h3 class="feature-title">SMART TERMINAL HUD</h3>
+                <p class="feature-desc">High-speed point of sale workspace with ergonomic 3-column topology. Instant barcode scanning via pre-warmed RAM hash maps and automated receipt thermal structuring.</p>
+                <div style="margin-top: 20px; font-family:'VT323'; color:var(--cyber-cyan); font-size:1.1rem;">> LATENCY: &lt; 5ms_</div>
             </div>
         </div>
-    </footer>
 
-</body>
-</html>
+        <div class="col-lg-3 col-md-6">
+            <div class="feature-card">
+                <i class="fa-solid fa-cloud-arrow-up feature-icon" style="color: var(--cyber-emerald);"></i>
+                <h3 class="feature-title">DIGITAL SAAS LICENSE</h3>
+                <p class="feature-desc">Flexible software pricing plans (NODE.ALPHA, NODE.PRIME, NODE.OMEGA) tailored for single boutique storefronts up to multitenant national retail hypermarkets.</p>
+                <div style="margin-top: 20px; font-family:'VT323'; color:var(--cyber-emerald); font-size:1.1rem;">> DEPLOYMENT: CLOUD_READY_</div>
+            </div>
+        </div>
 
+        <div class="col-lg-3 col-md-6">
+            <div class="feature-card">
+                <i class="fa-solid fa-warehouse feature-icon" style="color: var(--cyber-amber);"></i>
+                <h3 class="feature-title">REALTIME WAREHOUSE</h3>
+                <p class="feature-desc">Strict stock accounting with Optimistic Concurrency tokens (`RowVersion`). Automated stock vouchers, transfer slips, and supplier debt accounting audits.</p>
+                <div style="margin-top: 20px; font-family:'VT323'; color:var(--cyber-amber); font-size:1.1rem;">> LOCK_ENGINE: OPTIMISTIC_</div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="feature-card">
+                <i class="fa-solid fa-user-lock feature-icon" style="color: var(--cyber-danger);"></i>
+                <h3 class="feature-title">SELF-SERVICE IAM</h3>
+                <p class="feature-desc">Granular RBAC access policies separating operators from core financials. Equipped with biometric employee avatar uploading and automatic cryptographic GUID anonymization.</p>
+                <div style="margin-top: 20px; font-family:'VT323'; color:var(--cyber-danger); font-size:1.1rem;">> SECURITY: ZERO_TRUST_</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SaaS Digital Package Showcase Banner -->
+<div class="container-fluid px-5" style="max-width: 1700px;">
+    <div class="digital-banner">
+        <span class="reticle" style="top:15px; left:15px;">[ ]</span>
+        <span class="reticle" style="top:15px; right:15px;">[ ]</span>
+        <span class="reticle" style="bottom:15px; left:15px;">[ ]</span>
+        <span class="reticle" style="bottom:15px; right:15px;">[ ]</span>
+
+        <div class="row align-items-center g-5">
+            <div class="col-lg-8">
+                <div style="font-family:'VT323'; color:var(--cyber-emerald); font-size:1.3rem;">> NEW RELEASE: DIGIPOSE CORPORATE DIGITAL PACKAGES _</div>
+                <h2 style="font-family:'Orbitron'; font-weight:900; font-size:2.8rem; color:#FFFFFF; margin: 15px 0;">
+                    SCALE YOUR RETAIL CHAIN WITH CUSTOM DIGITAL POS LICENSES
+                </h2>
+                <p style="color:var(--cyber-muted); font-size:1.1rem; line-height:1.8;">
+                    Transition from legacy offline registers to cloud-native high-frequency transaction clusters. Our Digital POS commercial software subscriptions include instant branch replication, automated chart telemetry (Chart.js), VIP CRM loyalty processing, and real-time shift cash reconciliation.
+                </p>
+                <div class="d-flex gap-3 mt-4">
+                    <span class="badge" style="background:#000; border:1px solid var(--cyber-emerald); color:var(--cyber-emerald); padding:10px 15px; font-size:0.9rem; border-radius:0;">
+                        <i class="fa-solid fa-check me-2"></i> Instant License Activation
+                    </span>
+                    <span class="badge" style="background:#000; border:1px solid var(--cyber-cyan); color:var(--cyber-cyan); padding:10px 15px; font-size:0.9rem; border-radius:0;">
+                        <i class="fa-solid fa-network-wired me-2"></i> Multi-branch Synchronization
+                    </span>
+                </div>
+            </div>
+            <div class="col-lg-4 text-lg-end text-start">
+                <a href="/Home/Product" class="cta-btn-primary w-100 text-center py-4" style="font-size:1.25rem;">
+                    [ VIEW PRICING & LICENSES ] <i class="fa-solid fa-arrow-right-long ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- B2B & B2C Convergence Matrix: Storefront Catalog | Tech Support NOC | Talent Careers -->
+<div class="container-fluid px-5 my-5" style="max-width: 1700px;">
+    <h2 class="section-header">// CUSTOMER PORTAL & ENTERPRISE CHANNELS //</h2>
+    
+    <div class="row g-4">
+        <!-- Pillar 1: Online Retail Storefront -->
+        <div class="col-lg-4">
+            <div class="feature-card" style="border-top: 3px solid var(--cyber-cyan); display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                    <div style="font-family:'VT323'; color:var(--cyber-cyan); font-size:1.2rem; margin-bottom:10px;">> RETAIL_CATALOG_HUB _</div>
+                    <h3 style="font-family:'Orbitron'; font-size:1.5rem; color:#FFF; font-weight:900; margin-bottom:15px;">
+                        <i class="fa-solid fa-cart-shopping text-cyan me-2"></i> POS HARDWARE STORE
+                    </h3>
+                    <p class="feature-desc">
+                        Direct purchasing for commercial retail grade hardware: Dual-Screen Touch Terminals, 2D High-Speed CMOS Barcode Scanners, Thermal Receipt Printers, and LAN Cash Drawers.
+                    </p>
+                    <div class="p-3 my-3" style="background:#000; border:1px dashed var(--cyber-cyan);">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span style="color:#FFF; font-family:'Roboto Mono'; font-size:0.85rem;"><i class="fa-solid fa-check text-success me-1"></i> Smart Terminal X9</span>
+                            <span style="font-family:'VT323'; color:var(--cyber-cyan); font-size:1.2rem;">$849.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span style="color:#FFF; font-family:'Roboto Mono'; font-size:0.85rem;"><i class="fa-solid fa-check text-success me-1"></i> Thermal Printer 80mm</span>
+                            <span style="font-family:'VT323'; color:var(--cyber-cyan); font-size:1.2rem;">$149.00</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="/Storefront/Index" class="btn w-100 py-3 mt-3" style="background:transparent; border:1px solid var(--cyber-cyan); color:var(--cyber-cyan); font-family:'Orbitron'; font-weight:bold; letter-spacing:1px; text-decoration:none; text-align:center;">
+                    [ ENTER STOREFRONT ] <i class="fa-solid fa-arrow-up-right-from-square ms-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Pillar 2: NOC Technical Support & Contact -->
+        <div class="col-lg-4">
+            <div class="feature-card" style="border-top: 3px solid var(--cyber-emerald); display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                    <div style="font-family:'VT323'; color:var(--cyber-emerald); font-size:1.2rem; margin-bottom:10px;">> SUPPORT_NOC_24_7 _</div>
+                    <h3 style="font-family:'Orbitron'; font-size:1.5rem; color:#FFF; font-weight:900; margin-bottom:15px;">
+                        <i class="fa-solid fa-headset text-success me-2"></i> TECHNICAL SUPPORT
+                    </h3>
+                    <p class="feature-desc">
+                        Dedicated B2B SLA assistance, Hardware RMA replacements, API webhook integration engineering support, and 24/7 emergency failover hotline for supermarket chains.
+                    </p>
+                    <ul class="list-unstyled my-4" style="color:var(--cyber-muted); font-size:0.9rem;">
+                        <li class="mb-2"><i class="fa-solid fa-phone text-success me-2"></i> Hotline: <strong style="color:#FFF;">+84 0123 456 888</strong> (Sales & CRM)</li>
+                        <li class="mb-2"><i class="fa-solid fa-envelope text-success me-2"></i> NOC Email: <strong style="color:#FFF;">noc@digipose-erp.tech</strong></li>
+                        <li><i class="fa-solid fa-clock text-success me-2"></i> SLA Response Time: <strong style="color:#FFF;">&lt; 15 Minutes</strong></li>
+                    </ul>
+                </div>
+                <a href="/Home/Contact" class="btn w-100 py-3 mt-3" style="background:transparent; border:1px solid var(--cyber-emerald); color:var(--cyber-emerald); font-family:'Orbitron'; font-weight:bold; letter-spacing:1px; text-decoration:none; text-align:center;">
+                    [ CONTACT ENGINEERING ] <i class="fa-solid fa-paper-plane ms-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Pillar 3: Careers & Talent Acquisition -->
+        <div class="col-lg-4">
+            <div class="feature-card" style="border-top: 3px solid var(--cyber-amber); display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                    <div style="font-family:'VT323'; color:var(--cyber-amber); font-size:1.2rem; margin-bottom:10px;">> TALENT_ACQUISITION_GRID _</div>
+                    <h3 style="font-family:'Orbitron'; font-size:1.5rem; color:#FFF; font-weight:900; margin-bottom:15px;">
+                        <i class="fa-solid fa-user-astronaut text-warning me-2"></i> JOIN THE CLUSTER
+                    </h3>
+                    <p class="feature-desc">
+                        We are recruiting elite architects, embedded IoT C++ device drivers specialists, and real-time SignalR telemetrists to build next-generation autonomous commerce systems.
+                    </p>
+                    <div class="p-3 my-3" style="background: rgba(255, 176, 0, 0.05); border: 1px dashed var(--cyber-amber);">
+                        <div style="font-family:'Orbitron'; color:var(--cyber-amber); font-size:0.95rem; font-weight:bold; margin-bottom:5px;">OPEN POSITIONS // 2026</div>
+                        <div style="font-family:'Roboto Mono'; font-size:0.85rem; color:#FFF;">- Senior Cloud Architect (ASP.NET 8 / DDD)</div>
+                        <div style="font-family:'Roboto Mono'; font-size:0.85rem; color:#FFF;">- Embedded Firmware IoT Engineer (ESP32/MQTT)</div>
+                    </div>
+                </div>
+                <a href="/Home/Careers" class="btn w-100 py-3 mt-3" style="background:transparent; border:1px solid var(--cyber-amber); color:var(--cyber-amber); font-family:'Orbitron'; font-weight:bold; letter-spacing:1px; text-decoration:none; text-align:center;">
+                    [ EXPLORE CAREER ROLES ] <i class="fa-solid fa-briefcase ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

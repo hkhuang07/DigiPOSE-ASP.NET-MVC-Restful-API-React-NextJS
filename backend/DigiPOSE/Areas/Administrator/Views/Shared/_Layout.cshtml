@@ -82,9 +82,21 @@
                 </div>
 
                 <!-- Profile Dropdown (Matching Reference Image) -->
+                @{
+                    string? adminAvatar = User.FindFirst("AvatarUrl")?.Value;
+                }
                 <div class="dropdown">
                     <div class="hud-profile-trigger dropdown-toggle" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        <div class="hud-avatar-box">@(User.Identity?.Name != null && User.Identity.Name.Length >= 2 ? User.Identity.Name.Substring(0, 2).ToUpper() : "ADM")</div>
+                        <div class="hud-avatar-box" style="overflow: hidden; padding: 0;">
+                            @if (!string.IsNullOrEmpty(adminAvatar))
+                            {
+                                <img src="~/uploads/avatars/@adminAvatar" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;" />
+                            }
+                            else
+                            {
+                                <span>@(User.Identity?.Name != null && User.Identity.Name.Length >= 2 ? User.Identity.Name.Substring(0, 2).ToUpper() : "ADM")</span>
+                            }
+                        </div>
                         <div class="hud-user-info">
                             <span class="hud-user-name">@(User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "COMMANDER")</span>
                             <span class="hud-user-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "SYSTEM ADMIN")</span>
@@ -92,9 +104,12 @@
                         <i class="fa-solid fa-caret-down text-cyan ms-2" id="hudProfileCaret" style="font-size: 0.75rem; transition: transform 0.2s ease;"></i>
                     </div>
                     <ul class="dropdown-menu dropdown-menu-end hud-dropdown-menu" aria-labelledby="profileDropdown">
-                        <li><a class="dropdown-item" href="#"><i class="fa-solid fa-id-card me-2"></i> User Profile</a></li>
-                        <li><a class="dropdown-item" href="#"><i class="fa-solid fa-sliders me-2"></i> System Settings</a></li>
-                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Index"><i class="fa-solid fa-id-card me-2" style="color: #00E5FF;"></i> View Profile</a></li>
+                        <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Index" asp-fragment="orders-tab"><i class="fa-solid fa-boxes-stacked me-2" style="color: #00FF66;"></i> My Orders</a></li>
+                        <li><a class="dropdown-item" asp-area="" asp-controller="Auth" asp-action="ChangePassword"><i class="fa-solid fa-key me-2" style="color: #FFB000;"></i> Change Password</a></li>
+                        <li><a class="dropdown-item" asp-area="" asp-controller="Storefront" asp-action="Index"><i class="fa-solid fa-cart-shopping me-2" style="color: #00E5FF;"></i> Corporate Storefront</a></li>
+                        <li><a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="DashboardRouter"><i class="fa-solid fa-gauge-high me-2" style="color: #00FF66;"></i> Access POS Cluster</a></li>
+                        <li><hr class="dropdown-divider" style="border-color: rgba(0, 229, 255, 0.2);"></li>
                         <li><a class="dropdown-item text-danger" asp-area="" asp-controller="Auth" asp-action="Logout"><i class="fa-solid fa-power-off me-2"></i> Log Out</a></li>
                     </ul>
                 </div>

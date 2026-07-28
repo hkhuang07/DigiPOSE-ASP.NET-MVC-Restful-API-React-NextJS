@@ -7,6 +7,7 @@
     <form class="ajax-modal-form" asp-action="@(Model.InventoryId == 0 ? "Create" : "Edit")" asp-controller="ProductInventories" method="post">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="InventoryId" />
+        <input type="hidden" asp-for="RowVersion" />
         <div class="modal-body">
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3" style="font-family:'Roboto Mono'; font-size:0.85rem;"></div>
             <div class="mb-3">
@@ -31,6 +32,19 @@
                     <span asp-validation-for="MinStockLevel" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
                 </div>
             </div>
+            @if (Model.InventoryId > 0)
+            {
+                <div class="p-3 my-2" style="border: 1px dashed #FF3333; background: rgba(255, 51, 51, 0.05); border-radius: 4px;">
+                    <div class="d-flex align-items-center mb-2" style="color: #FF3333; font-family: 'Orbitron', 'Rajdhani', sans-serif; font-weight: 700; font-size: 0.9rem;">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i> >>> [BẤT KHẢ KHÁNG // FORCE MAJEURE OVERRIDE]
+                    </div>
+                    <p class="mb-2" style="color: #FFB000; font-family: 'Roboto Mono', monospace; font-size: 0.8rem;">
+                        Directly altering balance bypasses standard vouchers. Require Super Admin / Chief Accountant role & mandatory justification log.
+                    </p>
+                    <label for="mandatoryReason" class="form-cyber-label mt-2" style="color: #FFB000;">MANDATORY AUDIT JUSTIFICATION <span style="color:#FF3333;">*</span></label>
+                    <input type="text" id="mandatoryReason" name="mandatoryReason" class="form-control form-cyber-control" placeholder="Min 15 chars (e.g. Discrepancy adjustment after hardware restore)" style="border-color: #FFB000 !important; font-family: 'Roboto Mono', monospace;" />
+                </div>
+            }
         </div>
         <div class="modal-footer">
             <button type="button" class="btn-cyber-cancel" data-bs-dismiss="modal" style="border-top: 1px solid aliceblue !important; border-bottom: 1px solid aliceblue !important; border-left: none !important; border-right: none !important; color: aliceblue !important; background: #222222 !important;"><i class="fa-solid fa-xmark me-1"></i> CANCEL</button>

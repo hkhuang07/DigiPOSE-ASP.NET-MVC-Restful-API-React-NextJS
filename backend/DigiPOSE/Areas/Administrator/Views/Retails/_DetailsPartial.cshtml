@@ -1,0 +1,57 @@
+@model DigiPOSE.Models.Retail
+<div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-file-invoice text-cyan me-2"></i> RETAIL DOCUMENT // @Model.DocNo</h5>
+        <button type="button" class="btn-close-cyber" data-bs-dismiss="modal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div style="background:#060606; border:1px solid #1A1A1A; padding:14px;">
+                    <div style="font-family:'Orbitron'; font-size:0.7rem; color:#00E5FF; text-transform:uppercase; margin-bottom:10px; border-bottom:1px solid #1A1A1A; padding-bottom:6px;"><i class="fa-solid fa-file me-1"></i> Document Info</div>
+                    <table class="table-cyber" style="font-size:0.85rem;">
+                        <tr><td style="color:#555; width:45%;">Doc No</td><td style="color:#00E5FF; font-family:'Roboto Mono'; font-weight:bold;">@Model.DocNo</td></tr>
+                        <tr><td style="color:#555;">Retail No</td><td>@(Model.RetailNo ?? "--")</td></tr>
+                        <tr><td style="color:#555;">Doc Type</td><td>@(Model.DocType == "B2B_INVOICE" ? "<span class='badge bg-warning text-dark'>B2B Invoice</span>" : "<span class='badge bg-info text-dark'>POS Retail</span>")</td></tr>
+                        <tr><td style="color:#555;">Date</td><td>@Model.Date.ToString("dd/MM/yyyy")</td></tr>
+                        <tr><td style="color:#555;">Issued At</td><td style="font-family:'Roboto Mono'; font-size:0.8rem;">@Model.EndDate.ToString("dd/MM/yyyy HH:mm:ss")</td></tr>
+                        <tr><td style="color:#555;">Print No</td><td>@Model.PrintNo</td></tr>
+                        <tr><td style="color:#555;">e-Invoice</td><td>@(Model.IsEInvoiceReported ? "<span class='text-success'>✓ Reported</span>" : "<span class='text-warning'>Pending</span>")</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div style="background:#060606; border:1px solid #1A1A1A; padding:14px;">
+                    <div style="font-family:'Orbitron'; font-size:0.7rem; color:#00E5FF; text-transform:uppercase; margin-bottom:10px; border-bottom:1px solid #1A1A1A; padding-bottom:6px;"><i class="fa-solid fa-building me-1"></i> Transaction Info</div>
+                    <table class="table-cyber" style="font-size:0.85rem;">
+                        <tr><td style="color:#555; width:45%;">Branch</td><td>@(Model.Branch?.BranchName ?? "--")</td></tr>
+                        <tr><td style="color:#555;">Counter</td><td>@(Model.Counter?.CounterName ?? "--")</td></tr>
+                        <tr><td style="color:#555;">Cashier</td><td>@(Model.User?.UserName ?? "--")</td></tr>
+                        <tr><td style="color:#555;">Shift</td><td>#@Model.ShiftId</td></tr>
+                        <tr><td style="color:#555;">Payment</td><td>@(Model.PaymentMethod?.MethodName ?? "--")</td></tr>
+                        <tr><td style="color:#555;">Customer</td><td>@(Model.BuyerLegalName ?? Model.Customer?.FullName ?? "Walk-in")</td></tr>
+                        <tr><td style="color:#555;">Tax Code</td><td>@(Model.BuyerTaxCode ?? "--")</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div style="background:#060606; border:1px solid #1A1A1A; padding:14px; margin-top:12px;">
+            <div style="font-family:'Orbitron'; font-size:0.7rem; color:#00FF66; text-transform:uppercase; margin-bottom:10px; border-bottom:1px solid #1A1A1A; padding-bottom:6px;"><i class="fa-solid fa-calculator me-1"></i> Financial Summary</div>
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;">
+                <div style="text-align:center;"><div style="color:#555; font-size:0.7rem; text-transform:uppercase;">Qty</div><div style="color:#CCC; font-family:'VT323'; font-size:1.5rem;">@Model.TotalQuantity</div></div>
+                <div style="text-align:center;"><div style="color:#555; font-size:0.7rem; text-transform:uppercase;">Gross</div><div style="color:#A0C0CE; font-family:'VT323'; font-size:1.5rem;">@string.Format("{0:N0}", Model.GrossAmount)</div></div>
+                <div style="text-align:center;"><div style="color:#555; font-size:0.7rem; text-transform:uppercase;">Discount</div><div style="color:#FFB000; font-family:'VT323'; font-size:1.5rem;">@string.Format("{0:N0}", Model.DiscountAmount)</div></div>
+                <div style="text-align:center;"><div style="color:#555; font-size:0.7rem; text-transform:uppercase;">VAT</div><div style="color:#00E5FF; font-family:'VT323'; font-size:1.5rem;">@string.Format("{0:N0}", Model.VatAmount)</div></div>
+                <div style="text-align:center;"><div style="color:#555; font-size:0.7rem; text-transform:uppercase;">Tendered</div><div style="color:#CCC; font-family:'VT323'; font-size:1.5rem;">@string.Format("{0:N0}", Model.TenderedAmount)</div></div>
+                <div style="text-align:center;"><div style="color:#555; font-size:0.7rem; text-transform:uppercase;">Change</div><div style="color:#FFB000; font-family:'VT323'; font-size:1.5rem;">@string.Format("{0:N0}", Model.ChangeAmount)</div></div>
+            </div>
+            <div style="border-top:1px solid #1A1A1A; margin-top:12px; padding-top:10px; display:flex; justify-content:space-between; align-items:baseline;">
+                <span style="font-family:'Orbitron'; font-size:0.8rem; color:#888;">TOTAL AMOUNT</span>
+                <span style="font-family:'VT323'; font-size:2rem; color:#00FF66;">@string.Format("{0:N0}", Model.TotalAmount) ₫</span>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn-cyber-cancel" data-bs-dismiss="modal"><i class="fa-solid fa-xmark me-1"></i> CLOSE</button>
+    </div>
+</div>

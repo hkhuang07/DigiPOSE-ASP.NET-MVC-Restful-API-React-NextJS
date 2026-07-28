@@ -14,28 +14,51 @@ namespace DigiPOSE.Controllers
             _context = context;
         }
 
-        // Public Landing Page / Automatic Role Router
+        // Public Landing Page & Corporate Storefront Portal
         [AllowAnonymous]
         public IActionResult Index()
         {
-            // Logic nghiệp vụ: Nếu người dùng ĐÃ ĐĂNG NHẬP -> Tự động chuyển hướng về Home theo quyền (Role)
-            if (User.Identity != null && User.Identity.IsAuthenticated)
-            {
-                return DashboardRouter();
-            }
-
-            // Nếu CHƯA ĐĂNG NHẬP -> Hiển thị trang Landing Page công khai cho khách
+            // Cho phép cả khách chưa đăng nhập lẫn Quản trị viên/Khách hàng đã đăng nhập trải nghiệm trang chủ Storefront & B2B Portal
             return View();
         }
 
-        // Protected Router for authenticated users
+        // GET: /Home/Introduce (Giới thiệu giải pháp ERP & Hệ sinh thái POS)
+        [AllowAnonymous]
+        public IActionResult Introduce()
+        {
+            return View();
+        }
+
+        // GET: /Home/Product (Danh mục thiết bị và báo giá Gói dịch vụ POS DIGITAL)
+        [AllowAnonymous]
+        public IActionResult Product()
+        {
+            return View();
+        }
+
+        // GET: /Home/Contact (Cổng liên hệ Hỗ trợ Kỹ thuật & NOC 24/7)
+        [AllowAnonymous]
+        public IActionResult Contact()
+        {
+            return View();
+        }
+
+        // GET: /Home/Careers or /Home/TuyenDung (Trang tuyển dụng nhân sự chiến lược)
+        [AllowAnonymous]
+        [Route("Home/Careers")]
+        [Route("Home/TuyenDung")]
+        [Route("TuyenDung")]
+        public IActionResult Careers()
+        {
+            return View();
+        }
+
+        // Protected Router for authenticated users (Called post-login or via Dashboard button)
         [Authorize]
         public IActionResult DashboardRouter()
         {
-            // Lấy Role hiện tại của User đăng nhập
             var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
 
-            // Điều hướng động (Dynamic Routing) dựa trên Role
             return userRole switch
             {
                 "Super Admin" => RedirectToAction("Index", "Home", new { Area = "Administrator" }),
@@ -44,8 +67,8 @@ namespace DigiPOSE.Controllers
                 "Warehouse" => RedirectToAction("Index", "Home", new { Area = "Administrator" }), 
                 "Catalog" => RedirectToAction("Index", "Home", new { Area = "Administrator" }), 
                 "Accountant" => RedirectToAction("Index", "Home", new { Area = "Administrator" }), 
-                "Pending Approval" => RedirectToAction("Index", "Home", new { Area = "" }), 
-                "User" => RedirectToAction("Index", "Home", new { Area = "" }), 
+                "Pending Approval" => RedirectToAction("Index", "Profile", new { Area = "" }), 
+                "User" => RedirectToAction("Index", "Storefront", new { Area = "" }), 
                 _ => RedirectToAction("Index", "Home", new { Area = "Administrator" })
             };
         }

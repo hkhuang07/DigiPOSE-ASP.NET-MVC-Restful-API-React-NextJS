@@ -1,0 +1,76 @@
+@{
+    Layout = "~/Views/Shared/_StorefrontLayout.cshtml";
+    ViewData["Title"] = "Introduce — Enterprise POS System Architecture";
+}
+
+<div class="container-fluid px-5 my-5" style="max-width: 1700px;">
+    <!-- Architecture Title Banner -->
+    <div style="border: 2px solid var(--cyber-cyan); background: rgba(0,229,255,0.05); padding: 50px; position: relative; margin-bottom: 70px;">
+        <div style="font-family:'VT323'; color:var(--cyber-emerald); font-size:1.3rem; letter-spacing:2px;">> SYSTEM_MANUAL // CHAPTER: ENTERPRISE_DOMAIN_ARCHITECTURE _</div>
+        <h1 style="font-family:'Orbitron'; font-weight:900; font-size:3.5rem; color:#FFFFFF; margin: 10px 0 20px 0; text-shadow:0 0 20px rgba(0,229,255,0.5);">
+            <i class="fa-solid fa-network-wired text-cyan me-3"></i> INTELLIGENT RETAIL TELEMETRY & CLOUD ERP
+        </h1>
+        <p style="color:var(--cyber-muted); font-size:1.15rem; max-width:1100px; line-height:1.8;">
+            DigiPOSE is engineered from the ground up as a resilient, fault-tolerant Enterprise Point of Sale and Inventory Management Ecosystem. Built upon clean architectural paradigms and Domain-Driven Design (DDD), our platform decouples terminal execution from core transactional persistence, guaranteeing zero downtime during localized network anomalies.
+        </p>
+    </div>
+
+    <!-- 3 Core Design Principles -->
+    <div class="row g-5 mb-5">
+        <div class="col-lg-4">
+            <div style="background:var(--cyber-surface); border:1px solid var(--cyber-emerald); padding:40px; height:100%; position:relative; box-shadow:0 0 20px rgba(0,255,102,0.1);">
+                <div style="font-size:3rem; color:var(--cyber-emerald); margin-bottom:20px;"><i class="fa-solid fa-bolt-lightning"></i></div>
+                <h3 style="font-family:'Orbitron'; font-size:1.5rem; color:#FFF; font-weight:700; margin-bottom:15px;">O(1) ULTRA-LOW LATENCY</h3>
+                <p style="color:var(--cyber-muted); font-size:1rem; line-height:1.7;">
+                    Retail checkout speed directly impacts transactional throughput. By executing barcode lookups and inventory availability verification against in-memory hash structures (`IInventoryRAMService`), DigiPOSE consistently processes product scans in under 5 milliseconds.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div style="background:var(--cyber-surface); border:1px solid var(--cyber-cyan); padding:40px; height:100%; position:relative; box-shadow:0 0 20px rgba(0,229,255,0.1);">
+                <div style="font-size:3rem; color:var(--cyber-cyan); margin-bottom:20px;"><i class="fa-solid fa-shield-virus"></i></div>
+                <h3 style="font-family:'Orbitron'; font-size:1.5rem; color:#FFF; font-weight:700; margin-bottom:15px;">OPTIMISTIC CONCURRENCY</h3>
+                <p style="color:var(--cyber-muted); font-size:1rem; line-height:1.7;">
+                    To prevent inventory race conditions across multi-counter checkout lanes, all physical quantities and order tables incorporate strict SQL database timestamp tokens (`RowVersion`). Simultaneous edits automatically intercept modification conflicts without database deadlocks.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div style="background:var(--cyber-surface); border:1px solid var(--cyber-amber); padding:40px; height:100%; position:relative; box-shadow:0 0 20px rgba(255,176,0,0.1);">
+                <div style="font-size:3rem; color:var(--cyber-amber); margin-bottom:20px;"><i class="fa-solid fa-layer-group"></i></div>
+                <h3 style="font-family:'Orbitron'; font-size:1.5rem; color:#FFF; font-weight:700; margin-bottom:15px;">GRANULAR R.B.A.C SECURITY</h3>
+                <p style="color:var(--cyber-muted); font-size:1rem; line-height:1.7;">
+                    Adhering to strict Zero-Trust security guidelines, our Role-Based Access Control matrix completely isolates operators from sensitive back-office corporate accounting, stock purchasing, and personnel management domains.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Topology Schematic Presentation -->
+    <div style="background: #0A0A0A; border: 1px solid var(--cyber-border); padding: 50px; margin: 70px 0;">
+        <div style="font-family:'Orbitron'; font-size:1.8rem; font-weight:700; color:var(--cyber-cyan); margin-bottom:30px;">
+            <i class="fa-solid fa-sitemap me-3"></i> DEPLOYMENT TOPOLOGY & HYPER-GRID INFRASTRUCTURE
+        </div>
+        <div class="row g-4 align-items-center">
+            <div class="col-md-6">
+                <ul class="list-unstyled" style="font-family:'Roboto Mono'; font-size:1.05rem; color:var(--cyber-text); line-height:2.2;">
+                    <li><i class="fa-solid fa-square-check text-success me-3"></i> <strong>Backend Framework:</strong> ASP.NET Core MVC 8 & Web API</li>
+                    <li><i class="fa-solid fa-square-check text-success me-3"></i> <strong>Data Layer:</strong> Entity Framework Core / SQL Server High-Availability Cluster</li>
+                    <li><i class="fa-solid fa-square-check text-success me-3"></i> <strong>Frontend Telemetry:</strong> Cyber-Cinematic Medical/Military HUD & Chart.js Engine</li>
+                    <li><i class="fa-solid fa-square-check text-success me-3"></i> <strong>Session Security:</strong> Cookie Authentication with Dynamically Mapped Permission Policy Claims</li>
+                    <li><i class="fa-solid fa-square-check text-success me-3"></i> <strong>File Storage Engine:</strong> Isolated cryptographic GUID processing for avatar and asset uploads</li>
+                </ul>
+            </div>
+            <div class="col-md-6 text-center">
+                <div style="border: 2px dashed var(--cyber-cyan); padding: 40px; background: #000;">
+                    <i class="fa-solid fa-server" style="font-size:5rem; color:var(--cyber-emerald); margin-bottom:15px;"></i>
+                    <div style="font-family:'VT323'; color:#FFFFFF; font-size:1.6rem; letter-spacing:3px;">
+                        [ ENTERPRISE MONOLITH / MICROSERVICES HYBRID READY ]
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

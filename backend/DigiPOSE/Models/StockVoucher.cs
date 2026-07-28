@@ -3,9 +3,22 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DigiPOSE.Models
 {
+    public enum VoucherStatus
+    {
+        Draft = 1,
+        PendingApproval = 2,
+        Posted = 3,
+        Cancelled = 4
+    }
+
     public class StockVoucher
     {
         [Key] public int VoucherId { get; set; }
+
+        [StringLength(50)]
+        [Display(Name = "Voucher Code")]
+        public string VoucherCode { get; set; } = string.Empty;
+
         [Display(Name = "Branch")] 
         [Required(ErrorMessage = "Please select a branch.")]
         public int BranchId { get; set; }
@@ -25,12 +38,24 @@ namespace DigiPOSE.Models
         [Column(TypeName = "decimal(18,4)")]
         [Display(Name = "Total Value")] 
         public decimal TotalValue { get; set; }
+
+        [Display(Name = "Voucher Status")]
+        public VoucherStatus Status { get; set; } = VoucherStatus.Draft;
+
+        [Display(Name = "Approved By")]
+        public int? ApprovedByUserId { get; set; }
+
+        [Display(Name = "Approved At")]
+        public DateTime? ApprovedAt { get; set; }
         
         [Display(Name = "Created At")] 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         public Branch? Branch { get; set; }
+        [ForeignKey("UserId")]
         public User? User { get; set; }
+        [ForeignKey("ApprovedByUserId")]
+        public User? ApprovedByUser { get; set; }
         public Supplier? Supplier { get; set; }
         public ICollection<StockVoucherDetail>? StockVoucherDetails { get; set; }
     }

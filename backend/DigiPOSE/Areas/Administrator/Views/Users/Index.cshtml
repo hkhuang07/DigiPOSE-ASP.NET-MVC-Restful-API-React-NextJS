@@ -23,6 +23,7 @@
             <thead>
                 <tr>
                     <th style="width:5%; text-align:center; white-space:nowrap;">#</th>
+                    <th style="width:60px; text-align:center; white-space:nowrap;">AVATAR</th>
                     <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.UserName)</th>
                     <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.FullName)</th>
                     <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.RoleId)</th>
@@ -54,6 +55,22 @@
                 },
                 columns: [
                     { data: null, name: null, sortable: false, render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
+                    { 
+                        data: 'imageUrl', 
+                        name: 'ImageUrl', 
+                        sortable: false,
+                        render: function (d, t, r) {
+                            if (d && d.trim() !== '') {
+                                return `<div style="width:40px; height:40px; border:1px solid #00E5FF; overflow:hidden; margin:0 auto; background:#000;">
+                                            <img src="/uploads/avatars/${d}" style="width:100%; height:100%; object-fit:cover;" alt="Avatar" />
+                                        </div>`;
+                            } else {
+                                return `<div style="width:40px; height:40px; border:1px solid rgba(255,255,255,0.2); overflow:hidden; margin:0 auto; background:#0A0A0A; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-user-astronaut text-muted"></i>
+                                        </div>`;
+                            }
+                        }
+                    },
                     { data: 'userName', name: 'UserName', render: d => `<i class="fa-solid fa-user me-2 text-cyan"></i><span style="font-family:'Rajdhani'; font-weight:600; color:#FFF;">${d}</span>` },
                     { data: 'fullName', name: 'FullName', render: d => d ? `<span style="color:#A0C0CE;">${d}</span>` : '' },
                     { data: 'roleName', name: 'Role.RoleName', render: d => d ? `<span style="color:#A0C0CE;">${d}</span>` : '' },

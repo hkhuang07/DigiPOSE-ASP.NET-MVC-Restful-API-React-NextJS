@@ -28,6 +28,7 @@ namespace DigiPOSE.Controllers.Api
         private readonly IMemoryCache _cache;
         private readonly IHubContext<PosRealtimeHub> _hubContext;
         private readonly IVatBalancingEngine _vatBalancingEngine;
+        private readonly IInventoryLedgerService _ledgerService;
 
         public StorefrontController(
             DigiPoseDbContext context,
@@ -35,7 +36,8 @@ namespace DigiPOSE.Controllers.Api
             Channel<JobQueueItem> jobChannel,
             IMemoryCache cache,
             IHubContext<PosRealtimeHub> hubContext,
-            IVatBalancingEngine vatBalancingEngine)
+            IVatBalancingEngine vatBalancingEngine,
+            IInventoryLedgerService ledgerService)
         {
             _context = context;
             _inventoryRam = inventoryRam;
@@ -43,6 +45,7 @@ namespace DigiPOSE.Controllers.Api
             _cache = cache;
             _hubContext = hubContext;
             _vatBalancingEngine = vatBalancingEngine;
+            _ledgerService = ledgerService;
         }
 
         #region 1. CUSTOMER IDENTITY & PROFILE
@@ -548,18 +551,18 @@ namespace DigiPOSE.Controllers.Api
                     _context.OrderDetails.Add(od);
 
                     // Handle physical goods vs SaaS subscriptions
-                    if (item.Product?.ItemNatureId == 1) // Physical asset -> Append-Only Inventory Ledger
+                    if (item.Product?.ItemNatureId == 1) // Physical asset -> Delegate to Enterprise DDD Ledger Service
                     {
-                        var txLog = new InventoryTransaction
-                        {
-                            ProductId = item.ProductId,
-                            BranchId = 1, // HQ Fulfillment
-                            QuantityDelta = -item.Quantity,
-                            TxType = InventoryTxType.WebSale,
-                            ReferenceOrderId = newOrder.OrderId,
-                            CreatedAt = DateTime.Now
-                        };
-                        _context.InventoryTransactions.Add(txLog);
+                        await _ledgerService.RecordTransactionAsync(
+                            1, // HQ Fulfillment Branch
+                            item.ProductId,
+                            -item.Quantity,
+                            InventoryTxType.WebSale,
+                            newOrder.OrderId,
+                            $"WEB-{newOrder.OrderId}",
+                            newOrder.UserId,
+                            item.UnitPrice,
+                            $"Storefront WebSale E-Commerce fulfillment for Order #{newOrder.OrderId}");
                     }
                     else if (item.Product?.ItemNatureId == 2) // Digital SaaS Subscription
                     {

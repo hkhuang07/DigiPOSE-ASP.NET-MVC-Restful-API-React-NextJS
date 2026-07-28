@@ -1,0 +1,110 @@
+@{
+    Layout = "~/Views/Shared/_StorefrontLayout.cshtml";
+    ViewData["Title"] = "Digital POS Packages & Commercial SaaS Licenses";
+}
+
+<div class="container-fluid px-5 my-5" style="max-width: 1700px;">
+    <!-- Page Header -->
+    <div class="text-center mb-5 pb-3">
+        <div style="font-family:'VT323'; color:var(--cyber-emerald); font-size:1.4rem; letter-spacing:2px;">> ENTERPRISE_B2B_SOCIETY // TARGET: COMMERCIAL_SAAS_SUBSCRIPTION _</div>
+        <h1 style="font-family:'Orbitron'; font-weight:900; font-size:3.5rem; color:#FFFFFF; margin: 10px 0 20px 0; text-shadow:0 0 25px rgba(0,255,102,0.4);">
+            DIGITAL POS COMMERCIAL LICENSES
+        </h1>
+        <p style="color:var(--cyber-muted); font-size:1.2rem; max-width:900px; margin: 0 auto; line-height:1.7;">
+            Equip your enterprise with high-availability software licenses designed for mission-critical POS environments. All subscription tiers include automatic cloud backups, automated software upgrades, and secure self-service identity management.
+        </p>
+    </div>
+
+    <!-- 3 Pricing License Tiers -->
+    <div class="row g-5 justify-content-center mb-5">
+        <!-- Node ALPHA -->
+        <div class="col-xl-4 col-lg-4 col-md-6">
+            <div style="background:var(--cyber-surface); border:1px solid var(--cyber-border); padding:50px 40px; height:100%; position:relative; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 0 20px rgba(0,229,255,0.1);">
+                <div>
+                    <div style="font-family:'VT323'; color:var(--cyber-cyan); font-size:1.3rem;">[ TIER: BOUTIQUE RETAILER ]</div>
+                    <h2 style="font-family:'Orbitron'; font-size:2.4rem; color:#FFFFFF; font-weight:900; margin:10px 0 30px 0;">NODE.ALPHA</h2>
+                    <div style="font-family:'VT323'; font-size:4.5rem; color:var(--cyber-cyan); line-height:1; margin-bottom:15px;">
+                        $49<span style="font-size:1.4rem; color:var(--cyber-muted); font-family:'Roboto Mono';">/month</span>
+                    </div>
+                    <p style="color:var(--cyber-muted); font-size:0.95rem; margin-bottom:35px; border-bottom:1px solid var(--cyber-border); padding-bottom:20px;">
+                        Ideal for single-store retail operations requiring reliable checkout execution and core inventory ledger tracking.
+                    </p>
+                    <ul class="list-unstyled" style="font-family:'Roboto Mono'; font-size:0.95rem; color:var(--cyber-text); line-height:2.4;">
+                        <li><i class="fa-solid fa-square-check text-success me-3"></i> 1 Active Retail Branch</li>
+                        <li><i class="fa-solid fa-square-check text-success me-3"></i> Up to 3 POS Operator Terminals</li>
+                        <li><i class="fa-solid fa-square-check text-success me-3"></i> Standard O(1) Barcode Scanning</li>
+                        <li><i class="fa-solid fa-square-check text-success me-3"></i> Basic Shift Closing Audits</li>
+                        <li class="text-muted"><i class="fa-solid fa-xmark text-danger me-3"></i> No Advanced Chart.js Analytics</li>
+                        <li class="text-muted"><i class="fa-solid fa-xmark text-danger me-3"></i> No VIP Reward Loyalty Program</li>
+                    </ul>
+                </div>
+                <div class="mt-5 pt-4">
+                    <a href="/Auth/Register?plan=alpha" class="btn w-100 py-4" style="background:transparent; border:2px solid var(--cyber-cyan); color:var(--cyber-cyan); font-family:'Orbitron'; font-weight:900; font-size:1.1rem; text-transform:uppercase;">
+                        [ CONFIGURE NODE.ALPHA ]
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Node PRIME -->
+        <div class="col-xl-4 col-lg-4 col-md-6">
+            <div style="background:rgba(0, 255, 102, 0.04); border:2px solid var(--cyber-emerald); padding:50px 40px; height:100%; position:relative; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 0 35px rgba(0,255,102,0.25); transform: scale(1.04);">
+                <div style="position:absolute; top:-15px; right:30px; background:var(--cyber-emerald); color:#000; font-family:'Orbitron'; font-weight:900; padding:6px 20px; font-size:0.9rem; text-transform:uppercase;">
+                    [ MOST RECOMMENDED ]
+                </div>
+                <div>
+                    <div style="font-family:'VT323'; color:var(--cyber-emerald); font-size:1.3rem;">[ TIER: MULTI-STORE ENTERPRISE ]</div>
+                    <h2 style="font-family:'Orbitron'; font-size:2.4rem; color:#FFFFFF; font-weight:900; margin:10px 0 30px 0;">NODE.PRIME</h2>
+                    <div style="font-family:'VT323'; font-size:4.5rem; color:var(--cyber-emerald); line-height:1; margin-bottom:15px;">
+                        $129<span style="font-size:1.4rem; color:var(--cyber-muted); font-family:'Roboto Mono';">/month</span>
+                    </div>
+                    <p style="color:var(--cyber-muted); font-size:0.95rem; margin-bottom:35px; border-bottom:1px solid var(--cyber-emerald); padding-bottom:20px;">
+                        Comprehensive enterprise solution engineered for high-volume retail chains demanding deep telemetry analytics.
+                    </p>
+                    <ul class="list-unstyled" style="font-family:'Roboto Mono'; font-size:0.95rem; color:var(--cyber-text); line-height:2.4;">
+                        <li><i class="fa-solid fa-square-check text-success me-3"></i> Up to 5 Active Retail Branches</li>
+                        <li><i class="fa-solid fa-square-check text-success me-3"></i> Unlimited Operator Accounts</li>
+                        <li><i class="fa-solid fa-square-check text-success me-3"></i> Real-time Chart.js Analytics Dashboard</li>
+                        <li><i class="fa-solid fa-square-check text-success me-3"></i> VIP Loyalty CRM & Reward Points Engine</li>
+                        <li><i class="fa-solid fa-square-check text-success me-3"></i> Self-Service Avatar & IAM File Engine</li>
+                        <li><i class="fa-solid fa-square-check text-success me-3"></i> 24/7 Priority Telemetry Support</li>
+                    </ul>
+                </div>
+                <div class="mt-5 pt-4">
+                    <a href="/Auth/Register?plan=prime" class="btn w-100 py-4" style="background:var(--cyber-emerald); border:2px solid var(--cyber-emerald); color:#000000; font-family:'Orbitron'; font-weight:900; font-size:1.15rem; text-transform:uppercase; box-shadow:0 0 20px rgba(0,255,102,0.4);">
+                        [ INITIALIZE NODE.PRIME ] <i class="fa-solid fa-bolt ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Node OMEGA -->
+        <div class="col-xl-4 col-lg-4 col-md-6">
+            <div style="background:var(--cyber-surface); border:1px solid var(--cyber-border); padding:50px 40px; height:100%; position:relative; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 0 20px rgba(0,229,255,0.1);">
+                <div>
+                    <div style="font-family:'VT323'; color:var(--cyber-amber); font-size:1.3rem;">[ TIER: NATIONAL HYPERMARKET ]</div>
+                    <h2 style="font-family:'Orbitron'; font-size:2.4rem; color:#FFFFFF; font-weight:900; margin:10px 0 30px 0;">NODE.OMEGA</h2>
+                    <div style="font-family:'VT323'; font-size:4.5rem; color:var(--cyber-amber); line-height:1; margin-bottom:15px;">
+                        CUSTOM<span style="font-size:1.4rem; color:var(--cyber-muted); font-family:'Roboto Mono';"> / SLA</span>
+                    </div>
+                    <p style="color:var(--cyber-muted); font-size:0.95rem; margin-bottom:35px; border-bottom:1px solid var(--cyber-border); padding-bottom:20px;">
+                        Tailored enterprise cluster for national supermarket franchises requiring customized hardware firmware integration.
+                    </p>
+                    <ul class="list-unstyled" style="font-family:'Roboto Mono'; font-size:0.95rem; color:var(--cyber-text); line-height:2.4;">
+                        <li><i class="fa-solid fa-square-check text-success me-3"></i> Unlimited Branches & Terminals</li>
+                        <li><i class="fa-solid fa-square-check text-success me-3"></i> Dedicated Isolated Cloud Database</li>
+                        <li><i class="fa-solid fa-square-check text-success me-3"></i> Custom Biometric Hardware Drivers</li>
+                        <li><i class="fa-solid fa-square-check text-success me-3"></i> Full GraphQL & RESTful API Architecture</li>
+                        <li><i class="fa-solid fa-square-check text-success me-3"></i> Dedicated Enterprise Account Architect</li>
+                        <li><i class="fa-solid fa-square-check text-success me-3"></i> On-premise NOC Deployment Options</li>
+                    </ul>
+                </div>
+                <div class="mt-5 pt-4">
+                    <a href="/Home/Contact?subject=omega_inquiry" class="btn w-100 py-4" style="background:transparent; border:2px solid var(--cyber-amber); color:var(--cyber-amber); font-family:'Orbitron'; font-weight:900; font-size:1.1rem; text-transform:uppercase;">
+                        [ CONTACT NOC COMMAND ]
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

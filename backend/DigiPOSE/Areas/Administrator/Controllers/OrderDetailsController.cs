@@ -131,7 +131,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 .FirstOrDefaultAsync(m => m.OrderDetailId == id);
             if (detail == null) return NotFound();
 
-            return View(detail);
+            return PartialView("_DetailsPartial", detail);
         }
 
         public async Task<IActionResult> Create()

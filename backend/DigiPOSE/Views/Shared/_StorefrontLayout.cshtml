@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - DigiPOSE Enterprise Ecosystem</title>
+    
+    <!-- CSS Dependencies -->
+    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/font-awesome/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@500;700&family=VT323&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        :root {
+            --cyber-bg: #000000;
+            --cyber-surface: #0A0A0A;
+            --cyber-cyan: #00E5FF;
+            --cyber-emerald: #00FF66;
+            --cyber-amber: #FFB000;
+            --cyber-danger: #FF3333;
+            --cyber-text: #FFFFFF;
+            --cyber-muted: #A0C0CE;
+            --cyber-border: rgba(0, 229, 255, 0.4);
+            --scanline-opacity: 0.15;
+        }
+
+        [data-theme="light"] {
+            --cyber-bg: #EAF7FD;
+            --cyber-surface: #FFFFFF;
+            --cyber-cyan: #006680;
+            --cyber-emerald: #00803B;
+            --cyber-amber: #B37700;
+            --cyber-danger: #D30000;
+            --cyber-text: #051A24;
+            --cyber-muted: #4F707E;
+            --cyber-border: rgba(0, 102, 128, 0.4);
+            --scanline-opacity: 0.05;
+        }
+
+        body {
+            background-color: var(--cyber-bg);
+            color: var(--cyber-text);
+            font-family: 'Roboto Mono', monospace;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* CRT Scanline Overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, var(--scanline-opacity)) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 99999;
+        }
+
+        /* Cyber Storefront Navigation Bar */
+        .cyber-store-nav {
+            background: var(--cyber-surface);
+            border-bottom: 2px solid var(--cyber-cyan);
+            padding: 0 40px;
+            height: 75px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 229, 255, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-brand-group {
+            display: flex;
+            align-items: center;
+        }
+
+        .cyber-brand {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 1.6rem;
+            color: var(--cyber-cyan);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Central Menu Structure: Introduce | Product | Store | Contact | Tuyển dụng | */
+        .nav-center-menu {
+            display: flex;
+            align-items: center;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-center-menu li {
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-link-cyber {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--cyber-text);
+            text-transform: uppercase;
+            text-decoration: none;
+            padding: 10px 22px;
+            letter-spacing: 1px;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .nav-link-cyber:hover, .nav-link-cyber.active {
+            color: var(--cyber-emerald);
+            text-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
+        }
+
+        .nav-divider {
+            color: var(--cyber-cyan);
+            font-weight: bold;
+            font-size: 1.2rem;
+            opacity: 0.6;
+            margin: 0 4px;
+            user-select: none;
+        }
+
+        /* Right Action Utility Controls: Language - Dark/Light - [Login][Sign up] */
+        .nav-right-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .cyber-utility-btn {
+            background: transparent;
+            border: 1px solid var(--cyber-border);
+            color: var(--cyber-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 0;
+            transition: all 0.25s;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .cyber-utility-btn:hover {
+            border-color: var(--cyber-cyan);
+            background: rgba(0, 229, 255, 0.15);
+            box-shadow: 0 0 12px var(--cyber-cyan);
+            color: var(--cyber-text);
+        }
+
+        .btn-action-login {
+            background: transparent;
+            border: 1px solid var(--cyber-cyan);
+            color: var(--cyber-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            letter-spacing: 1px;
+            padding: 8px 18px;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-radius: 0;
+        }
+
+        .btn-action-login:hover {
+            background: var(--cyber-cyan);
+            color: var(--cyber-bg);
+            box-shadow: 0 0 15px var(--cyber-cyan);
+        }
+
+        .btn-action-signup {
+            background: transparent;
+            border: 1px solid var(--cyber-emerald);
+            color: var(--cyber-emerald);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            letter-spacing: 1px;
+            padding: 8px 18px;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-radius: 0;
+        }
+
+        .btn-action-signup:hover {
+            background: var(--cyber-emerald);
+            color: #000000;
+            box-shadow: 0 0 15px var(--cyber-emerald);
+        }
+
+        /* Dropdown custom */
+        .cyber-dropdown-menu {
+            background: var(--cyber-surface);
+            border: 1px solid var(--cyber-cyan);
+            border-radius: 0;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+            padding: 10px 0;
+            min-width: 220px;
+        }
+
+        .cyber-dropdown-menu .dropdown-item {
+            color: var(--cyber-text);
+            font-family: 'Roboto Mono', monospace;
+            padding: 10px 20px;
+            transition: all 0.2s;
+        }
+
+        .cyber-dropdown-menu .dropdown-item:hover {
+            background: rgba(0, 229, 255, 0.15);
+            color: var(--cyber-cyan);
+            padding-left: 25px;
+        }
+
+        /* Footer */
+        .cyber-footer {
+            background: var(--cyber-surface);
+            border-top: 2px solid var(--cyber-cyan);
+            padding: 50px 40px 30px 40px;
+            margin-top: 80px;
+            font-size: 0.9rem;
+            color: var(--cyber-muted);
+            box-shadow: 0 -4px 20px rgba(0, 229, 255, 0.1);
+        }
+
+        .footer-title {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            color: var(--cyber-cyan);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .footer-links list-unstyled li {
+            margin-bottom: 10px;
+        }
+
+        .footer-link {
+            color: var(--cyber-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-link:hover {
+            color: var(--cyber-emerald);
+            text-shadow: 0 0 8px rgba(0, 255, 102, 0.5);
+        }
+
+        /* HUD Profile Box in Storefront */
+        .hud-profile-trigger {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 229, 255, 0.05);
+            border: 1px solid var(--cyber-cyan);
+            padding: 4px 12px 4px 4px;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .hud-profile-trigger:hover {
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+            border-color: var(--cyber-emerald);
+        }
+
+        .hud-avatar-box {
+            width: 36px;
+            height: 36px;
+            background: #000;
+            border: 1px solid var(--cyber-cyan);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            color: var(--cyber-cyan);
+            overflow: hidden;
+        }
+
+        .hud-user-info {
+            display: flex;
+            flex-direction: column;
+            margin-left: 10px;
+            line-height: 1.2;
+        }
+
+        .hud-user-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--cyber-text);
+        }
+
+        .hud-user-role {
+            font-family: 'VT323', monospace;
+            font-size: 0.95rem;
+            color: var(--cyber-emerald);
+            letter-spacing: 1px;
+        }
+
+        /* Off-canvas Custom Cyber Theme */
+        .offcanvas-cyber {
+            background: var(--cyber-surface);
+            border-left: 2px solid var(--cyber-cyan);
+            color: var(--cyber-text);
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        .offcanvas-cyber .offcanvas-header {
+            border-bottom: 1px solid var(--cyber-border);
+            padding: 20px;
+            background: rgba(0, 229, 255, 0.05);
+        }
+
+        .offcanvas-cyber .offcanvas-title {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            color: var(--cyber-text);
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+        }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <!-- Corporate Storefront Cyber Navbar -->
+    <nav class="cyber-store-nav">
+        <!-- Left: Brand Logo -->
+        <div class="nav-brand-group">
+            <a href="/Home/Index" class="cyber-brand">
+                <i class="fa-solid fa-microchip me-2"></i> DigiPOSE
+            </a>
+        </div>
+
+        <!-- Center: Standardized Navigation Matrix -->
+        <ul class="nav-center-menu">
+            <li><a href="/Home/Introduce" class="nav-link-cyber @(ViewContext.RouteData.Values["Action"]?.ToString() == "Introduce" ? "active" : "")">Introduce</a></li>
+            <li><span class="nav-divider">|</span></li>
+            <li><a href="/Home/Product" class="nav-link-cyber @(ViewContext.RouteData.Values["Action"]?.ToString() == "Product" ? "active" : "")">Product</a></li>
+            <li><span class="nav-divider">|</span></li>
+            <li><a href="/Storefront/Index" class="nav-link-cyber @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Storefront" ? "active" : "")">Store</a></li>
+            <li><span class="nav-divider">|</span></li>
+            <li><a href="/Home/Contact" class="nav-link-cyber @(ViewContext.RouteData.Values["Action"]?.ToString() == "Contact" ? "active" : "")">Contact</a></li>
+            <li><span class="nav-divider">|</span></li>
+            <li><a href="/Home/Careers" class="nav-link-cyber @(ViewContext.RouteData.Values["Action"]?.ToString() == "Careers" ? "active" : "")">Careers</a></li>
+            <li><span class="nav-divider">|</span></li>
+        </ul>
+
+        <!-- Right: Action Utility Controls -> Language - Dark/light - [Login][Sign up] -->
+        <div class="nav-right-actions d-flex align-items-center gap-3">
+            <!-- Language Selection (Icon ONLY / Flag representation) -->
+            <div class="dropdown">
+                <button class="cyber-utility-btn dropdown-toggle px-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Switch Interface Language (VI/EN)">
+                    <i class="fa-solid fa-globe" style="font-size:1.1rem; color: var(--cyber-cyan);"></i> <span id="langShortCode" class="ms-1" style="font-family:'VT323'; font-size:1.1rem; font-weight:bold;">VI</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end cyber-dropdown-menu">
+                    <li><h6 class="dropdown-header text-cyan" style="font-family:'Orbitron';">LOCALIZATION CODES</h6></li>
+                    <li><a class="dropdown-item" href="javascript:switchLanguage('VI')"><i class="fa-solid fa-check text-success me-2" id="iconVI"></i> Tiếng Việt [ VI / VN ]</a></li>
+                    <li><a class="dropdown-item" href="javascript:switchLanguage('EN')"><i class="fa-solid fa-minus text-muted me-2" id="iconEN"></i> English [ EN / US ]</a></li>
+                </ul>
+            </div>
+
+            <!-- Dark / Light Mode Switcher (ICON ONLY, NO TEXT) -->
+            <button class="cyber-utility-btn px-2" type="button" onclick="toggleStorefrontTheme()" title="Toggle Dark Void / Light Holo Theme">
+                <i class="fa-solid fa-sun" id="themeIcon" style="font-size:1.1rem; color: var(--cyber-amber);"></i>
+            </button>
+
+            <!-- Notification Icon Dropdown (NEW) -->
+            <div class="dropdown hud-notif-wrapper">
+                <button class="cyber-utility-btn px-2 position-relative" type="button" id="storeNotifDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Ecosystem Notifications">
+                    <i class="fa-solid fa-bell" style="font-size: 1.1rem; color: var(--cyber-text);"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:var(--cyber-danger); color:#FFF; font-family:'VT323'; font-size:0.8rem; font-weight:bold;">2</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end cyber-dropdown-menu" aria-labelledby="storeNotifDropdown">
+                    <li><h6 class="dropdown-header text-cyan" style="color:var(--cyber-cyan); font-family:'Orbitron';">TELEMETRY & DEALS</h6></li>
+                    <li><a class="dropdown-item" href="#"><i class="fa-solid fa-circle-check text-success me-2"></i> Real-time DB Sync online</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="fa-solid fa-truck-fast text-warning me-2"></i> Freeship applied for > 500k VND</a></li>
+                </ul>
+            </div>
+
+            <!-- Off-canvas Cart Trigger (NEW - right next to Notification) -->
+            <button class="cyber-utility-btn px-2 position-relative" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" aria-controls="cartOffcanvas" title="Open Shopping Cart">
+                <i class="fa-solid fa-cart-shopping" style="font-size: 1.1rem; color: var(--cyber-emerald);"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:var(--cyber-cyan); color:#000; font-family:'VT323'; font-size:0.85rem; font-weight:bold;" id="navCartBadgeCount">0</span>
+            </button>
+
+            <!-- Auth Buttons OR Profile Dropdown when authenticated -->
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                string? userAvatar = User.FindFirst("AvatarUrl")?.Value;
+                <div class="dropdown">
+                    <div class="hud-profile-trigger dropdown-toggle" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="hud-avatar-box">
+                            @if (!string.IsNullOrEmpty(userAvatar))
+                            {
+                                <img src="~/uploads/avatars/@userAvatar" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;" />
+                            }
+                            else
+                            {
+                                <span>@(User.Identity.Name != null && User.Identity.Name.Length >= 2 ? User.Identity.Name.Substring(0, 2).ToUpper() : "US")</span>
+                            }
+                        </div>
+                        <div class="hud-user-info">
+                            <span class="hud-user-name">@(User.FindFirst("FullName")?.Value ?? User.Identity.Name)</span>
+                            <span class="hud-user-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "VERIFIED MEMBER")</span>
+                        </div>
+                        <i class="fa-solid fa-caret-down text-cyan ms-2" style="font-size: 0.75rem;"></i>
+                    </div>
+                    <ul class="dropdown-menu dropdown-menu-end cyber-dropdown-menu" aria-labelledby="profileDropdown">
+                        <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Index"><i class="fa-solid fa-id-card me-2" style="color: var(--cyber-cyan);"></i> View Profile</a></li>
+                        <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Index" asp-fragment="orders-tab"><i class="fa-solid fa-boxes-stacked me-2" style="color: var(--cyber-emerald);"></i> My Orders</a></li>
+                        <li><a class="dropdown-item" asp-area="" asp-controller="Auth" asp-action="ChangePassword"><i class="fa-solid fa-key me-2" style="color: var(--cyber-amber);"></i> Change Password</a></li>
+                        <li><a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="DashboardRouter"><i class="fa-solid fa-gauge-high me-2" style="color: #00FF66;"></i> Access POS Cluster</a></li>
+                        <li><hr class="dropdown-divider" style="border-color: var(--cyber-border);"></li>
+                        <li><a class="dropdown-item text-danger" asp-area="" asp-controller="Auth" asp-action="Logout"><i class="fa-solid fa-power-off me-2"></i> Log Out</a></li>
+                    </ul>
+                </div>
+            }
+            else
+            {
+                <a href="/Auth/Login" class="btn-action-login">[ Login ]</a>
+                <a href="/Auth/Register" class="btn-action-signup">[ Sign up ]</a>
+            }
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <!-- Cyber Corporate Footer -->
+    <footer class="cyber-footer">
+        <div class="container-fluid">
+            <div class="row g-5">
+                <div class="col-lg-4 col-md-6">
+                    <div style="font-family:'Orbitron'; font-size:1.5rem; font-weight:900; color:var(--cyber-cyan); margin-bottom:15px;">
+                        <i class="fa-solid fa-microchip me-2"></i> DigiPOSE ECOSYSTEM
+                    </div>
+                    <p style="color:var(--cyber-muted); line-height:1.7;">
+                        Next-generation Enterprise Resource Planning & Point of Sale Telemetry infrastructure. Low-latency POS computing nodes equipped with asynchronous memory caching and strict zero-trust role isolation.
+                    </p>
+                    <div style="color:var(--cyber-emerald); font-family:'VT323'; font-size:1.2rem; margin-top:20px;">
+                        > STATUS: OPERATIONAL_CLUSTER_ONLINE [ 99.999% SLA ] _
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-md-3">
+                    <h5 class="footer-title">Navigation</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="/Home/Introduce" class="footer-link">> Introduce Architecture</a></li>
+                        <li class="mb-2"><a href="/Home/Product" class="footer-link">> DIGITAL POS Packages</a></li>
+                        <li class="mb-2"><a href="/Storefront/Index" class="footer-link">> Retail Marketplace</a></li>
+                        <li class="mb-2"><a href="/Home/Contact" class="footer-link">> Enterprise NOC 24/7</a></li>
+                        <li class="mb-2"><a href="/Home/Careers" class="footer-link">> Tuyển dụng Engineering</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-md-3">
+                    <h5 class="footer-title">Telemetry Modules</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><span class="text-white"><i class="fa-solid fa-check text-success me-2"></i> Smart POS Terminal v16.3</span></li>
+                        <li class="mb-2"><span class="text-white"><i class="fa-solid fa-check text-success me-2"></i> RAM Cache Scanner (O(1))</span></li>
+                        <li class="mb-2"><span class="text-white"><i class="fa-solid fa-check text-success me-2"></i> Optimistic Concurrency Engine</span></li>
+                        <li class="mb-2"><span class="text-white"><i class="fa-solid fa-check text-success me-2"></i> Self-Service Profile IAM</span></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-md-12">
+                    <h5 class="footer-title">NOC Command HQ</h5>
+                    <div style="font-family:'Roboto Mono'; font-size:0.95rem; color:var(--cyber-text);">
+                        <div class="mb-2"><i class="fa-solid fa-location-dot text-cyan me-2"></i> Floor 24, Cyber-Tech Tower, Silicon Quad</div>
+                        <div class="mb-2"><i class="fa-solid fa-phone-volume text-success me-2"></i> +84 (24) 8888-9999 [ Emergency Switch ]</div>
+                        <div class="mb-4"><i class="fa-solid fa-envelope-open-text text-warning me-2"></i> enterprise-noc@digipose.io</div>
+                        <div style="font-size:0.8rem; color:var(--cyber-muted); border-top:1px dashed var(--cyber-border); padding-top:12px;">
+                            &copy; 2026 DIGIPOSE CORP. STRICT MILITARY/MEDICAL HUD PROTOCOL ENFORCED.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Off-canvas Shopping Cart (Real Database Cart Synchronization) -->
+    <div class="offcanvas offcanvas-end offcanvas-cyber" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel" style="width: 450px;">
+        <div class="offcanvas-header d-flex justify-content-between align-items-center">
+            <h5 class="offcanvas-title" id="cartOffcanvasLabel"><i class="fa-solid fa-cart-shopping text-cyan me-2"></i> ACTIVE STAGING CART</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column justify-content-between p-4">
+            <div id="cartItemsContainer" class="flex-grow-1 overflow-auto pe-2">
+                <div class="text-center py-5 text-muted">
+                    <i class="fa-solid fa-box-open mb-3" style="font-size:3rem; opacity:0.5;"></i>
+                    <p style="font-family:'VT323'; font-size:1.4rem;">> NO ASSETS IN STAGING CART // _</p>
+                </div>
+            </div>
+
+            <div class="pt-3 mt-3" style="border-top: 2px dashed var(--cyber-border);">
+                <div class="d-flex justify-content-between mb-2">
+                    <span style="color:var(--cyber-muted);">GROSS SUBTOTAL:</span>
+                    <span style="font-family:'VT323'; font-size:1.4rem; color:#FFF;" id="cartGrossAmount">$0.00</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span style="color:var(--cyber-muted);">ESTIMATED TAX (VAT):</span>
+                    <span style="font-family:'VT323'; font-size:1.4rem; color:var(--cyber-amber);" id="cartTaxAmount">$0.00</span>
+                </div>
+                <div class="d-flex justify-content-between mb-4 pb-2" style="border-bottom:1px solid var(--cyber-border);">
+                    <span style="font-family:'Orbitron'; font-weight:700; color:var(--cyber-cyan);">MASTER TOTAL:</span>
+                    <span style="font-family:'VT323'; font-size:2rem; font-weight:bold; color:var(--cyber-emerald);" id="cartTotalAmount">$0.00</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-danger py-2 w-50" style="font-family:'Orbitron'; font-weight:bold; border-radius:0; font-size:0.85rem;" onclick="clearStorefrontCart()">
+                        <i class="fa-solid fa-trash me-2"></i> [ CLEAR ]
+                    </button>
+                    <button class="btn py-3 w-100" style="background:var(--cyber-emerald); color:#000; font-family:'Orbitron'; font-weight:900; border-radius:0; font-size:1rem; text-transform:uppercase;" id="btnProceedCheckout" onclick="proceedToCheckout()">
+                        <i class="fa-solid fa-credit-card me-2"></i> [ PROCEED TO CHECKOUT ]
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // High-performance theme switcher with zero visual layout shifts
+        function toggleStorefrontTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = (currentTheme === 'dark') ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('digipose_store_theme', newTheme);
+            const icon = document.getElementById('themeIcon');
+            if (icon) {
+                icon.className = newTheme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            }
+        }
+
+        function switchLanguage(lang) {
+            const el = document.getElementById('langShortCode');
+            if(el) el.innerText = lang;
+            if (lang === 'VI') {
+                if(document.getElementById('iconVI')) document.getElementById('iconVI').className = "fa-solid fa-check text-success me-2";
+                if(document.getElementById('iconEN')) document.getElementById('iconEN').className = "fa-solid fa-minus text-muted me-2";
+            } else {
+                if(document.getElementById('iconEN')) document.getElementById('iconEN').className = "fa-solid fa-check text-success me-2";
+                if(document.getElementById('iconVI')) document.getElementById('iconVI').className = "fa-solid fa-minus text-muted me-2";
+            }
+            localStorage.setItem('digipose_store_lang', lang);
+        }
+
+        // ====================================================================
+        // REAL DATABASE CART MANAGEMENT (0% MOCK DATA PROTOCOL)
+        // ====================================================================
+        function getActiveCartId() {
+            return parseInt(localStorage.getItem('digipose_cart_id') || '0', 10);
+        }
+
+        function loadStorefrontCart() {
+            const cartId = getActiveCartId();
+            if (cartId === 0) {
+                renderEmptyCart();
+                return;
+            }
+
+            fetch(`/api/v1/Storefront/cart/${cartId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.cartState === "CardEmpty" || !data.items || data.items.length === 0) {
+                        renderEmptyCart();
+                    } else {
+                        renderCartData(data);
+                    }
+                })
+                .catch(err => {
+                    console.error(">>> [CART_SYNC_ERROR]:", err);
+                    renderEmptyCart();
+                });
+        }
+
+        function renderEmptyCart() {
+            document.getElementById('navCartBadgeCount').innerText = '0';
+            document.getElementById('cartGrossAmount').innerText = '0 VND';
+            document.getElementById('cartTaxAmount').innerText = '0 VND';
+            document.getElementById('cartTotalAmount').innerText = '0 VND';
+            document.getElementById('cartItemsContainer').innerHTML = `
+                <div class="text-center py-5 text-muted">
+                    <i class="fa-solid fa-box-open mb-3" style="font-size:3rem; opacity:0.5;"></i>
+                    <p style="font-family:'VT323'; font-size:1.4rem;">> NO ASSETS IN STAGING CART // _</p>
+                </div>`;
+        }
+
+        function renderCartData(data) {
+            document.getElementById('navCartBadgeCount').innerText = data.totalQuantity || data.items.length;
+            document.getElementById('cartGrossAmount').innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.grossAmount);
+            document.getElementById('cartTaxAmount').innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.taxAmount);
+            document.getElementById('cartTotalAmount').innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.totalAmount);
+
+            let html = '';
+            data.items.forEach(item => {
+                const img = item.imageUrl || '/demo/products/default_cyber_product.png';
+                const itemTotal = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.subtotal);
+                html += `
+                <div class="d-flex align-items-center mb-3 p-2" style="background: rgba(0, 229, 255, 0.03); border: 1px solid rgba(0, 229, 255, 0.2);">
+                    <div style="width: 60px; height: 60px; background:#000; border:1px solid var(--cyber-border); flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                        ${img.startsWith('/') || img.startsWith('http') ? `<img src="${img}" style="max-width:100%; max-height:100%; object-fit:cover;" alt="product"/>` : `<i class="fa-solid fa-box text-cyan"></i>`}
+                    </div>
+                    <div class="ms-3 flex-grow-1 min-w-0">
+                        <div style="font-family:'Orbitron'; font-size:0.85rem; font-weight:700; color:#FFF; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${item.productName}</div>
+                        <div style="font-family:'VT323'; color:var(--cyber-cyan); font-size:1.1rem;">${itemTotal} (${item.quantity} ${item.unitName})</div>
+                        <div class="d-flex align-items-center gap-2 mt-1">
+                            <button class="btn btn-sm btn-outline-info px-2 py-0" style="border-radius:0; font-weight:bold;" onclick="adjustCartQty(${item.productId}, -1)">-</button>
+                            <span style="font-family:'Roboto Mono'; font-size:0.85rem;">${item.quantity}</span>
+                            <button class="btn btn-sm btn-outline-info px-2 py-0" style="border-radius:0; font-weight:bold;" onclick="adjustCartQty(${item.productId}, 1)">+</button>
+                            <button class="btn btn-sm text-danger px-2 py-0 ms-auto" title="Remove" onclick="removeCartItem(${item.productId})"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('cartItemsContainer').innerHTML = html;
+        }
+
+        function addToStorefrontCart(productId, price, unitName) {
+            const cartId = getActiveCartId();
+            const payload = {
+                CartId: cartId,
+                ProductId: productId,
+                Quantity: 1,
+                UnitPrice: price,
+                UnitName: unitName || 'Unit'
+            };
+
+            fetch('/api/v1/Storefront/cart/add-item', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.cartId && cartId === 0) {
+                    localStorage.setItem('digipose_cart_id', data.cartId);
+                }
+                loadStorefrontCart();
+                // Open offcanvas automatically for immediate feedback
+                const cartEl = document.getElementById('cartOffcanvas');
+                if (cartEl) {
+                    const bsOffcanvas = new bootstrap.Offcanvas(cartEl);
+                    bsOffcanvas.show();
+                }
+            })
+            .catch(err => console.error(">>> [ADD_CART_ERR]:", err));
+        }
+
+        function adjustCartQty(productId, delta) {
+            const cartId = getActiveCartId();
+            if (cartId === 0) return;
+
+            const url = delta < 0 ? '/api/v1/Storefront/cart/decrease-item' : '/api/v1/Storefront/cart/add-item';
+            const payload = { CartId: cartId, ProductId: productId, Quantity: 1, UnitPrice: 0, UnitName: 'Unit' };
+
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(() => loadStorefrontCart())
+            .catch(err => console.error(">>> [ADJUST_QTY_ERR]:", err));
+        }
+
+        function removeCartItem(productId) {
+            const cartId = getActiveCartId();
+            if (cartId === 0) return;
+
+            fetch('/api/v1/Storefront/cart/remove-item', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ CartId: cartId, ProductId: productId, Quantity: 0, UnitPrice: 0, UnitName: '' })
+            })
+            .then(() => loadStorefrontCart())
+            .catch(err => console.error(">>> [REMOVE_ITEM_ERR]:", err));
+        }
+
+        function clearStorefrontCart() {
+            const cartId = getActiveCartId();
+            if (cartId === 0) return;
+
+            fetch(`/api/v1/Storefront/cart/${cartId}/clear`, { method: 'DELETE' })
+                .then(() => {
+                    localStorage.removeItem('digipose_cart_id');
+                    renderEmptyCart();
+                })
+                .catch(err => console.error(">>> [CLEAR_CART_ERR]:", err));
+        }
+
+        function proceedToCheckout() {
+            const cartId = getActiveCartId();
+            if (cartId === 0 || document.getElementById('navCartBadgeCount').innerText === '0') {
+                alert("> CANNOT CHECKOUT EMPTY CART. PLEASE ADD PRODUCTS TO STAGING AREA.");
+                return;
+            }
+            window.location.href = `/Storefront/Checkout?cartId=${cartId}`;
+        }
+
+        // Initialize state from local persistent memory
+        document.addEventListener("DOMContentLoaded", function() {
+            const savedTheme = localStorage.getItem('digipose_store_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            const savedLang = localStorage.getItem('digipose_store_lang') || 'VI';
+            switchLanguage(savedLang);
+            loadStorefrontCart();
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

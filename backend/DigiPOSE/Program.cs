@@ -27,6 +27,7 @@ builder.Services.AddDbContextPool<DigiPoseDbContext>(options =>
 // >>> [LEAN_LAN_ARCHITECTURE_SERVICES]: Singleton Lazy-Loading RAM Stock Engine, VAT Balancing Engine & Background Resilient Queue
 builder.Services.AddSingleton<IInventoryRAMService, InventoryRAMService>();
 builder.Services.AddSingleton<IVatBalancingEngine, VatBalancingEngine>();
+builder.Services.AddScoped<IInventoryLedgerService, InventoryLedgerService>();
 builder.Services.AddSingleton(Channel.CreateUnbounded<JobQueueItem>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = false }));
 builder.Services.AddHostedService<ResilientInvoiceWorker>();
 builder.Services.AddMemoryCache();

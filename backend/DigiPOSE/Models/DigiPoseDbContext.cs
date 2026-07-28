@@ -47,6 +47,12 @@ namespace DigiPOSE.Models
         public DbSet<StorefrontCartItem> StorefrontCartItems { get; set; }
         public DbSet<Retail> Retails { get; set; } // >>> [ENTERPRISE_POS_ACCOUNTING]: Immutable retail trade documents & B2B vouchers
 
+        // >>> [ENTERPRISE_WAREHOUSE_DDD]: Dedicated entities for inter-branch inventory transfers and physical shelf audit reconciliation
+        public DbSet<StockTransfer> StockTransfers { get; set; }
+        public DbSet<StockTransferDetail> StockTransferDetails { get; set; }
+        public DbSet<StockAudit> StockAudits { get; set; }
+        public DbSet<StockAuditDetail> StockAuditDetails { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -95,6 +101,10 @@ namespace DigiPOSE.Models
             modelBuilder.Entity<StorefrontCart>().ToTable("StorefrontCarts");
             modelBuilder.Entity<StorefrontCartItem>().ToTable("StorefrontCartItems");
             modelBuilder.Entity<Retail>().ToTable("Retails");
+            modelBuilder.Entity<StockTransfer>().ToTable("StockTransfers");
+            modelBuilder.Entity<StockTransferDetail>().ToTable("StockTransferDetails");
+            modelBuilder.Entity<StockAudit>().ToTable("StockAudits");
+            modelBuilder.Entity<StockAuditDetail>().ToTable("StockAuditDetails");
 
             // >>> [CRITICAL_IDEMPOTENCY_INDEX]: Enforces DB-level unique constraint against double-billing & duplicate trade vouchers
             modelBuilder.Entity<Order>().HasIndex(o => o.IdempotencyKey).IsUnique().HasDatabaseName("IX_Orders_IdempotencyKey");
@@ -104,6 +114,10 @@ namespace DigiPOSE.Models
 
             // >>> [APPEND_ONLY_OPTIMIZATION]: Indexed purely for read aggregate speed, zero lock contention
             modelBuilder.Entity<InventoryTransaction>().HasIndex(e => new { e.ProductId, e.CreatedAt }).HasDatabaseName("IX_InventoryTx_Product_Date");
+            modelBuilder.Entity<InventoryTransaction>().HasIndex(e => new { e.BranchId, e.ProductId, e.CreatedAt }).HasDatabaseName("IX_InventoryTx_Branch_Product_Date");
+            modelBuilder.Entity<StockVoucher>().HasIndex(v => v.VoucherCode).HasDatabaseName("IX_StockVouchers_Code");
+            modelBuilder.Entity<StockTransfer>().HasIndex(t => t.TransferCode).IsUnique().HasDatabaseName("IX_StockTransfers_Code");
+            modelBuilder.Entity<StockAudit>().HasIndex(a => a.AuditCode).IsUnique().HasDatabaseName("IX_StockAudits_Code");
             modelBuilder.Entity<JobQueueItem>().HasIndex(e => new { e.Status, e.CreatedAt }).HasDatabaseName("IX_JobQueue_Status");
             modelBuilder.Entity<StorefrontCart>().HasIndex(e => e.CartGuid).IsUnique().HasDatabaseName("IX_StorefrontCarts_CartGuid");
             modelBuilder.Entity<StorefrontCart>().HasIndex(e => e.UpdatedAt).HasDatabaseName("IX_StorefrontCarts_UpdatedAt");

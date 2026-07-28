@@ -1,0 +1,98 @@
+@{
+    Layout = "~/Views/Shared/_StorefrontLayout.cshtml";
+    ViewData["Title"] = "Contact NOC HQ & Technical Support";
+}
+
+<div class="container-fluid px-5 my-5" style="max-width: 1600px;">
+    <!-- Contact Header -->
+    <div style="border-bottom: 2px solid var(--cyber-cyan); padding-bottom: 25px; margin-bottom: 50px;">
+        <div style="font-family:'VT323'; color:var(--cyber-emerald); font-size:1.3rem;">> NOC_COMMUNICATION_LINK // PROTOCOL: ENCRYPTED_SOCKET_V3 _</div>
+        <h1 style="font-family:'Orbitron'; font-weight:900; font-size:3rem; color:#FFFFFF; margin: 10px 0 0 0; text-shadow:0 0 15px rgba(0,229,255,0.5);">
+            <i class="fa-solid fa-satellite-dish text-cyan me-3"></i> NETWORK OPERATIONS COMMAND (NOC 24/7)
+        </h1>
+    </div>
+
+    <div class="row g-5">
+        <!-- Left: NOC Contact Telemetry & Headquarters -->
+        <div class="col-lg-5">
+            <div style="background:var(--cyber-surface); border:1px solid var(--cyber-cyan); padding:40px; height:100%; box-shadow:0 0 20px rgba(0,229,255,0.15); position:relative;">
+                <h3 style="font-family:'Orbitron'; font-weight:700; color:var(--cyber-cyan); margin-bottom:25px; font-size:1.4rem;">
+                    <i class="fa-solid fa-headset me-2"></i> COMMAND CENTER TELEMETRY
+                </h3>
+                <p style="color:var(--cyber-muted); font-size:1rem; line-height:1.8; margin-bottom:35px;">
+                    Our localized engineering operations teams continuously monitor terminal uptime and server cloud database health across all active retail tenant clusters. Contact our technical architects directly for customized enterprise deployments or SLA escalations.
+                </p>
+
+                <div class="mb-4" style="border-left: 3px solid var(--cyber-emerald); padding-left: 20px;">
+                    <div style="font-family:'Orbitron'; color:var(--cyber-text); font-size:0.85rem; text-transform:uppercase;">Technical Support Hotline [ Emergency Switch ]</div>
+                    <div style="font-family:'VT323'; color:var(--cyber-emerald); font-size:2rem; font-weight:bold;">+84 (24) 8888-9999</div>
+                    <small style="color:var(--cyber-muted);">Average response latency: &lt; 90 seconds (24 hours a day, 365 days a year)</small>
+                </div>
+
+                <div class="mb-4" style="border-left: 3px solid var(--cyber-cyan); padding-left: 20px;">
+                    <div style="font-family:'Orbitron'; color:var(--cyber-text); font-size:0.85rem; text-transform:uppercase;">Enterprise Architecture Consulting</div>
+                    <div style="font-family:'VT323'; color:var(--cyber-cyan); font-size:1.8rem; font-weight:bold;">enterprise-noc@digipose.io</div>
+                </div>
+
+                <div class="mb-4" style="border-left: 3px solid var(--cyber-amber); padding-left: 20px;">
+                    <div style="font-family:'Orbitron'; color:var(--cyber-text); font-size:0.85rem; text-transform:uppercase;">Command HQ Physical Coordinates</div>
+                    <div style="font-family:'Roboto Mono'; color:var(--cyber-text); font-size:1.05rem; margin-top:5px;">Floor 24, Cyber-Tech Tower, Silicon Quad, District 1, Ho Chi Minh City, VN</div>
+                </div>
+
+                <div style="margin-top:40px; padding:15px; background:#000; border:1px solid var(--cyber-border); text-align:center;">
+                    <span style="font-family:'VT323'; color:var(--cyber-emerald); font-size:1.2rem;">
+                        > SECURITY STATUS: ALL CLUSTER FIREWALLS OPERATIONAL _
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Advisory Inquiry & Support Ticket Transmission Form -->
+        <div class="col-lg-7">
+            <div style="background:var(--cyber-surface); border:1px solid var(--cyber-border); padding:40px; height:100%;">
+                <h3 style="font-family:'Orbitron'; font-weight:700; color:#FFFFFF; margin-bottom:10px; font-size:1.4rem;">
+                    <i class="fa-solid fa-terminal text-success me-2"></i> TRANSMIT ADVISORY OR TECHNICAL TICKET
+                </h3>
+                <p style="color:var(--cyber-muted); font-size:0.95rem; margin-bottom:30px;">
+                    Please input your corporate contact parameters below. An assigned solutions architect will establish communication within 2 business hours.
+                </p>
+
+                <form onsubmit="event.preventDefault(); alert('>>> [TELEMETRY_SUCCESS]: Advisory transmission successfully delivered to NOC HQ!'); reset();">
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-family:'Orbitron'; color:var(--cyber-cyan); font-size:0.85rem; text-transform:uppercase;">Operator Name / Enterprise Title</label>
+                            <input type="text" class="form-control" required placeholder="e.g. Alex Vance, CTO" style="background:#000; border:1px solid var(--cyber-cyan); color:#FFF; font-family:'Roboto Mono'; border-radius:0; padding:12px;" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-family:'Orbitron'; color:var(--cyber-cyan); font-size:0.85rem; text-transform:uppercase;">Corporate Email Address</label>
+                            <input type="email" class="form-control" required placeholder="alex@retail-enterprise.vn" style="background:#000; border:1px solid var(--cyber-cyan); color:#FFF; font-family:'Roboto Mono'; border-radius:0; padding:12px;" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-family:'Orbitron'; color:var(--cyber-cyan); font-size:0.85rem; text-transform:uppercase;">Direct Phone / Telegram ID</label>
+                            <input type="text" class="form-control" required placeholder="09xxxxxxxx" style="background:#000; border:1px solid var(--cyber-cyan); color:#FFF; font-family:'Roboto Mono'; border-radius:0; padding:12px;" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-family:'Orbitron'; color:var(--cyber-cyan); font-size:0.85rem; text-transform:uppercase;">Inquiry Target Domain</label>
+                            <select class="form-select" style="background:#000; border:1px solid var(--cyber-cyan); color:#FFF; font-family:'Roboto Mono'; border-radius:0; padding:12px;">
+                                <option>NODE.OMEGA Custom License Quotation</option>
+                                <option>POS Smart Terminal X9 Hardware Bulk Order</option>
+                                <option>Technical API / ERP Integration Escalation</option>
+                                <option>Partner Ecosystem & Distributor Network</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" style="font-family:'Orbitron'; color:var(--cyber-cyan); font-size:0.85rem; text-transform:uppercase;">Technical Specifications / Message Payload</label>
+                            <textarea rows="5" class="form-control" required placeholder="Describe your existing store topology, target POS branch volume, and integration objectives..." style="background:#000; border:1px solid var(--cyber-cyan); color:#FFF; font-family:'Roboto Mono'; border-radius:0; padding:15px;"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4 pt-3" style="border-top:1px dashed var(--cyber-border);">
+                        <button type="submit" class="btn px-5 py-3" style="background:var(--cyber-emerald); color:#000000; font-family:'Orbitron'; font-weight:900; font-size:1.1rem; text-transform:uppercase; border-radius:0; box-shadow:0 0 15px rgba(0,255,102,0.4);">
+                            <i class="fa-solid fa-paper-plane me-2"></i> [ TRANSMIT PAYLOAD TO NOC ]
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

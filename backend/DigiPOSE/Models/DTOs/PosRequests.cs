@@ -89,4 +89,24 @@ namespace DigiPOSE.Models.DTOs
         [Required] public int CounterId { get; set; }
         [Range(0, (double)decimal.MaxValue)] public decimal StartCash { get; set; } = 0;
     }
+
+    public class CloseShiftRequest
+    {
+        [Required] public int ShiftId { get; set; }
+        [Range(0, (double)decimal.MaxValue)] public decimal EndCash { get; set; } = 0;
+    }
+
+    public class CreateCustomerRequest
+    {
+        [Required] public string FullName { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; }
+        public string? Email { get; set; }
+        public string? Address { get; set; }
+        public int? CustomerTypeId { get; set; }
+    }
+
+    public class AddPointsRequest
+    {
+        [Required] [Range(1, int.MaxValue)] public int Points { get; set; }
+    }
 }
