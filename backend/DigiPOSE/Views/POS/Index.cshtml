@@ -82,14 +82,25 @@
 
         .pos-brand {
             font-family: var(--font-hdr);
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 900;
             color: #FFF;
             text-decoration: none;
             letter-spacing: 1px;
-            display: flex; align-items: center; gap: 6px;
+            display: flex; align-items: center; gap: 8px;
         }
-        .pos-brand span { color: var(--holo-cyan); }
+        .pos-brand .hud-logo-svg {
+            width: 30px; height: 30px; flex-shrink: 0;
+        }
+        .pos-brand .brand-name span.accent { color: var(--holo-cyan); }
+        .pos-brand .brand-name { display: flex; flex-direction: column; line-height: 1; }
+        .pos-brand .brand-name .title-main { font-size: 0.88rem; font-weight: 900; letter-spacing: 1px; }
+        .pos-brand .brand-name .title-sub { font-size: 0.52rem; color: #555; letter-spacing: 2px; font-family: 'Roboto Mono', monospace; font-weight: 400; }
+        .pos-brand .hud-badge-ver {
+            font-size: 0.52rem; font-family: 'Roboto Mono', monospace; font-weight: 400;
+            color: var(--holo-cyan); border: 1px solid rgba(0,229,255,0.4);
+            padding: 1px 4px; margin-left: 4px; letter-spacing: 1px;
+        }
 
         .header-right { display: flex; align-items: center; gap: 8px; }
 
@@ -925,7 +936,21 @@
     ==================================================== -->
     <div id="setupGate">
         <div class="setup-card">
-            <div class="setup-logo">Digi<span>POS</span></div>
+            <div class="setup-logo" style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:4px;">
+                <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <polygon points="50,5 95,27 95,73 50,95 5,73 5,27" stroke="#00E5FF" stroke-width="4" fill="rgba(0,229,255,0.1)"/>
+                    <circle cx="50" cy="50" r="24" stroke="#00E5FF" stroke-width="3" stroke-dasharray="6 4"/>
+                    <circle cx="50" cy="50" r="8" fill="#00FF66"/>
+                    <line x1="50" y1="15" x2="50" y2="35" stroke="#00E5FF" stroke-width="3"/>
+                    <line x1="50" y1="65" x2="50" y2="85" stroke="#00E5FF" stroke-width="3"/>
+                    <line x1="15" y1="50" x2="35" y2="50" stroke="#00E5FF" stroke-width="3"/>
+                    <line x1="65" y1="50" x2="85" y2="50" stroke="#00E5FF" stroke-width="3"/>
+                </svg>
+                <div>
+                    <div style="font-family:var(--font-hdr); font-size:1.2rem; font-weight:900; color:#FFF; letter-spacing:2px;">Digi<span style="color:var(--holo-cyan);">POSE</span> <span style="font-size:0.6rem; color:var(--holo-cyan); border:1px solid rgba(0,229,255,0.4); padding:1px 5px;">v1.0</span></div>
+                    <div style="font-size:0.62rem; color:#555; font-family:'Roboto Mono',monospace; letter-spacing:2px; text-transform:uppercase;">POS Terminal</div>
+                </div>
+            </div>
             <div class="setup-subtitle">POS Terminal Setup</div>
 
             <div class="setup-step-indicator">
@@ -982,9 +1007,19 @@
                 <i class="fa-solid fa-bars"></i>
             </button>
             <a href="/Home/Index" class="pos-brand" title="Back to Main Dashboard">
-                <i class="fa-solid fa-cash-register" style="color:var(--bio-emerald); font-size:1rem;"></i>
-                Digi<span>POS</span>
-                <span style="font-size:0.6rem; color:#444; margin-left:2px;">POS CENTER</span>
+                <svg class="hud-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <polygon points="50,5 95,27 95,73 50,95 5,73 5,27" stroke="#00E5FF" stroke-width="4" fill="rgba(0,229,255,0.1)"/>
+                    <circle cx="50" cy="50" r="24" stroke="#00E5FF" stroke-width="3" stroke-dasharray="6 4"/>
+                    <circle cx="50" cy="50" r="8" fill="#00FF66"/>
+                    <line x1="50" y1="15" x2="50" y2="35" stroke="#00E5FF" stroke-width="3"/>
+                    <line x1="50" y1="65" x2="50" y2="85" stroke="#00E5FF" stroke-width="3"/>
+                    <line x1="15" y1="50" x2="35" y2="50" stroke="#00E5FF" stroke-width="3"/>
+                    <line x1="65" y1="50" x2="85" y2="50" stroke="#00E5FF" stroke-width="3"/>
+                </svg>
+                <div class="brand-name">
+                    <div class="title-main">Digi<span class="accent">POSE</span> HUD <span class="hud-badge-ver">v1.0</span></div>
+                    <div class="title-sub">POS CENTER</div>
+                </div>
             </a>
         </div>
         <div class="header-right">

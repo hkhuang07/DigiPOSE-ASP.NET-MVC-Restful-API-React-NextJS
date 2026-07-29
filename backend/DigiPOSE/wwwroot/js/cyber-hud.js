@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 2. Theme Toggle Handling (Cyber Void vs Cyber Holographic - Icon Only)
     const themeToggleBtn = document.getElementById("themeToggleBtn");
-    const savedTheme = localStorage.getItem("digipose_theme");
+    const savedTheme = localStorage.getItem("digipose_global_theme") || localStorage.getItem("digipose_theme");
 
     if (savedTheme === "light") {
         document.body.classList.add("light-theme");
@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
         themeToggleBtn.addEventListener("click", function () {
             document.body.classList.toggle("light-theme");
             const isLight = document.body.classList.contains("light-theme");
-            localStorage.setItem("digipose_theme", isLight ? "light" : "dark");
+            localStorage.setItem("digipose_global_theme", isLight ? "light" : "dark");
             themeToggleBtn.innerHTML = isLight ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
         });
     }

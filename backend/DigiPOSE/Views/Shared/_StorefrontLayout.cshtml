@@ -424,7 +424,7 @@
                         <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Index"><i class="fa-solid fa-id-card me-2" style="color: var(--cyber-cyan);"></i> View Profile</a></li>
                         <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Index" asp-fragment="orders-tab"><i class="fa-solid fa-boxes-stacked me-2" style="color: var(--cyber-emerald);"></i> My Orders</a></li>
                         <li><a class="dropdown-item" asp-area="" asp-controller="Auth" asp-action="ChangePassword"><i class="fa-solid fa-key me-2" style="color: var(--cyber-amber);"></i> Change Password</a></li>
-                        <li><a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="DashboardRouter"><i class="fa-solid fa-gauge-high me-2" style="color: #00FF66;"></i> Access POS Cluster</a></li>
+                        <li><a class="dropdown-item" asp-area="" asp-controller="POS" asp-action="Index"><i class="fa-solid fa-cash-register me-2" style="color: #00FF66;"></i> Access POS Terminal</a></li>
                         <li><hr class="dropdown-divider" style="border-color: var(--cyber-border);"></li>
                         <li><a class="dropdown-item text-danger" asp-area="" asp-controller="Auth" asp-action="Logout"><i class="fa-solid fa-power-off me-2"></i> Log Out</a></li>
                     </ul>
@@ -541,7 +541,7 @@
             const currentTheme = html.getAttribute('data-theme');
             const newTheme = (currentTheme === 'dark') ? 'light' : 'dark';
             html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('digipose_store_theme', newTheme);
+            localStorage.setItem('digipose_global_theme', newTheme);
             const icon = document.getElementById('themeIcon');
             if (icon) {
                 icon.className = newTheme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
@@ -604,14 +604,14 @@
 
         function renderCartData(data) {
             document.getElementById('navCartBadgeCount').innerText = data.totalQuantity || data.items.length;
-            document.getElementById('cartGrossAmount').innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.grossAmount);
-            document.getElementById('cartTaxAmount').innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.taxAmount);
-            document.getElementById('cartTotalAmount').innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.totalAmount);
+            document.getElementById('cartGrossAmount').innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.grossPrice);
+            document.getElementById('cartTaxAmount').innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.totalTaxAmount);
+            document.getElementById('cartTotalAmount').innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.totalPrice);
 
             let html = '';
             data.items.forEach(item => {
                 const img = item.imageUrl || '/demo/products/default_cyber_product.png';
-                const itemTotal = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.subtotal);
+                const itemTotal = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.lineTotal || item.subtotal || (item.unitPrice * item.quantity));
                 html += `
                 <div class="d-flex align-items-center mb-3 p-2" style="background: rgba(0, 229, 255, 0.03); border: 1px solid rgba(0, 229, 255, 0.2);">
                     <div style="width: 60px; height: 60px; background:#000; border:1px solid var(--cyber-border); flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden;">
@@ -622,7 +622,7 @@
                         <div style="font-family:'VT323'; color:var(--cyber-cyan); font-size:1.1rem;">${itemTotal} (${item.quantity} ${item.unitName})</div>
                         <div class="d-flex align-items-center gap-2 mt-1">
                             <button class="btn btn-sm btn-outline-info px-2 py-0" style="border-radius:0; font-weight:bold;" onclick="adjustCartQty(${item.productId}, -1)">-</button>
-                            <span style="font-family:'Roboto Mono'; font-size:0.85rem;">${item.quantity}</span>
+                            <span style="font-family:'Roboto Mono'; font-size:0.85rem;" data-pid="${item.productId}">${item.quantity}</span>
                             <button class="btn btn-sm btn-outline-info px-2 py-0" style="border-radius:0; font-weight:bold;" onclick="adjustCartQty(${item.productId}, 1)">+</button>
                             <button class="btn btn-sm text-danger px-2 py-0 ms-auto" title="Remove" onclick="removeCartItem(${item.productId})"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
@@ -642,7 +642,7 @@
                 UnitName: unitName || 'Unit'
             };
 
-            fetch('/api/v1/Storefront/cart/add-item', {
+            fetch('/api/v1/Storefront/cart/add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -650,7 +650,7 @@
             .then(res => res.json())
             .then(data => {
                 if (data.cartId && cartId === 0) {
-                    localStorage.setItem('digipose_cart_id', data.cartId);
+                    localStorage.setItem('digipose_cart_id', data.cartId.toString());
                 }
                 loadStorefrontCart();
                 // Open offcanvas automatically for immediate feedback
@@ -667,47 +667,55 @@
             const cartId = getActiveCartId();
             if (cartId === 0) return;
 
-            const url = delta < 0 ? '/api/v1/Storefront/cart/decrease-item' : '/api/v1/Storefront/cart/add-item';
-            const payload = { CartId: cartId, ProductId: productId, Quantity: 1, UnitPrice: 0, UnitName: 'Unit' };
+            // Must read current qty from DOM to calculate new qty for PUT update-quantity
+            const cartContainer = document.getElementById('cartItemsContainer');
+            const qtySpans = cartContainer ? cartContainer.querySelectorAll('[data-pid="' + productId + '"]') : [];
+            let currentQty = 1;
+            if (qtySpans.length > 0) currentQty = parseInt(qtySpans[0].innerText || '1', 10);
+            const newQty = Math.max(0, currentQty + delta);
 
-            fetch(url, {
-                method: 'POST',
+            fetch('/api/v1/Storefront/cart/update-quantity', {
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ CartId: cartId, ProductId: productId, NewQuantity: newQty })
             })
             .then(() => loadStorefrontCart())
-            .catch(err => console.error(">>> [ADJUST_QTY_ERR]:", err));
+            .catch(err => console.error('>>> [ADJUST_QTY_ERR]:', err));
         }
 
         function removeCartItem(productId) {
             const cartId = getActiveCartId();
             if (cartId === 0) return;
 
-            fetch('/api/v1/Storefront/cart/remove-item', {
+            fetch('/api/v1/Storefront/cart/remove', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ CartId: cartId, ProductId: productId, Quantity: 0, UnitPrice: 0, UnitName: '' })
+                body: JSON.stringify({ CartId: cartId, ProductId: productId })
             })
             .then(() => loadStorefrontCart())
-            .catch(err => console.error(">>> [REMOVE_ITEM_ERR]:", err));
+            .catch(err => console.error('>>> [REMOVE_ITEM_ERR]:', err));
         }
 
         function clearStorefrontCart() {
             const cartId = getActiveCartId();
             if (cartId === 0) return;
 
-            fetch(`/api/v1/Storefront/cart/${cartId}/clear`, { method: 'DELETE' })
+            fetch(`/api/v1/Storefront/cart/clear/${cartId}`, { method: 'POST' })
                 .then(() => {
                     localStorage.removeItem('digipose_cart_id');
                     renderEmptyCart();
                 })
-                .catch(err => console.error(">>> [CLEAR_CART_ERR]:", err));
+                .catch(err => console.error('>>> [CLEAR_CART_ERR]:', err));
         }
 
         function proceedToCheckout() {
             const cartId = getActiveCartId();
             if (cartId === 0 || document.getElementById('navCartBadgeCount').innerText === '0') {
-                alert("> CANNOT CHECKOUT EMPTY CART. PLEASE ADD PRODUCTS TO STAGING AREA.");
+                if (typeof showCyberNotify === 'function') {
+                    showCyberNotify("STAGING CART EMPTY", "Cannot checkout an empty staging cart. Please add hardware assets or digital packages before proceeding.", "warning");
+                } else {
+                    alert("> CANNOT CHECKOUT EMPTY CART. PLEASE ADD PRODUCTS TO STAGING AREA.");
+                }
                 return;
             }
             window.location.href = `/Storefront/Checkout?cartId=${cartId}`;
@@ -715,13 +723,14 @@
 
         // Initialize state from local persistent memory
         document.addEventListener("DOMContentLoaded", function() {
-            const savedTheme = localStorage.getItem('digipose_store_theme') || 'dark';
+            const savedTheme = localStorage.getItem('digipose_global_theme') || localStorage.getItem('digipose_store_theme') || 'dark';
             document.documentElement.setAttribute('data-theme', savedTheme);
             const savedLang = localStorage.getItem('digipose_store_lang') || 'VI';
             switchLanguage(savedLang);
             loadStorefrontCart();
         });
     </script>
+    @await Html.PartialAsync("_CyberNotificationModal")
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

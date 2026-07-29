@@ -1,4 +1,4 @@
-Đòn phân tích kiến trúc: Các truy vấn liên quan đến Ca làm việc phải đạt tốc độ $\mathcal{O}(1)$ hoặc $\mathcal{O}(\log N)$ thông qua Index, vì mỗi giao dịch (Checkout) của thu ngân đều phải được "móc" vào một Ca làm việc đang mở (Active Shift).
+Đòn phân tích kiến trúc: Các truy vấn liên quan đến Ca làm việc phải đạt tốc độ $\mathcal{O}(1)$ hoặc $\mathcal{O}(\log N)$ thông qua Index, vì mỗi giao dịch (Checkout) của thu ngân đều phải được "móc" vào một Ca làm iệc đang mở (Active Shift).
 
 BUỔI 12: XÂY DỰNG PHÂN HỆ QUẢN LÝ CA LÀM VIỆC VÀ KẾT TOÁN DÒNG TIỀN (SHIFT & CASH MANAGEMENT)
 Bước 1: Quản trị Quầy thu ngân (Counters) tại CMS

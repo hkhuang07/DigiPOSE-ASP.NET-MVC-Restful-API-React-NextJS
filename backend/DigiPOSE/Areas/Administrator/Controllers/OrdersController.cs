@@ -287,7 +287,8 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             ViewBag.UserId = new SelectList(_context.Users, "UserId", "UserName", val_UserId);
             ViewBag.CustomerId = new SelectList(_context.Customers, "CustomerId", "FullName", val_CustomerId);
             ViewBag.StatusId = new SelectList(_context.OrderStatuses, "StatusId", "StatusName", val_StatusId);
-            ViewBag.PaymentMethodId = new SelectList(_context.PaymentMethods, "PaymentMethodId", "PaymentMethodName", val_PaymentMethodId);
+            ViewBag.PaymentMethodId = new SelectList(_context.PaymentMethods, "PaymentMethodId", "MethodName", val_PaymentMethodId);
+
         }
     }
 }

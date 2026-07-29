@@ -8,8 +8,8 @@
     .checkout-box {
         background: var(--cyber-surface);
         border: 1px solid var(--cyber-cyan);
-        padding: 30px;
-        box-shadow: 0 0 25px rgba(0, 229, 255, 0.15);
+        padding: 18px 22px;
+        box-shadow: 0 0 15px rgba(0, 229, 255, 0.12);
         border-radius: 0;
     }
     .form-control-cyber {
@@ -18,95 +18,133 @@
         color: #FFFFFF !important;
         font-family: 'Roboto Mono', monospace;
         border-radius: 0 !important;
-        padding: 12px 16px;
+        padding: 8px 12px;
+        font-size: 0.88rem;
     }
     .form-control-cyber:focus {
         border-color: var(--cyber-cyan) !important;
-        box-shadow: 0 0 10px rgba(0, 229, 255, 0.4) !important;
+        box-shadow: 0 0 8px rgba(0, 229, 255, 0.35) !important;
     }
     .payment-radio-box {
         border: 1px solid var(--cyber-border);
         background: rgba(0, 0, 0, 0.5);
-        padding: 15px;
+        padding: 10px 14px;
         cursor: pointer;
         transition: all 0.2s ease;
         display: flex;
         align-items: center;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
     }
     .payment-radio-box:hover, .payment-radio-box.selected {
         border-color: var(--cyber-emerald);
         background: rgba(0, 255, 102, 0.08);
-        box-shadow: 0 0 12px rgba(0, 255, 102, 0.25);
+        box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
+    }
+    .payment-select-cyber {
+        background: #050505;
+        border: 1px solid var(--cyber-border);
+        color: var(--cyber-cyan);
+        font-family: 'Roboto Mono', monospace;
+        padding: 6px 10px;
+        font-size: 0.82rem;
+        width: 100%;
+        margin-top: 6px;
+        cursor: pointer;
+    }
+    .payment-select-cyber:focus {
+        border-color: var(--cyber-emerald);
+        outline: none;
     }
 </style>
 
-<div class="container my-5" style="max-width: 1400px;">
-    <div class="pb-3 mb-4" style="border-bottom: 2px solid var(--cyber-cyan);">
-        <div style="font-family:'VT323'; color:var(--cyber-emerald); font-size:1.3rem;">> MISSION_CRITICAL_CHECKOUT // ACID READ_COMMITTED TRANSACTION READY _</div>
-        <h1 style="font-family:'Orbitron'; font-weight:900; color:#FFF; margin-top:5px;">
-            <i class="fa-solid fa-shield-halved text-cyan me-3"></i> SECURE ASSET CHECKOUT MATRIX
-        </h1>
+<div class="container my-4" style="max-width: 1300px;">
+    <div class="pb-2 mb-3" style="border-bottom: 2px solid var(--cyber-cyan);">
+        <div style="font-family:'VT323'; color:var(--cyber-emerald); font-size:1.1rem;">> MISSION_CRITICAL_CHECKOUT // ACID READ_COMMITTED TRANSACTION READY _</div>
+        <h2 style="font-family:'Orbitron'; font-weight:900; color:#FFF; margin-top:3px; font-size: 1.5rem;">
+            <i class="fa-solid fa-shield-halved text-cyan me-2"></i> SECURE ASSET CHECKOUT MATRIX
+        </h2>
     </div>
 
-    <div class="row g-5">
+    <div class="row g-4">
         <!-- Left Column: Logistics & Payment Selection -->
         <div class="col-lg-7">
-            <div class="checkout-box mb-4">
-                <h4 style="font-family:'Orbitron'; font-weight:900; color:var(--cyber-cyan); border-bottom:1px dashed var(--cyber-border); padding-bottom:12px; margin-bottom:20px;">
+            <div class="checkout-box mb-3">
+                <h5 style="font-family:'Orbitron'; font-weight:800; color:var(--cyber-cyan); border-bottom:1px dashed var(--cyber-border); padding-bottom:8px; margin-bottom:14px; font-size: 1.05rem;">
                     <i class="fa-solid fa-truck-fast me-2"></i> 1. DEPLOYMENT & LOGISTICS INFORMATION
-                </h4>
-                <div class="row g-3">
+                </h5>
+                <div class="row g-2">
                     <div class="col-md-6">
-                        <label class="form-label text-white font-orbitron text-uppercase" style="font-size:0.85rem;">Contact Full Name <span class="text-danger">*</span></label>
+                        <label class="form-label text-white font-orbitron text-uppercase mb-1" style="font-size:0.78rem;">Contact Full Name <span class="text-danger">*</span></label>
                         <input type="text" id="contactName" class="form-control form-control-cyber" placeholder="e.g. Lt. Commander Vance" value="@(User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "")" required />
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label text-white font-orbitron text-uppercase" style="font-size:0.85rem;">Contact Phone <span class="text-danger">*</span></label>
+                        <label class="form-label text-white font-orbitron text-uppercase mb-1" style="font-size:0.78rem;">Contact Phone <span class="text-danger">*</span></label>
                         <input type="text" id="contactPhone" class="form-control form-control-cyber" placeholder="e.g. +84 988 888 888" required />
                     </div>
-                    <div class="col-12">
-                        <label class="form-label text-white font-orbitron text-uppercase" style="font-size:0.85rem;">Deployment / Delivery Address <span class="text-danger">*</span></label>
+                    <div class="col-12 mt-2">
+                        <label class="form-label text-white font-orbitron text-uppercase mb-1" style="font-size:0.78rem;">Deployment / Delivery Address <span class="text-danger">*</span></label>
                         <input type="text" id="shippingAddress" class="form-control form-control-cyber" placeholder="Floor, Cyber Tower, Building, Street, City" required />
                     </div>
-                    <div class="col-12">
-                        <label class="form-label text-white font-orbitron text-uppercase" style="font-size:0.85rem;">Operational Instructions / Notes</label>
-                        <textarea id="orderNotes" class="form-control form-control-cyber" rows="3" placeholder="Special hardware calibration requests or delivery time restrictions..."></textarea>
+                    <div class="col-12 mt-2">
+                        <label class="form-label text-white font-orbitron text-uppercase mb-1" style="font-size:0.78rem;">Operational Instructions / Notes</label>
+                        <textarea id="orderNotes" class="form-control form-control-cyber" rows="2" placeholder="Special hardware calibration requests or delivery time restrictions..."></textarea>
                     </div>
                 </div>
             </div>
 
             <div class="checkout-box">
-                <h4 style="font-family:'Orbitron'; font-weight:900; color:var(--cyber-emerald); border-bottom:1px dashed var(--cyber-border); padding-bottom:12px; margin-bottom:20px;">
+                <h5 style="font-family:'Orbitron'; font-weight:800; color:var(--cyber-emerald); border-bottom:1px dashed var(--cyber-border); padding-bottom:8px; margin-bottom:14px; font-size: 1.05rem;">
                     <i class="fa-solid fa-credit-card me-2"></i> 2. SELECT SETTLEMENT METHOD (REAL DB)
-                </h4>
+                </h5>
                 <div id="paymentMethodsContainer">
                     @if (Model.PaymentMethods != null && Model.PaymentMethods.Any())
                     {
+                        var mainMethods = Model.PaymentMethods.Take(3).ToList();
+                        var otherMethods = Model.PaymentMethods.Skip(3).ToList();
                         var isFirst = true;
-                        foreach (var method in Model.PaymentMethods)
+
+                        foreach (var method in mainMethods)
                         {
-                            <div class="payment-radio-box @(isFirst ? "selected" : "")" onclick="selectPaymentMethod(@method.PaymentMethodId, this)">
-                                <input class="form-check-input ms-2 me-3" type="radio" name="paymentMethodRadio" id="pm_@method.PaymentMethodId" value="@method.PaymentMethodId" @(isFirst ? "checked" : "") style="transform: scale(1.3); background-color: #000; border-color: var(--cyber-emerald);" />
-                                <div class="ms-2">
-                                    <div style="font-family:'Orbitron'; font-weight:700; color:#FFF; font-size:1rem;">
+                            <div class="payment-radio-box @(isFirst ? "selected" : "")" id="box_pm_@method.PaymentMethodId" onclick="selectPaymentMethod(@method.PaymentMethodId, this)">
+                                <input class="form-check-input ms-1 me-3" type="radio" name="paymentMethodRadio" id="pm_@method.PaymentMethodId" value="@method.PaymentMethodId" @(isFirst ? "checked" : "") style="transform: scale(1.15); background-color: #000; border-color: var(--cyber-emerald);" />
+                                <div class="ms-1 flex-grow-1">
+                                    <div style="font-family:'Orbitron'; font-weight:700; color:#FFF; font-size:0.92rem;">
                                         <i class="fa-solid fa-check-circle text-success me-2"></i> @method.MethodName.ToUpper()
                                     </div>
-                                    <div style="font-family:'Roboto Mono'; font-size:0.8rem; color:var(--cyber-muted);">
+                                    <div style="font-family:'Roboto Mono'; font-size:0.75rem; color:var(--cyber-muted); margin-top: 2px;">
                                         @(string.IsNullOrWhiteSpace(method.Description) ? "Standard enterprise settlement engine with automated accounting sync." : method.Description)
                                     </div>
                                 </div>
                             </div>
                             isFirst = false;
                         }
+
+                        if (otherMethods.Any())
+                        {
+                            var firstOtherId = otherMethods.First().PaymentMethodId;
+                            <div class="payment-radio-box" id="box_pm_other" onclick="selectOtherPaymentMethod()">
+                                <input class="form-check-input ms-1 me-3" type="radio" name="paymentMethodRadio" id="pm_other_radio" value="@firstOtherId" style="transform: scale(1.15); background-color: #000; border-color: var(--cyber-emerald);" />
+                                <div class="ms-1 flex-grow-1">
+                                    <div style="font-family:'Orbitron'; font-weight:700; color:var(--cyber-cyan); font-size:0.92rem;">
+                                        <i class="fa-solid fa-list-ul me-2"></i> OTHER SETTLEMENT METHODS (@otherMethods.Count MORE)
+                                    </div>
+                                    <select class="payment-select-cyber" id="otherPaymentSelect" onchange="onOtherSelectChanged(this.value, event)">
+                                        @foreach(var other in otherMethods)
+                                        {
+                                            <option value="@other.PaymentMethodId">@other.MethodName.ToUpper() (@(string.IsNullOrWhiteSpace(other.Description) ? "Gateway Enabled" : other.Description))</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        }
                     }
                     else
                     {
-                        <div class="payment-radio-box selected" onclick="selectPaymentMethod(1, this)">
-                            <input class="form-check-input ms-2 me-3" type="radio" name="paymentMethodRadio" id="pm_1" value="1" checked />
-                            <div class="ms-2">
-                                <div style="font-family:'Orbitron'; font-weight:700; color:#FFF; font-size:1rem;">CASH ON DELIVERY (DEFAULT SETTLEMENT)</div>
-                                <div style="font-family:'Roboto Mono'; font-size:0.8rem; color:var(--cyber-muted);">Direct cash settlement upon hardware receipt and commissioning.</div>
+                        <div class="payment-radio-box selected" id="box_pm_1" onclick="selectPaymentMethod(1, this)">
+                            <input class="form-check-input ms-1 me-3" type="radio" name="paymentMethodRadio" id="pm_1" value="1" checked />
+                            <div class="ms-1">
+                                <div style="font-family:'Orbitron'; font-weight:700; color:#FFF; font-size:0.92rem;">CASH ON DELIVERY (DEFAULT SETTLEMENT)</div>
+                                <div style="font-family:'Roboto Mono'; font-size:0.75rem; color:var(--cyber-muted);">Direct cash settlement upon hardware receipt and commissioning.</div>
                             </div>
                         </div>
                     }
@@ -116,60 +154,60 @@
 
         <!-- Right Column: Staging Cart Verification & Execution Button -->
         <div class="col-lg-5">
-            <div class="checkout-box" style="position: sticky; top: 100px; border-color: var(--cyber-emerald);">
-                <h4 style="font-family:'Orbitron'; font-weight:900; color:#FFF; border-bottom:2px solid var(--cyber-emerald); padding-bottom:12px; margin-bottom:20px;">
+            <div class="checkout-box" style="position: sticky; top: 90px; border-color: var(--cyber-emerald); padding: 18px 20px;">
+                <h5 style="font-family:'Orbitron'; font-weight:800; color:#FFF; border-bottom:2px solid var(--cyber-emerald); padding-bottom:8px; margin-bottom:14px; font-size: 1.05rem;">
                     <i class="fa-solid fa-receipt text-success me-2"></i> ASSET MANIFEST // CART #@Model.Cart.CartId
-                </h4>
+                </h5>
 
-                <div style="max-height: 380px; overflow-y: auto; margin-bottom: 20px;" class="pe-2">
+                <div style="max-height: 300px; overflow-y: auto; margin-bottom: 15px;" class="pe-1">
                     @if (Model.Cart.Items != null)
                     {
                         foreach (var item in Model.Cart.Items)
                         {
                             var img = !string.IsNullOrEmpty(item.Product?.ImageUrl) ? item.Product.ImageUrl : "/demo/products/default_cyber_product.png";
-                            <div class="d-flex justify-content-between align-items-center p-2 mb-2" style="background:rgba(255,255,255,0.02); border:1px solid rgba(0,255,102,0.2);">
-                                <div class="d-flex align-items-center">
-                                    <div style="width:50px; height:50px; background:#000; border:1px solid var(--cyber-border); flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+                            <div class="d-flex justify-content-between align-items-center p-2 mb-2" style="background:rgba(255,255,255,0.02); border:1px solid rgba(0,255,102,0.2); font-size: 0.85rem;">
+                                <div class="d-flex align-items-center min-w-0 flex-grow-1">
+                                    <div style="width:40px; height:40px; background:#000; border:1px solid var(--cyber-border); flex-shrink:0; display:flex; align-items:center; justify-content:center;">
                                         @if(img.StartsWith("/") || img.StartsWith("http")) {
                                             <img src="@img" style="max-width:100%; max-height:100%; object-fit:contain;" alt="item"/>
                                         } else {
                                             <i class="fa-solid fa-box text-cyan"></i>
                                         }
                                     </div>
-                                    <div class="ms-3">
-                                        <div style="font-family:'Orbitron'; font-size:0.85rem; font-weight:700; color:#FFF;">@(item.Product?.ProductName ?? $"Asset #{item.ProductId}")</div>
-                                        <div style="font-family:'Roboto Mono'; font-size:0.78rem; color:var(--cyber-muted);">Qty: @item.Quantity x @item.UnitPrice.ToString("N0") VND</div>
+                                    <div class="ms-2 text-truncate pe-2">
+                                        <div style="font-family:'Orbitron'; font-size:0.8rem; font-weight:700; color:#FFF;" class="text-truncate">@(item.Product?.ProductName ?? $"Asset #{item.ProductId}")</div>
+                                        <div style="font-family:'Roboto Mono'; font-size:0.72rem; color:var(--cyber-muted);">Qty: @item.Quantity x @item.UnitPrice.ToString("N0")</div>
                                     </div>
                                 </div>
-                                <div style="font-family:'VT323'; font-size:1.3rem; color:var(--cyber-cyan); font-weight:bold;">
-                                    @((item.Quantity * item.UnitPrice).ToString("N0")) VND
+                                <div style="font-family:'VT323'; font-size:1.15rem; color:var(--cyber-cyan); font-weight:bold; flex-shrink:0;">
+                                    @((item.Quantity * item.UnitPrice).ToString("N0")) ₫
                                 </div>
                             </div>
                         }
                     }
                 </div>
 
-                <div class="pt-3" style="border-top:2px dashed var(--cyber-border);">
-                    <div class="d-flex justify-content-between mb-2">
+                <div class="pt-2" style="border-top:2px dashed var(--cyber-border);">
+                    <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;">
                         <span style="font-family:'Roboto Mono'; color:var(--cyber-muted);">GROSS SUBTOTAL:</span>
-                        <span style="font-family:'VT323'; font-size:1.5rem; color:#FFF;">@Model.Cart.GrossAmount.ToString("N0") VND</span>
+                        <span style="font-family:'VT323'; font-size:1.25rem; color:#FFF;">@Model.Cart.GrossAmount.ToString("N0") VND</span>
                     </div>
-                    <div class="d-flex justify-content-between mb-2">
+                    <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;">
                         <span style="font-family:'Roboto Mono'; color:var(--cyber-muted);">VAT / COMPLIANCE TAX:</span>
-                        <span style="font-family:'VT323'; font-size:1.5rem; color:var(--cyber-amber);">@Model.Cart.TaxAmount.ToString("N0") VND</span>
+                        <span style="font-family:'VT323'; font-size:1.25rem; color:var(--cyber-amber);">@Model.Cart.TaxAmount.ToString("N0") VND</span>
                     </div>
-                    <div class="d-flex justify-content-between mb-4 pb-2" style="border-bottom: 2px solid var(--cyber-emerald);">
-                        <span style="font-family:'Orbitron'; font-weight:900; color:var(--cyber-emerald);">MASTER SETTLEMENT:</span>
-                        <span style="font-family:'VT323'; font-size:2.4rem; font-weight:bold; color:var(--cyber-emerald); text-shadow:0 0 10px rgba(0,255,102,0.5);">
-                            @Model.Cart.TotalAmount.ToString("N0") VND
+                    <div class="d-flex justify-content-between mb-3 pb-2" style="border-bottom: 2px solid var(--cyber-emerald);">
+                        <span style="font-family:'Orbitron'; font-weight:800; color:var(--cyber-emerald); font-size:0.95rem;">MASTER SETTLEMENT:</span>
+                        <span style="font-family:'VT323'; font-size:1.9rem; font-weight:bold; color:var(--cyber-emerald); text-shadow:0 0 8px rgba(0,255,102,0.4);">
+                            @Model.Cart.TotalAmount.ToString("N0") ₫
                         </span>
                     </div>
 
-                    <button type="button" class="btn w-100 py-3" style="background:var(--cyber-emerald); color:#000; font-family:'Orbitron'; font-weight:900; font-size:1.2rem; border-radius:0; text-transform:uppercase; box-shadow:0 0 20px rgba(0,255,102,0.4);" id="btnSubmitOrder" onclick="executeStorefrontCheckout()">
+                    <button type="button" class="btn w-100 py-2" style="background:var(--cyber-emerald); color:#000; font-family:'Orbitron'; font-weight:900; font-size:1rem; border-radius:0; text-transform:uppercase; box-shadow:0 0 15px rgba(0,255,102,0.3);" id="btnSubmitOrder" onclick="executeStorefrontCheckout()">
                         <i class="fa-solid fa-shield-cat me-2"></i> [ CONFIRM & PAY ORDER ]
                     </button>
-                    <a href="/Storefront/Index" class="btn btn-outline-secondary w-100 py-2 mt-3" style="font-family:'Orbitron'; font-weight:bold; border-radius:0;">
-                        <i class="fa-solid fa-arrow-left me-2"></i> [ RETURN TO STOREFRONT ]
+                    <a href="/Storefront/Index" class="btn btn-outline-secondary w-100 py-2 mt-2" style="font-family:'Orbitron'; font-weight:bold; font-size:0.85rem; border-radius:0;">
+                        <i class="fa-solid fa-arrow-left me-1"></i> [ RETURN TO STOREFRONT ]
                     </a>
                 </div>
             </div>
@@ -180,12 +218,46 @@
 @section Scripts {
     <script>
         let selectedPmId = 1;
+
+        // Initialize default payment method selection on load
+        document.addEventListener("DOMContentLoaded", function() {
+            const firstRadio = document.querySelector('input[name="paymentMethodRadio"]:checked');
+            if (firstRadio) {
+                selectedPmId = parseInt(firstRadio.value, 10) || 1;
+            } else {
+                const anyRadio = document.querySelector('input[name="paymentMethodRadio"]');
+                if (anyRadio) {
+                    anyRadio.checked = true;
+                    selectedPmId = parseInt(anyRadio.value, 10) || 1;
+                }
+            }
+        });
+
         function selectPaymentMethod(id, el) {
             selectedPmId = id;
             document.querySelectorAll('.payment-radio-box').forEach(b => b.classList.remove('selected'));
-            el.classList.add('selected');
-            const r = el.querySelector('input[type=radio]');
+            if(el) el.classList.add('selected');
+            const r = el ? el.querySelector('input[type=radio]') : null;
             if(r) r.checked = true;
+        }
+
+        function selectOtherPaymentMethod() {
+            const select = document.getElementById('otherPaymentSelect');
+            const otherBox = document.getElementById('box_pm_other');
+            const otherRadio = document.getElementById('pm_other_radio');
+            
+            document.querySelectorAll('.payment-radio-box').forEach(b => b.classList.remove('selected'));
+            if(otherBox) otherBox.classList.add('selected');
+            if(otherRadio) otherRadio.checked = true;
+            if(select) {
+                selectedPmId = parseInt(select.value, 10) || 1;
+            }
+        }
+
+        function onOtherSelectChanged(val, event) {
+            if(event) event.stopPropagation();
+            selectedPmId = parseInt(val, 10) || 1;
+            selectOtherPaymentMethod();
         }
 
         function executeStorefrontCheckout() {
@@ -195,7 +267,11 @@
             const notes = document.getElementById('orderNotes').value.trim();
 
             if (!contactName || !contactPhone || !shippingAddress) {
-                alert("> CHECKOUT FAULT: Please supply all mandatory operational logistics fields (*).");
+                if (typeof showCyberNotify === 'function') {
+                    showCyberNotify("VALIDATION FAULT", "Please complete all mandatory deployment & logistics contact fields (*) before confirming order.", "warning");
+                } else {
+                    alert("> CHECKOUT FAULT: Please supply all mandatory operational logistics fields (*).");
+                }
                 return;
             }
 
@@ -205,7 +281,7 @@
 
             const payload = {
                 CartId: @Model.Cart.CartId,
-                CustomerId: 0, // Resolved from JWT token or anonymous guest session in API
+                CustomerId: 0,
                 ContactName: contactName,
                 ContactPhone: contactPhone,
                 ShippingAddress: shippingAddress,
@@ -219,24 +295,35 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success || data.orderId > 0 || data.InvoiceNumber) {
-                    // Transaction ACID committed successfully!
+            .then(async res => {
+                const data = await res.json();
+                if (res.ok && (data.success || data.orderId > 0 || data.InvoiceNumber || data.status === "Success")) {
                     localStorage.removeItem('digipose_cart_id');
                     const orderId = data.orderId || data.OrderId || 0;
                     const inv = data.invoiceNumber || data.InvoiceNumber || 'INV-SUCCESS';
                     const charged = data.totalCharged || @Model.Cart.TotalAmount;
                     window.location.href = `/Storefront/Thanks?orderId=${orderId}&invoiceNumber=${inv}&totalCharged=${charged}`;
                 } else {
-                    alert("> TRANSACTION ROLLBACK: " + (data.message || data.error || "O(1) Stock lock check failed or item unavailable."));
+                    let errMsg = data.message || data.error || data.Error || data.Details || "O(1) Stock lock check failed or item unavailable.";
+                    if (data.Error === "OUT_OF_STOCK" || errMsg === "OUT_OF_STOCK") {
+                        errMsg = `Asset [${data.productName || data.ProductName || 'Item'}] is out of stock in branch inventory cache!`;
+                    }
+                    if (typeof showCyberNotify === 'function') {
+                        showCyberNotify("CHECKOUT BLOCKED", errMsg, "danger");
+                    } else {
+                        alert("> TRANSACTION ROLLBACK: " + errMsg);
+                    }
                     btn.disabled = false;
                     btn.innerHTML = `<i class="fa-solid fa-shield-cat me-2"></i> [ CONFIRM & PAY ORDER ]`;
                 }
             })
             .catch(err => {
                 console.error(">>> [CHECKOUT_FAULT]:", err);
-                alert("> NETWORK COMM EXCEPTION WHILE EXECUTING TRANSACTION LEDGER.");
+                if (typeof showCyberNotify === 'function') {
+                    showCyberNotify("NETWORK FAULT", "Network communication exception while executing transaction ledger. Please check backend connection.", "danger");
+                } else {
+                    alert("> NETWORK COMM EXCEPTION WHILE EXECUTING TRANSACTION LEDGER.");
+                }
                 btn.disabled = false;
                 btn.innerHTML = `<i class="fa-solid fa-shield-cat me-2"></i> [ CONFIRM & PAY ORDER ]`;
             });

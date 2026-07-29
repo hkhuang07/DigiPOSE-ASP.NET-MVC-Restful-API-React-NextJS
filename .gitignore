@@ -51,6 +51,8 @@ gg-app-password.jpg
 ModelBuilderExtensions.cs
 docs/pos
 docs/store
+docs/walkthought.md
+docs/implementation_plan.md
 
 
 # ── Cryptographic Secrets & SSL Certificates ──

@@ -19,7 +19,7 @@
         transform: translateY(-4px);
     }
     .cyber-card-img-box {
-        height: 220px;
+        height: 200px;
         background: #000000;
         border-bottom: 1px solid var(--cyber-border);
         display: flex;
@@ -27,29 +27,125 @@
         justify-content: center;
         position: relative;
     }
-    .filter-btn-chip {
-        background: rgba(0, 0, 0, 0.6);
+    /* ---- Search + Filter toolbar ---- */
+    .sf-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 20px;
+        background: rgba(0,229,255,0.03);
+        border: 1px solid rgba(0,229,255,0.25);
+        border-top: none;
+        margin-bottom: 0;
+    }
+    .sf-toggle-filter {
+        background: transparent;
+        border: 1px solid var(--cyber-border);
+        color: var(--cyber-cyan);
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 700;
+        padding: 9px 13px;
+        border-radius: 0;
+        transition: all 0.2s;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+    .sf-toggle-filter:hover, .sf-toggle-filter.active {
+        background: rgba(0,229,255,0.15);
+        box-shadow: 0 0 10px rgba(0,229,255,0.3);
+        border-color: var(--cyber-cyan);
+    }
+    .sf-search-group {
+        flex: 1;
+        min-width: 180px;
+        display: flex;
+    }
+    .sf-search-group input {
+        flex: 1;
+        background: #000;
+        border: 1px solid var(--cyber-cyan);
+        border-right: none;
+        color: #FFF;
+        font-family: 'Roboto Mono', monospace;
+        font-size: 0.9rem;
+        padding: 9px 16px;
+        border-radius: 0;
+        outline: none;
+    }
+    .sf-search-group input::placeholder { color: rgba(255,255,255,0.35); }
+    .sf-search-group input:focus { box-shadow: inset 0 0 8px rgba(0,229,255,0.15); }
+    .sf-search-btn {
+        background: transparent;
+        border: 1px solid var(--cyber-cyan);
+        color: var(--cyber-cyan);
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 9px 18px;
+        border-radius: 0;
+        transition: all 0.2s;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+    .sf-search-btn:hover { background: var(--cyber-cyan); color: #000; }
+    /* Dropdown filter buttons */
+    .sf-filter-btn {
+        background: rgba(0,0,0,0.7);
         border: 1px solid var(--cyber-border);
         color: var(--cyber-text);
         font-family: 'Orbitron', sans-serif;
-        font-weight: 600;
-        font-size: 0.8rem;
-        padding: 8px 18px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 9px 13px;
         border-radius: 0;
-        transition: all 0.2s ease;
+        transition: all 0.2s;
         text-transform: uppercase;
+        white-space: nowrap;
+        cursor: pointer;
     }
-    .filter-btn-chip:hover, .filter-btn-chip.active {
-        background: var(--cyber-cyan);
-        color: #000000;
-        box-shadow: 0 0 15px var(--cyber-cyan);
+    .sf-filter-btn:hover, .sf-filter-btn.active {
         border-color: var(--cyber-cyan);
-        font-weight: 900;
+        color: var(--cyber-cyan);
+        box-shadow: 0 0 10px rgba(0,229,255,0.2);
+        background: rgba(0,229,255,0.08);
     }
+    .sf-filter-btn.active i.fa-chevron-down { transform: rotate(180deg); transition: transform 0.2s; }
+    /* Dropdown panel */
+    .sf-dropdown-panel {
+        display: none;
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        z-index: 9999;
+        background: var(--cyber-surface);
+        border: 1px solid var(--cyber-cyan);
+        min-width: 210px;
+        max-height: 320px;
+        overflow-y: auto;
+        box-shadow: 0 8px 25px rgba(0,229,255,0.25);
+    }
+    .sf-dropdown-panel.open { display: block; }
+    .sf-dropdown-panel .sf-opt {
+        padding: 9px 16px;
+        font-family: 'Roboto Mono', monospace;
+        font-size: 0.82rem;
+        color: var(--cyber-text);
+        cursor: pointer;
+        border-bottom: 1px dashed rgba(0,229,255,0.12);
+        transition: all 0.15s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .sf-dropdown-panel .sf-opt:hover { background: rgba(0,229,255,0.12); color: var(--cyber-cyan); }
+    .sf-dropdown-panel .sf-opt.selected { color: var(--cyber-emerald); }
+    /* Filter matrix sidebar */
     .cyber-accordion .accordion-item {
         background: var(--cyber-surface);
         border: 1px solid var(--cyber-border);
-        margin-bottom: 10px;
+        margin-bottom: 8px;
         border-radius: 0 !important;
     }
     .cyber-accordion .accordion-button {
@@ -57,7 +153,7 @@
         color: var(--cyber-cyan);
         font-family: 'Orbitron', sans-serif;
         font-weight: 700;
-        font-size: 0.95rem;
+        font-size: 0.82rem;
         border-radius: 0 !important;
         box-shadow: none !important;
     }
@@ -67,16 +163,16 @@
     }
     .filter-tree-list {
         list-style: none;
-        padding-left: 5px;
+        padding-left: 4px;
         margin-bottom: 0;
     }
     .filter-tree-list li {
-        padding: 6px 10px;
+        padding: 6px 8px;
         border-bottom: 1px dashed rgba(0, 229, 255, 0.15);
         cursor: pointer;
         transition: all 0.2s;
         font-family: 'Roboto Mono', monospace;
-        font-size: 0.88rem;
+        font-size: 0.8rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -84,36 +180,32 @@
     .filter-tree-list li:hover {
         background: rgba(0, 229, 255, 0.15);
         color: var(--cyber-cyan);
-        padding-left: 16px;
+        padding-left: 14px;
     }
+    #filterMatrixPanel { display: none; }
+    #filterMatrixPanel.open { display: block; }
 </style>
 
 <div class="container-fluid px-4 px-xl-5 my-4" style="max-width: 1800px;">
-    <!-- Storefront Title Bar & Multi-Field Search Matrix -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center pb-4 mb-4" style="border-bottom: 2px solid var(--cyber-cyan); background: rgba(0,229,255,0.04); padding: 25px;">
+    <!-- Storefront Title Bar -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center pb-4 mb-0" style="border-bottom: 2px solid var(--cyber-cyan); background: rgba(0,229,255,0.04); padding: 25px;">
         <div>
             <div style="font-family:'VT323'; color:var(--cyber-emerald); font-size:1.3rem;">> ONLINE_RETAIL_MARKETPLACE // 100% REAL_DB_CONNECTION [ ONLINE ] _</div>
             <h1 style="font-family:'Orbitron'; font-weight:900; font-size:2.5rem; color:#FFFFFF; margin: 5px 0 0 0; text-shadow:0 0 15px rgba(0,229,255,0.5);">
                 <i class="fa-solid fa-microchip text-cyan me-3"></i> DIGIPOSE OFFICIAL STOREFRONT
             </h1>
         </div>
-        <div class="mt-3 mt-md-0 d-flex align-items-center gap-2">
-            <div class="input-group" style="width: 440px;">
-                <input type="text" class="form-control" id="searchInput" placeholder="Search Name, SKU, Slug or Spec..." style="background:#000000; border:1px solid var(--cyber-cyan); color:#FFF; font-family:'Roboto Mono'; border-radius:0; padding:12px 18px;" onkeypress="if(event.key === 'Enter') triggerLiveSearch()" />
-                <button class="btn btn-outline-info px-4" type="button" style="font-family:'Orbitron'; border-color:var(--cyber-cyan); border-radius:0; font-weight:bold;" onclick="triggerLiveSearch()">
-                    <i class="fa-solid fa-magnifying-glass me-2"></i> [ SEARCH ]
-                </button>
-            </div>
-            <button class="btn btn-outline-warning" type="button" style="border-radius:0; font-family:'Orbitron'; font-weight:bold; height: 50px;" onclick="resetAllFilters()" title="Reset Filters">
-                <i class="fa-solid fa-rotate-left"></i>
-            </button>
+        <div class="mt-3 mt-md-0">
+            <span style="font-family:'VT323'; color:var(--cyber-muted); font-size:1.1rem;">
+                > CATALOG ASSETS: <span style="color:var(--cyber-emerald);">@Model.Products.Count</span> // CATEGORIES: <span style="color:var(--cyber-cyan);">@Model.Categories.Count</span> _
+            </span>
         </div>
     </div>
 
     <!-- HERO ROTATING CAROUSEL WIDGET (Every 3 Seconds) -->
     @if (Model.FeaturedProducts != null && Model.FeaturedProducts.Any())
     {
-        <div id="cyberHeroCarousel" class="carousel slide mb-5" data-bs-ride="carousel" data-bs-interval="3000" style="border: 1px solid var(--cyber-cyan); background: var(--cyber-surface); box-shadow: 0 0 25px rgba(0, 229, 255, 0.2);">
+        <div id="cyberHeroCarousel" class="carousel slide mb-0" data-bs-ride="carousel" data-bs-interval="3000" style="border: 1px solid var(--cyber-cyan); border-top:none; background: var(--cyber-surface); box-shadow: 0 0 25px rgba(0, 229, 255, 0.2);">
             <div class="carousel-indicators" style="margin-bottom: 10px;">
                 @for (int i = 0; i < Model.FeaturedProducts.Count; i++)
                 {
@@ -125,39 +217,39 @@
                 {
                     var feat = Model.FeaturedProducts[i];
                     var featImg = !string.IsNullOrEmpty(feat.ImageUrl) ? feat.ImageUrl : "/demo/products/default_cyber_product.png";
-                    <div class="carousel-item @(i == 0 ? "active" : "")" style="padding: 40px 50px; min-height: 340px; background: linear-gradient(90deg, rgba(10,10,10,0.95) 45%, rgba(0,229,255,0.05) 100%);">
+                    <div class="carousel-item @(i == 0 ? "active" : "")" style="padding: 40px 50px; min-height: 300px; background: linear-gradient(90deg, rgba(10,10,10,0.95) 45%, rgba(0,229,255,0.05) 100%);">
                         <div class="row align-items-center g-4">
                             <div class="col-lg-8 text-start">
                                 <span class="badge mb-2" style="background:var(--cyber-emerald); color:#000; font-family:'VT323'; font-size:1.2rem; padding: 5px 15px;">
-                                    > FEATURED DEAL OF THE SECOND // @feat.Category?.CategoryName?.ToUpper() _
+                                    > FEATURED // @feat.Category?.CategoryName?.ToUpper() _
                                 </span>
-                                <div style="font-family:'VT323'; color:var(--cyber-amber); font-size:1.4rem; letter-spacing:2px; margin-top:5px;">
+                                <div style="font-family:'VT323'; color:var(--cyber-amber); font-size:1.3rem; letter-spacing:2px; margin-top:5px;">
                                     [ SKU: @feat.SKU ] // MFR: @(feat.Manufacturer?.ManufacturerName ?? "Original Architecture")
                                 </div>
-                                <h2 style="font-family:'Orbitron'; font-weight:900; font-size:2.4rem; color:#FFF; margin: 10px 0; text-shadow:0 0 10px rgba(0,255,102,0.4);">
+                                <h2 style="font-family:'Orbitron'; font-weight:900; font-size:2.2rem; color:#FFF; margin: 10px 0; text-shadow:0 0 10px rgba(0,255,102,0.4);">
                                     @feat.ProductName
                                 </h2>
-                                <p style="color:var(--cyber-muted); font-size:1rem; max-width: 750px; line-height:1.6; margin-bottom: 25px;">
-                                    @(string.IsNullOrWhiteSpace(feat.Description) ? $"Authentic POS & ERP compute node asset designed for mission-critical retail environments. Standard unit weight with low-latency I/O." : feat.Description)
+                                <p style="color:var(--cyber-muted); font-size:0.95rem; max-width: 700px; line-height:1.6; margin-bottom: 22px;">
+                                    @(string.IsNullOrWhiteSpace(feat.Description) ? "Authentic POS & ERP compute node asset designed for mission-critical retail environments. Low-latency I/O optimized." : feat.Description)
                                 </p>
                                 <div class="d-flex align-items-center gap-4">
-                                    <div style="font-family:'VT323'; font-size:3rem; font-weight:bold; color:var(--cyber-cyan); text-shadow:0 0 12px rgba(0,229,255,0.6);">
+                                    <div style="font-family:'VT323'; font-size:2.8rem; font-weight:bold; color:var(--cyber-cyan); text-shadow:0 0 12px rgba(0,229,255,0.6);">
                                         @feat.BasePrice.ToString("N0") VND
                                     </div>
-                                    <button class="btn btn-lg px-5 py-3" style="background:var(--cyber-cyan); color:#000; font-family:'Orbitron'; font-weight:900; border-radius:0; font-size:1.1rem; text-transform:uppercase;" onclick="addToStorefrontCart(@feat.ProductId, @feat.BasePrice, '@(feat.Unit?.UnitName ?? "Unit")')">
+                                    <button class="btn btn-lg px-5 py-3" style="background:var(--cyber-cyan); color:#000; font-family:'Orbitron'; font-weight:900; border-radius:0; font-size:1rem; text-transform:uppercase;" onclick="addToStorefrontCart(@feat.ProductId, @feat.BasePrice, '@(feat.Unit?.UnitName ?? "Unit")')">
                                         <i class="fa-solid fa-cart-plus me-2"></i> [ ACQUIRE ASSET ]
                                     </button>
                                 </div>
                             </div>
                             <div class="col-lg-4 text-center d-none d-lg-flex align-items-center justify-content-center">
-                                <div style="width: 250px; height: 250px; border: 1px dashed var(--cyber-border); display: flex; align-items: center; justify-content: center; background:#000; box-shadow: 0 0 30px rgba(0,229,255,0.15);">
+                                <div style="width: 230px; height: 230px; border: 1px dashed var(--cyber-border); display: flex; align-items: center; justify-content: center; background:#000; box-shadow: 0 0 30px rgba(0,229,255,0.15);">
                                     @if (featImg.StartsWith("/") || featImg.StartsWith("http"))
                                     {
-                                        <img src="@featImg" alt="@feat.ProductName" style="max-height: 220px; max-width: 220px; object-fit: contain;" />
+                                        <img src="@featImg" alt="@feat.ProductName" style="max-height: 210px; max-width: 210px; object-fit: contain;" />
                                     }
                                     else
                                     {
-                                        <i class="fa-solid fa-desktop" style="font-size:7rem; color:var(--cyber-cyan); opacity:0.8;"></i>
+                                        <i class="fa-solid fa-desktop" style="font-size:6rem; color:var(--cyber-cyan); opacity:0.8;"></i>
                                     }
                                 </div>
                             </div>
@@ -168,55 +260,125 @@
         </div>
     }
 
-    <!-- HORIZONTAL FILTER ACTION BUTTONS / CATEGORIES CHIPS -->
-    <div class="d-flex flex-wrap gap-2 mb-4 pb-3" style="border-bottom: 1px dashed rgba(0,229,255,0.3);">
-        <button class="filter-btn-chip active" id="chip-all" onclick="filterByChip('all', 0, this)">
-            <i class="fa-solid fa-cubes me-2"></i> ALL CATALOG ASSETS (@Model.Products.Count)
+    <!-- ================================================================
+         SEARCH + FILTER TOOLBAR
+         {[⊞ toggle]} [Search Input __________][SEARCH] [CATEGORIES▾][MANUFACTURERS▾][PRODUCT TYPE▾][ITEM NATURE▾] [↺]
+    ================================================================ -->
+    <div class="sf-toolbar mb-4">
+        <!-- Toggle Filter Matrix Sidebar -->
+        <button class="sf-toggle-filter" id="btnToggleFilter" onclick="toggleFilterMatrix()" title="Show / Hide Filter Matrix">
+            <i class="fa-solid fa-sliders"></i>
         </button>
-        @foreach (var cat in Model.Categories)
-        {
-            var count = Model.Products.Count(p => p.CategoryId == cat.CategoryId);
-            <button class="filter-btn-chip" onclick="filterByChip('cat', @cat.CategoryId, this)">
-                <i class="fa-solid fa-tag me-2" style="color:var(--cyber-cyan);"></i> @cat.CategoryName (@count)
+
+        <!-- Live Search bar -->
+        <div class="sf-search-group">
+            <input type="text" id="searchInput" placeholder="Search name, SKU, slug, spec..." onkeypress="if(event.key==='Enter') triggerLiveSearch()" />
+            <button class="sf-search-btn" type="button" onclick="triggerLiveSearch()">
+                <i class="fa-solid fa-magnifying-glass me-1"></i> SEARCH
             </button>
-        }
-        @foreach (var nat in Model.ItemNatures)
-        {
-            <button class="filter-btn-chip" onclick="filterByChip('nature', @nat.NatureId, this)" style="border-color:var(--cyber-emerald);">
-                <i class="fa-solid fa-cloud me-2" style="color:var(--cyber-emerald);"></i> [ @nat.NatureName ]
+        </div>
+
+        <!-- 4 Dropdown Filter buttons -->
+        <div class="position-relative" id="ddWrap-cat">
+            <button class="sf-filter-btn" id="btnCat" onclick="toggleDropdown('cat')">
+                <i class="fa-solid fa-folder-tree me-1"></i> CATEGORIES <i class="fa-solid fa-chevron-down ms-1" style="font-size:0.55rem;"></i>
             </button>
-        }
+            <div class="sf-dropdown-panel" id="ddPanel-cat">
+                <div class="sf-opt" onclick="filterByDropdown('all', 0, 'cat')">
+                    <span>> [ ALL CATEGORIES ]</span><span class="badge bg-secondary">@Model.Products.Count</span>
+                </div>
+                @foreach (var c in Model.Categories)
+                {
+                    <div class="sf-opt" onclick="filterByDropdown('cat', @c.CategoryId, 'cat')">
+                        <span>> @c.CategoryName</span>
+                        <span class="badge" style="background:var(--cyber-cyan); color:#000;">@Model.Products.Count(p => p.CategoryId == c.CategoryId)</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="position-relative" id="ddWrap-mfr">
+            <button class="sf-filter-btn" id="btnMfr" onclick="toggleDropdown('mfr')">
+                <i class="fa-solid fa-industry me-1"></i> MANUFACTURERS <i class="fa-solid fa-chevron-down ms-1" style="font-size:0.55rem;"></i>
+            </button>
+            <div class="sf-dropdown-panel" id="ddPanel-mfr">
+                <div class="sf-opt" onclick="filterByDropdown('all', 0, 'mfr')"><span>> [ ALL MANUFACTURERS ]</span></div>
+                @foreach (var m in Model.Manufacturers)
+                {
+                    <div class="sf-opt" onclick="filterByDropdown('mfr', @m.ManufacturerId, 'mfr')">
+                        <span>> @m.ManufacturerName</span>
+                        <span class="badge" style="background:var(--cyber-amber); color:#000;">@Model.Products.Count(p => p.ManufacturerId == m.ManufacturerId)</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="position-relative" id="ddWrap-type">
+            <button class="sf-filter-btn" id="btnType" onclick="toggleDropdown('type')">
+                <i class="fa-solid fa-bars-staggered me-1"></i> PRODUCT TYPE <i class="fa-solid fa-chevron-down ms-1" style="font-size:0.55rem;"></i>
+            </button>
+            <div class="sf-dropdown-panel" id="ddPanel-type">
+                <div class="sf-opt" onclick="filterByDropdown('all', 0, 'type')"><span>> [ ALL TYPES ]</span></div>
+                @foreach (var t in Model.ProductTypes)
+                {
+                    <div class="sf-opt" onclick="filterByDropdown('type', @t.ProductTypeId, 'type')">
+                        <span>> @t.TypeName</span>
+                        <span class="badge bg-info text-dark">@Model.Products.Count(p => p.ProductTypeId == t.ProductTypeId)</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="position-relative" id="ddWrap-nature">
+            <button class="sf-filter-btn" id="btnNature" onclick="toggleDropdown('nature')">
+                <i class="fa-solid fa-compact-disc me-1"></i> ITEM NATURE <i class="fa-solid fa-chevron-down ms-1" style="font-size:0.55rem;"></i>
+            </button>
+            <div class="sf-dropdown-panel" id="ddPanel-nature">
+                <div class="sf-opt" onclick="filterByDropdown('all', 0, 'nature')"><span>> [ ALL NATURES ]</span></div>
+                @foreach (var n in Model.ItemNatures)
+                {
+                    <div class="sf-opt" onclick="filterByDropdown('nature', @n.NatureId, 'nature')">
+                        <span>> @n.NatureName</span>
+                        <span class="badge" style="background:var(--cyber-emerald); color:#000;">@Model.Products.Count(p => p.ItemNatureId == n.NatureId)</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Reset button -->
+        <button class="sf-filter-btn" type="button" onclick="resetAllFilters()" title="Reset All Filters" style="border-color:var(--cyber-amber); color:var(--cyber-amber);">
+            <i class="fa-solid fa-rotate-left"></i>
+        </button>
     </div>
 
-    <!-- MAIN GRID MATRIX (LEFT: COLLAPSENT ACCORDION FILTERS | RIGHT: CATEGORY BATCHES & PRODUCTS) -->
+    <!-- MAIN GRID MATRIX -->
     <div class="row g-4">
-        <!-- Left Sidebar Accordion Matrix Filter -->
-        <div class="col-lg-3 col-xl-3">
-            <div class="p-4" style="background: var(--cyber-surface); border: 1px solid var(--cyber-cyan); position: sticky; top: 90px; box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);">
+        <!-- Left Sidebar Filter Matrix — hidden by default, toggled by ⊞ button -->
+        <div id="filterMatrixPanel" class="col-lg-2">
+            <div class="p-3" style="background: var(--cyber-surface); border: 1px solid var(--cyber-cyan); position: sticky; top: 90px; box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);">
                 <div class="d-flex justify-content-between align-items-center mb-3 pb-2" style="border-bottom: 2px solid var(--cyber-cyan);">
-                    <h5 style="font-family:'Orbitron'; font-weight:900; color:#FFF; margin:0;">
+                    <h5 style="font-family:'Orbitron'; font-weight:900; color:#FFF; margin:0; font-size:0.85rem;">
                         <i class="fa-solid fa-filter text-cyan me-2"></i> FILTER MATRIX
                     </h5>
-                    <span class="badge" style="background:var(--cyber-emerald); color:#000; font-family:'VT323'; font-size:1rem;">LIVE O(1)</span>
+                    <span class="badge" style="background:var(--cyber-emerald); color:#000; font-family:'VT323'; font-size:0.95rem;">LIVE</span>
                 </div>
-
                 <div class="accordion cyber-accordion" id="filterAccordion">
-                    <!-- Category Tree -->
+                    <!-- Category -->
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="headingCat">
                             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCat" aria-expanded="true">
-                                <i class="fa-solid fa-folder-tree me-2"></i> PRODUCT CATEGORIES
+                                <i class="fa-solid fa-folder-tree me-2"></i> CATEGORIES
                             </button>
                         </h2>
                         <div id="collapseCat" class="accordion-collapse collapse show">
-                            <div class="accordion-body p-2">
+                            <div class="accordion-body p-1">
                                 <ul class="filter-tree-list">
-                                    <li onclick="filterByChip('all', 0, null)">
-                                        <span>> [ SHOW ALL CATEGORIES ]</span> <span class="badge bg-secondary">@Model.Products.Count</span>
+                                    <li onclick="filterByDropdown('all', 0, null)">
+                                        <span>> [ ALL ]</span> <span class="badge bg-secondary">@Model.Products.Count</span>
                                     </li>
                                     @foreach (var c in Model.Categories)
                                     {
-                                        <li onclick="filterByChip('cat', @c.CategoryId, null)">
+                                        <li onclick="filterByDropdown('cat', @c.CategoryId, null)">
                                             <span>> @c.CategoryName</span>
                                             <span class="badge" style="background:var(--cyber-cyan); color:#000;">@Model.Products.Count(p => p.CategoryId == c.CategoryId)</span>
                                         </li>
@@ -225,20 +387,19 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Manufacturer Tree -->
+                    <!-- Manufacturer -->
                     <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingMfr">
+                        <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMfr">
                                 <i class="fa-solid fa-industry me-2"></i> MANUFACTURERS
                             </button>
                         </h2>
                         <div id="collapseMfr" class="accordion-collapse collapse">
-                            <div class="accordion-body p-2">
+                            <div class="accordion-body p-1">
                                 <ul class="filter-tree-list">
                                     @foreach (var m in Model.Manufacturers)
                                     {
-                                        <li onclick="filterByChip('mfr', @m.ManufacturerId, null)">
+                                        <li onclick="filterByDropdown('mfr', @m.ManufacturerId, null)">
                                             <span>> @m.ManufacturerName</span>
                                             <span class="badge" style="background:var(--cyber-amber); color:#000;">@Model.Products.Count(p => p.ManufacturerId == m.ManufacturerId)</span>
                                         </li>
@@ -247,20 +408,19 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Product Type Tree -->
+                    <!-- Product Type -->
                     <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingType">
+                        <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseType">
                                 <i class="fa-solid fa-bars-staggered me-2"></i> PRODUCT TYPES
                             </button>
                         </h2>
                         <div id="collapseType" class="accordion-collapse collapse">
-                            <div class="accordion-body p-2">
+                            <div class="accordion-body p-1">
                                 <ul class="filter-tree-list">
                                     @foreach (var t in Model.ProductTypes)
                                     {
-                                        <li onclick="filterByChip('type', @t.ProductTypeId, null)">
+                                        <li onclick="filterByDropdown('type', @t.ProductTypeId, null)">
                                             <span>> @t.TypeName</span>
                                             <span class="badge bg-info text-dark">@Model.Products.Count(p => p.ProductTypeId == t.ProductTypeId)</span>
                                         </li>
@@ -269,20 +429,19 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Item Nature Tree -->
+                    <!-- Item Nature -->
                     <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingNature">
+                        <h2 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNature">
-                                <i class="fa-solid fa-compact-disc me-2"></i> ITEM NATURE (ASSET/SAAS)
+                                <i class="fa-solid fa-compact-disc me-2"></i> ITEM NATURE
                             </button>
                         </h2>
                         <div id="collapseNature" class="accordion-collapse collapse">
-                            <div class="accordion-body p-2">
+                            <div class="accordion-body p-1">
                                 <ul class="filter-tree-list">
                                     @foreach (var n in Model.ItemNatures)
                                     {
-                                        <li onclick="filterByChip('nature', @n.NatureId, null)">
+                                        <li onclick="filterByDropdown('nature', @n.NatureId, null)">
                                             <span>> @n.NatureName</span>
                                             <span class="badge" style="background:var(--cyber-emerald); color:#000;">@Model.Products.Count(p => p.ItemNatureId == n.NatureId)</span>
                                         </li>
@@ -292,18 +451,12 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="mt-4 p-3 text-center" style="background:#000; border: 1px dashed var(--cyber-emerald);">
-                    <i class="fa-solid fa-shield-halved text-success mb-2" style="font-size:2rem;"></i>
-                    <div style="font-family:'VT323'; color:var(--cyber-emerald); font-size:1.1rem;">> ZERO MOCK DATA PROTOCOL _</div>
-                    <div style="font-family:'Roboto Mono'; font-size:0.75rem; color:var(--cyber-muted);">All pricing & VAT calculations synchronize directly with Live Entity Ledger in O(1) RAM.</div>
-                </div>
             </div>
         </div>
 
-        <!-- Right Main Content: Category Batches & Dynamic Search Results -->
-        <div class="col-lg-9 col-xl-9">
-            <!-- Dynamic Search / Filter Results Container (Initially hidden unless triggered) -->
+        <!-- Right Main Content -->
+        <div id="mainContentCol" class="col-12">
+            <!-- Filtered Results (hidden by default) -->
             <div id="filteredResultsContainer" style="display: none;">
                 <div class="d-flex justify-content-between align-items-center mb-4 pb-2" style="border-bottom: 2px solid var(--cyber-cyan);">
                     <h3 style="font-family:'Orbitron'; font-weight:900; color:#FFF; margin:0;">
@@ -311,16 +464,15 @@
                     </h3>
                     <span style="font-family:'VT323'; font-size:1.4rem; color:var(--cyber-emerald);" id="filteredCountText">FOUND 0 ASSETS</span>
                 </div>
-                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4 mb-5" id="filteredProductsGrid">
-                    <!-- Injected by JavaScript during Live Search or Accordion Filter -->
-                </div>
+                <!-- 4-column grid for filtered results -->
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4 mb-5" id="filteredProductsGrid"></div>
             </div>
 
-            <!-- Standard Category Groups (Max 8-10 products per category exactly as docs/store) -->
+            <!-- Category Batch Sections -->
             <div id="categoryBatchesContainer">
                 @foreach (var cat in Model.Categories)
                 {
-                    var catProducts = Model.Products.Where(p => p.CategoryId == cat.CategoryId).Take(9).ToList();
+                    var catProducts = Model.Products.Where(p => p.CategoryId == cat.CategoryId).Take(8).ToList();
                     if (!catProducts.Any()) continue;
 
                     <div class="mb-5 pb-3">
@@ -328,12 +480,12 @@
                             <h3 style="font-family:'Orbitron'; font-weight:900; color:#FFF; margin:0; text-shadow:0 0 10px rgba(0,229,255,0.4);">
                                 <i class="fa-solid fa-layer-group text-cyan me-2"></i> @cat.CategoryName.ToUpper()
                             </h3>
-                            <button class="btn btn-sm btn-outline-info" style="border-radius:0; font-family:'Orbitron'; font-weight:bold;" onclick="filterByChip('cat', @cat.CategoryId, null)">
-                                [ VIEW ALL ASSETS ] <i class="fa-solid fa-chevron-right ms-1"></i>
+                            <button class="btn btn-sm btn-outline-info" style="border-radius:0; font-family:'Orbitron'; font-weight:bold;" onclick="filterByDropdown('cat', @cat.CategoryId, null)">
+                                [ VIEW ALL ] <i class="fa-solid fa-chevron-right ms-1"></i>
                             </button>
                         </div>
-
-                        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+                        <!-- 4 columns grid -->
+                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
                             @foreach (var prod in catProducts)
                             {
                                 var pImg = !string.IsNullOrEmpty(prod.ImageUrl) ? prod.ImageUrl : "/demo/products/default_cyber_product.png";
@@ -343,35 +495,35 @@
                                             <div class="cyber-card-img-box">
                                                 @if (pImg.StartsWith("/") || pImg.StartsWith("http"))
                                                 {
-                                                    <img src="@pImg" alt="@prod.ProductName" style="max-height: 180px; max-width: 90%; object-fit: contain;" />
+                                                    <img src="@pImg" alt="@prod.ProductName" style="max-height: 170px; max-width: 90%; object-fit: contain;" />
                                                 }
                                                 else
                                                 {
-                                                    <i class="fa-solid fa-desktop" style="font-size:5rem; color:var(--cyber-cyan); opacity:0.8;"></i>
+                                                    <i class="fa-solid fa-desktop" style="font-size:4.5rem; color:var(--cyber-cyan); opacity:0.8;"></i>
                                                 }
-                                                <span class="badge" style="position:absolute; top:12px; left:12px; background:var(--cyber-emerald); color:#000; font-family:'VT323'; font-size:1.05rem; font-weight:bold; border-radius:0;">
-                                                    @(prod.ItemNature?.NatureName ?? "IN STOCK") // LIVE DB
+                                                <span class="badge" style="position:absolute; top:10px; left:10px; background:var(--cyber-emerald); color:#000; font-family:'VT323'; font-size:1rem; font-weight:bold; border-radius:0;">
+                                                    @(prod.ItemNature?.NatureName ?? "IN STOCK")
                                                 </span>
                                             </div>
-                                            <div class="card-body p-4">
-                                                <div style="font-family:'VT323'; color:var(--cyber-amber); font-size:1.1rem; letter-spacing:1px;">
-                                                    SKU: @prod.SKU // MFR: @(prod.Manufacturer?.ManufacturerName ?? "GENERIC")
+                                            <div class="card-body p-3">
+                                                <div style="font-family:'VT323'; color:var(--cyber-amber); font-size:0.95rem; letter-spacing:1px;">
+                                                    SKU: @prod.SKU // @(prod.Manufacturer?.ManufacturerName ?? "GENERIC")
                                                 </div>
-                                                <h5 style="font-family:'Orbitron'; color:#FFF; font-size:1.15rem; font-weight:700; margin:8px 0;">
+                                                <h5 style="font-family:'Orbitron'; color:#FFF; font-size:1rem; font-weight:700; margin:6px 0;">
                                                     @prod.ProductName
                                                 </h5>
-                                                <p style="color:var(--cyber-muted); font-size:0.88rem; line-height:1.5; margin-bottom:15px; height:48px; overflow:hidden; text-overflow:ellipsis;">
-                                                    @(string.IsNullOrWhiteSpace(prod.Description) ? $"Authentic POS system node asset ({prod.ProductType?.TypeName}). Verified enterprise SLA with instant hardware mapping." : prod.Description)
+                                                <p style="color:var(--cyber-muted); font-size:0.8rem; line-height:1.5; margin-bottom:10px; height:44px; overflow:hidden; text-overflow:ellipsis;">
+                                                    @(string.IsNullOrWhiteSpace(prod.Description) ? $"Authentic POS system node asset ({prod.ProductType?.TypeName}). Verified enterprise SLA." : prod.Description)
                                                 </p>
                                             </div>
                                         </div>
-                                        <div class="p-4 pt-0 mt-auto">
-                                            <div class="pt-3" style="border-top:1px dashed var(--cyber-border);">
-                                                <div class="d-flex justify-content-between align-items-end mb-3">
-                                                    <span style="font-family:'Roboto Mono'; font-size:0.75rem; color:var(--cyber-muted);">LIST PRICE:</span>
-                                                    <span style="font-family:'VT323'; font-size:2rem; color:var(--cyber-cyan); font-weight:bold; line-height:1;">@prod.BasePrice.ToString("N0") VND</span>
+                                        <div class="p-3 pt-0 mt-auto">
+                                            <div class="pt-2" style="border-top:1px dashed var(--cyber-border);">
+                                                <div class="d-flex justify-content-between align-items-end mb-2">
+                                                    <span style="font-family:'Roboto Mono'; font-size:0.68rem; color:var(--cyber-muted);">LIST PRICE:</span>
+                                                    <span style="font-family:'VT323'; font-size:1.7rem; color:var(--cyber-cyan); font-weight:bold; line-height:1;">@prod.BasePrice.ToString("N0") VND</span>
                                                 </div>
-                                                <button class="btn w-100 py-3" style="background:var(--cyber-cyan); color:#000; font-family:'Orbitron'; font-weight:900; border-radius:0; font-size:0.95rem; text-transform:uppercase;" onclick="addToStorefrontCart(@prod.ProductId, @prod.BasePrice, '@(prod.Unit?.UnitName ?? "Unit")')">
+                                                <button class="btn w-100 py-2" style="background:var(--cyber-cyan); color:#000; font-family:'Orbitron'; font-weight:900; border-radius:0; font-size:0.82rem; text-transform:uppercase;" onclick="addToStorefrontCart(@prod.ProductId, @prod.BasePrice, '@(prod.Unit?.UnitName ?? "Unit")')">
                                                     <i class="fa-solid fa-cart-plus me-2"></i> [ ADD TO STAGING CART ]
                                                 </button>
                                             </div>
@@ -385,72 +537,103 @@
             </div>
         </div>
     </div>
-
-    <!-- Telemetry Status Footer Info -->
-    <div class="mt-5 p-4 d-flex flex-wrap justify-content-between align-items-center" style="border: 1px dashed var(--cyber-border); background: rgba(0,0,0,0.5);">
-        <div class="d-flex align-items-center gap-3">
-            <i class="fa-solid fa-network-wired text-cyan" style="font-size:1.8rem;"></i>
-            <div>
-                <div style="font-family:'Orbitron'; font-size:1rem; color:#FFFFFF; font-weight:bold;">LOW-LATENCY EDGE FULFILLMENT MATRIX</div>
-                <div style="font-family:'VT323'; color:var(--cyber-muted); font-size:1.1rem;">> ALL ORDERS ARE PROCESSED VIA ASYNCHRONOUS TRANSACTION LEDGER WITH INSTANT VAT COMPLIANCE _</div>
-            </div>
-        </div>
-        <div style="font-family:'VT323'; font-size:1.5rem; color:var(--cyber-emerald);">
-            [ SECURE CHECKOUT READY ]
-        </div>
-    </div>
 </div>
 
 @section Scripts {
     <script>
         // ====================================================================
-        // LIVE CATALOG MATRIX ENGINE & AJAX FILTERING
+        // FILTER MATRIX SIDEBAR TOGGLE
         // ====================================================================
-        function resetAllFilters() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('filteredResultsContainer').style.display = 'none';
-            document.getElementById('categoryBatchesContainer').style.display = 'block';
-            document.querySelectorAll('.filter-btn-chip').forEach(btn => btn.classList.remove('active'));
-            const allChip = document.getElementById('chip-all');
-            if(allChip) allChip.classList.add('active');
+        function toggleFilterMatrix() {
+            const panel = document.getElementById('filterMatrixPanel');
+            const mainCol = document.getElementById('mainContentCol');
+            const btn = document.getElementById('btnToggleFilter');
+            const isOpen = panel.classList.toggle('open');
+            btn.classList.toggle('active', isOpen);
+            if (isOpen) {
+                mainCol.classList.remove('col-12');
+                mainCol.classList.add('col-lg-10');
+            } else {
+                mainCol.classList.add('col-12');
+                mainCol.classList.remove('col-lg-10');
+            }
         }
 
-        function filterByChip(type, id, btnElement) {
-            if(btnElement) {
-                document.querySelectorAll('.filter-btn-chip').forEach(b => b.classList.remove('active'));
-                btnElement.classList.add('active');
-            }
-            if (type === 'all' || id === 0) {
-                resetAllFilters();
-                return;
-            }
+        // ====================================================================
+        // DROPDOWN FILTER PANELS
+        // ====================================================================
+        const dropdownKeys = ['cat', 'mfr', 'type', 'nature'];
 
-            const payload = { PageNumber: 1, PageSize: 50, SortBy: "name" };
+        function toggleDropdown(key) {
+            dropdownKeys.forEach(k => {
+                const panel = document.getElementById('ddPanel-' + k);
+                const btn = document.getElementById('btn' + k.charAt(0).toUpperCase() + k.slice(1));
+                if (k === key) {
+                    const nowOpen = panel.classList.toggle('open');
+                    if (btn) btn.classList.toggle('active', nowOpen);
+                } else {
+                    panel.classList.remove('open');
+                    if (btn) btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Close dropdowns on outside click
+        document.addEventListener('click', function (e) {
+            dropdownKeys.forEach(k => {
+                const wrap = document.getElementById('ddWrap-' + k);
+                if (wrap && !wrap.contains(e.target)) {
+                    document.getElementById('ddPanel-' + k)?.classList.remove('open');
+                    const btn = document.getElementById('btn' + k.charAt(0).toUpperCase() + k.slice(1));
+                    if (btn) btn.classList.remove('active');
+                }
+            });
+        });
+
+        // ====================================================================
+        // FILTER & SEARCH LOGIC
+        // ====================================================================
+        function filterByDropdown(type, id, sourceKey) {
+            if (sourceKey) {
+                document.getElementById('ddPanel-' + sourceKey)?.classList.remove('open');
+                const srcBtn = document.getElementById('btn' + sourceKey.charAt(0).toUpperCase() + sourceKey.slice(1));
+                if (srcBtn) srcBtn.classList.remove('active');
+            }
+            if (type === 'all' || id === 0) { resetAllFilters(); return; }
+            const payload = { PageNumber: 1, PageSize: 100, SortBy: 'name' };
             if (type === 'cat') payload.CategoryId = id;
             if (type === 'mfr') payload.ManufacturerId = id;
             if (type === 'type') payload.ProductTypeId = id;
             if (type === 'nature') payload.ItemNatureId = id;
+            executeSearchApi(payload, `FILTER ${type.toUpperCase()} #${id}`);
+        }
 
-            executeSearchApi(payload, `FILTER: ${type.toUpperCase()} #${id}`);
+        function resetAllFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filteredResultsContainer').style.display = 'none';
+            document.getElementById('categoryBatchesContainer').style.display = 'block';
+            dropdownKeys.forEach(k => {
+                document.getElementById('ddPanel-' + k)?.classList.remove('open');
+                const b = document.getElementById('btn' + k.charAt(0).toUpperCase() + k.slice(1));
+                if (b) b.classList.remove('active');
+            });
         }
 
         function triggerLiveSearch() {
             const query = document.getElementById('searchInput').value.trim();
-            if(!query) {
-                resetAllFilters();
-                return;
-            }
-            executeSearchApi({ Query: query, PageNumber: 1, PageSize: 50, SortBy: "name" }, `SEARCH FOR '${query}'`);
+            if (!query) { resetAllFilters(); return; }
+            executeSearchApi({ Query: query, PageNumber: 1, PageSize: 100, SortBy: 'name' }, `SEARCH '${query}'`);
         }
 
         function executeSearchApi(payload, titleInfo) {
             document.getElementById('categoryBatchesContainer').style.display = 'none';
             const container = document.getElementById('filteredResultsContainer');
             container.style.display = 'block';
+            document.getElementById('filteredCountText').innerText = titleInfo;
             document.getElementById('filteredProductsGrid').innerHTML = `
                 <div class="col-12 text-center py-5">
                     <i class="fa-solid fa-circle-notch fa-spin text-cyan" style="font-size:3rem;"></i>
-                    <p style="font-family:'VT323'; font-size:1.5rem; color:var(--cyber-emerald); margin-top:15px;">> INTERROGATING O(1) RAM LEDGER // _</p>
+                    <p style="font-family:'VT323'; font-size:1.5rem; color:var(--cyber-emerald); margin-top:15px;">> QUERYING CATALOG LEDGER // _</p>
                 </div>`;
 
             fetch('/api/v1/Storefront/catalog/search', {
@@ -465,46 +648,48 @@
                     document.getElementById('filteredProductsGrid').innerHTML = `
                         <div class="col-12 text-center py-5">
                             <i class="fa-solid fa-folder-open text-warning mb-3" style="font-size:3.5rem;"></i>
-                            <h4 style="font-family:'Orbitron'; color:#FFF;">NO ASSETS MATCHED FILTER MATRIX</h4>
-                            <p style="color:var(--cyber-muted);">Please recalibrate search parameters or reset filter matrix.</p>
+                            <h4 style="font-family:'Orbitron'; color:#FFF;">NO ASSETS MATCHED</h4>
+                            <p style="color:var(--cyber-muted);">Recalibrate search parameters or reset filter.</p>
                             <button class="btn btn-outline-info px-4 mt-3" style="border-radius:0; font-family:'Orbitron'; font-weight:bold;" onclick="resetAllFilters()">[ RESET MATRIX ]</button>
                         </div>`;
                     return;
                 }
-
                 let html = '';
                 data.products.forEach(p => {
                     const priceFormatted = new Intl.NumberFormat('vi-VN').format(p.basePrice) + ' VND';
                     const img = p.imageUrl || '/demo/products/default_cyber_product.png';
+                    const imgTag = (img.startsWith('/') || img.startsWith('http'))
+                        ? `<img src="${img}" style="max-height:170px; max-width:90%; object-fit:contain;" alt="${p.productName}"/>`
+                        : `<i class="fa-solid fa-desktop" style="font-size:4.5rem; color:var(--cyber-cyan); opacity:0.8;"></i>`;
                     html += `
                     <div class="col">
                         <div class="card cyber-card h-100 d-flex flex-column justify-content-between">
                             <div>
                                 <div class="cyber-card-img-box">
-                                    ${img.startsWith('/') || img.startsWith('http') ? `<img src="${img}" style="max-height:180px; max-width:90%; object-fit:contain;" alt="asset"/>` : `<i class="fa-solid fa-desktop" style="font-size:5rem; color:var(--cyber-cyan); opacity:0.8;"></i>`}
-                                    <span class="badge" style="position:absolute; top:12px; left:12px; background:var(--cyber-emerald); color:#000; font-family:'VT323'; font-size:1.05rem; font-weight:bold; border-radius:0;">
-                                        ${p.isDigitalSaaS ? "SAAS LICENSE" : "HARDWARE ASSET"} // LIVE
+                                    ${imgTag}
+                                    <span class="badge" style="position:absolute; top:10px; left:10px; background:var(--cyber-emerald); color:#000; font-family:'VT323'; font-size:1rem; font-weight:bold; border-radius:0;">
+                                        ${p.isDigitalSaaS ? "SAAS LICENSE" : "HARDWARE"}
                                     </span>
                                 </div>
-                                <div class="card-body p-4">
-                                    <div style="font-family:'VT323'; color:var(--cyber-amber); font-size:1.1rem; letter-spacing:1px;">
-                                        SKU: ${p.sku} // MFR: ${p.manufacturerName}
+                                <div class="card-body p-3">
+                                    <div style="font-family:'VT323'; color:var(--cyber-amber); font-size:0.95rem; letter-spacing:1px;">
+                                        SKU: ${p.sku} // ${p.manufacturerName}
                                     </div>
-                                    <h5 style="font-family:'Orbitron'; color:#FFF; font-size:1.15rem; font-weight:700; margin:8px 0;">
+                                    <h5 style="font-family:'Orbitron'; color:#FFF; font-size:1rem; font-weight:700; margin:6px 0;">
                                         ${p.productName}
                                     </h5>
-                                    <p style="color:var(--cyber-muted); font-size:0.88rem; line-height:1.5; margin-bottom:15px; height:48px; overflow:hidden; text-overflow:ellipsis;">
+                                    <p style="color:var(--cyber-muted); font-size:0.8rem; line-height:1.5; margin-bottom:10px; height:44px; overflow:hidden; text-overflow:ellipsis;">
                                         ${p.metaDescription || "Authentic POS system compute asset. Verified enterprise SLA."}
                                     </p>
                                 </div>
                             </div>
-                            <div class="p-4 pt-0 mt-auto">
-                                <div class="pt-3" style="border-top:1px dashed var(--cyber-border);">
-                                    <div class="d-flex justify-content-between align-items-end mb-3">
-                                        <span style="font-family:'Roboto Mono'; font-size:0.75rem; color:var(--cyber-muted);">LIST PRICE:</span>
-                                        <span style="font-family:'VT323'; font-size:2rem; color:var(--cyber-cyan); font-weight:bold; line-height:1;">${priceFormatted}</span>
+                            <div class="p-3 pt-0 mt-auto">
+                                <div class="pt-2" style="border-top:1px dashed var(--cyber-border);">
+                                    <div class="d-flex justify-content-between align-items-end mb-2">
+                                        <span style="font-family:'Roboto Mono'; font-size:0.68rem; color:var(--cyber-muted);">LIST PRICE:</span>
+                                        <span style="font-family:'VT323'; font-size:1.7rem; color:var(--cyber-cyan); font-weight:bold; line-height:1;">${priceFormatted}</span>
                                     </div>
-                                    <button class="btn w-100 py-3" style="background:var(--cyber-cyan); color:#000; font-family:'Orbitron'; font-weight:900; border-radius:0; font-size:0.95rem; text-transform:uppercase;" onclick="addToStorefrontCart(${p.productId}, ${p.basePrice}, 'Unit')">
+                                    <button class="btn w-100 py-2" style="background:var(--cyber-cyan); color:#000; font-family:'Orbitron'; font-weight:900; border-radius:0; font-size:0.82rem; text-transform:uppercase;" onclick="addToStorefrontCart(${p.productId}, ${p.basePrice}, 'Unit')">
                                         <i class="fa-solid fa-cart-plus me-2"></i> [ ADD TO STAGING CART ]
                                     </button>
                                 </div>
@@ -515,11 +700,11 @@
                 document.getElementById('filteredProductsGrid').innerHTML = html;
             })
             .catch(err => {
-                console.error(">>> [SEARCH_MATRIX_ERR]:", err);
+                console.error('>>> [SEARCH_MATRIX_ERR]:', err);
                 document.getElementById('filteredProductsGrid').innerHTML = `
                     <div class="col-12 text-center py-5 text-danger">
                         <i class="fa-solid fa-triangle-exclamation mb-3" style="font-size:3rem;"></i>
-                        <h4>> O(1) INTERROGATION FAULT // CHECK SERVER LOGS _</h4>
+                        <h4>>> CATALOG API FAULT // CHECK CONSOLE _</h4>
                     </div>`;
             });
         }
