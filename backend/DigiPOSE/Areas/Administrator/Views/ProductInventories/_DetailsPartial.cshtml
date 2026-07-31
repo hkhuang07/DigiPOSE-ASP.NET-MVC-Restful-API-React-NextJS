@@ -1,4 +1,4 @@
-@model DigiPOSE.Models.ProductInventory
+﻿@model DigiPOSE.Models.ProductInventory
 <div class="modal-content">
     <div class="modal-header">
         <h5 class="modal-title"><i class="fa-solid fa-warehouse text-cyan me-2"></i> INVENTORY DETAILS</h5>
@@ -15,8 +15,8 @@
                 <div class="col-8" style="font-family:'Rajdhani'; font-size:1.1rem; font-weight:bold; color:#FFF;">@(Model.Product != null ? Model.Product.ProductName : "N/A")</div>
             </div>
             <div class="row mb-3 align-items-center">
-                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">BRANCH:</div>
-                <div class="col-8" style="font-family:'Roboto Mono'; font-size:0.9rem; color:#FFF;">@(Model.Branch != null ? Model.Branch.BranchName : "N/A")</div>
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">TENANT:</div>
+                <div class="col-8" style="font-family:'Roboto Mono'; font-size:0.9rem; color:#FFF;">@(Model.Tenant != null ? Model.Tenant.TenantName : "N/A")</div>
             </div>
             <div class="row mb-3 align-items-center">
                 <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">STOCK QUANTITY:</div>

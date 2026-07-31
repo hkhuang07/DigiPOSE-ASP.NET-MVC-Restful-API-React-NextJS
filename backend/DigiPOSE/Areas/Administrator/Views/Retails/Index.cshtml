@@ -19,7 +19,7 @@
                     <th>Doc No</th>
                     <th>Retail No</th>
                     <th>Type</th>
-                    <th>Branch</th>
+                    <th>Tenant</th>
                     <th>Buyer</th>
                     <th>Payment</th>
                     <th style="text-align:right;">Total (₫)</th>
@@ -48,7 +48,7 @@
                     { data: 'docNo', name: 'DocNo', render: d => `<span style="color:var(--primary-cyan); font-family:'Roboto Mono'; font-size:0.82rem; font-weight:bold;">${d}</span>` },
                     { data: 'retailNo', name: 'RetailNo', render: d => `<span style="color:#888; font-size:0.8rem;">${d}</span>` },
                     { data: 'docType', name: 'DocType', render: d => d === 'B2B_INVOICE' ? '<span class="badge bg-warning text-dark">B2B</span>' : '<span class="badge bg-info text-dark">POS</span>' },
-                    { data: 'branchName', name: 'BranchName' },
+                    { data: 'tenantName', name: 'TenantName' },
                     { data: 'buyerName', name: 'BuyerName', render: d => `<span style="color:#CCC;">${d}</span>` },
                     { data: 'paymentMethod', name: 'PaymentMethod', render: d => `<span style="color:#888;">${d}</span>` },
                     { data: 'totalAmount', name: 'TotalAmount', render: d => `<span style="color:#00FF66; font-family:'VT323'; font-size:1.1rem; float:right;">${$.fn.dataTable.render.number(',', '.', 0, '').display(d)}</span>` },

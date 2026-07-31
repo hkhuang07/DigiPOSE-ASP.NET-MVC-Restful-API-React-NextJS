@@ -25,6 +25,8 @@ namespace DigiPOSE.Controllers
 
         [HttpGet("")]
         [HttpGet("Index")]
+        [HttpGet("~/Home/Storefront/Index")]
+        [HttpGet("~/Home/Storefront")]
         public async Task<IActionResult> Index()
         {
             // 1. Fetch real active catalog assets from Database
@@ -64,8 +66,14 @@ namespace DigiPOSE.Controllers
         }
 
         [HttpGet("Checkout")]
+        [HttpGet("~/Home/Storefront/Checkout")]
         public async Task<IActionResult> Checkout(int? cartId)
         {
+            if (User?.Identity == null || !User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Login", "Auth", new { returnUrl = Request.Path + Request.QueryString });
+            }
+
             if (!cartId.HasValue || cartId.Value <= 0)
             {
                 return RedirectToAction(nameof(Index));
@@ -94,6 +102,7 @@ namespace DigiPOSE.Controllers
         }
 
         [HttpGet("Thanks")]
+        [HttpGet("~/Home/Storefront/Thanks")]
         public async Task<IActionResult> Thanks(int orderId, string? invoiceNumber = null, decimal totalCharged = 0)
         {
             var order = await _context.Orders

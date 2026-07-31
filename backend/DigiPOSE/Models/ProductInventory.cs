@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DigiPOSE.Models
@@ -6,9 +6,9 @@ namespace DigiPOSE.Models
     public class ProductInventory
     {
         [Key] public int InventoryId { get; set; }
-        [Display(Name = "Branch")]
-        [Required(ErrorMessage = "Please select a branch.")]
-        public int BranchId { get; set; }
+        [Display(Name = "Tenant")]
+        [Required(ErrorMessage = "Please select a tenant.")]
+        public int TenantId { get; set; }
         
         [Display(Name = "Product")]
         [Required(ErrorMessage = "Please select a product.")]
@@ -24,7 +24,7 @@ namespace DigiPOSE.Models
 
         [Timestamp] public byte[]? RowVersion { get; set; }
 
-        public Branch? Branch { get; set; }
+        public Tenant? Tenant { get; set; }
         public Product? Product { get; set; }
     }
 }

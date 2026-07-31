@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -36,7 +36,7 @@ namespace DigiPOSE.Controllers
 
             var user = await _context.Users
                 .Include(u => u.Role)
-                .Include(u => u.Branch)
+                .Include(u => u.Tenant)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.UserId == userId);
 
@@ -159,7 +159,7 @@ namespace DigiPOSE.Controllers
                     .Include(u => u.Role)
                         .ThenInclude(r => r!.PermissionRoles!)
                             .ThenInclude(pr => pr.Permission)
-                    .Include(u => u.Branch)
+                    .Include(u => u.Tenant)
                     .AsNoTracking()
                     .FirstOrDefaultAsync(u => u.UserId == user.UserId);
 
@@ -170,8 +170,8 @@ namespace DigiPOSE.Controllers
                         new System.Security.Claims.Claim("UserId", updatedUser.UserId.ToString()),
                         new System.Security.Claims.Claim(ClaimTypes.Name, updatedUser.UserName),
                         new System.Security.Claims.Claim("FullName", updatedUser.FullName ?? updatedUser.UserName),
-                        new System.Security.Claims.Claim("BranchId", updatedUser.BranchId.ToString()),
-                        new System.Security.Claims.Claim("BranchName", updatedUser.Branch?.BranchName ?? "N/A"),
+                        new System.Security.Claims.Claim("TenantId", updatedUser.TenantId.ToString()),
+                        new System.Security.Claims.Claim("TenantName", updatedUser.Tenant?.TenantName ?? "N/A"),
                         new System.Security.Claims.Claim(ClaimTypes.Role, updatedUser.Role?.RoleName ?? "User"),
                         new System.Security.Claims.Claim("AvatarUrl", updatedUser.ImageUrl ?? "")
                     };

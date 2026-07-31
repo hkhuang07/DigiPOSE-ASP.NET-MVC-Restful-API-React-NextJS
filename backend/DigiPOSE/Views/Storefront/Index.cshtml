@@ -4,187 +4,7 @@
     ViewData["Title"] = "Digital Retail Storefront & POS Catalog";
 }
 
-<style>
-    .cyber-card {
-        background: var(--cyber-surface);
-        border: 1px solid var(--cyber-border);
-        border-radius: 0;
-        transition: all 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
-        position: relative;
-        overflow: hidden;
-    }
-    .cyber-card:hover {
-        border-color: var(--cyber-cyan);
-        box-shadow: 0 0 20px rgba(0, 229, 255, 0.25);
-        transform: translateY(-4px);
-    }
-    .cyber-card-img-box {
-        height: 200px;
-        background: #000000;
-        border-bottom: 1px solid var(--cyber-border);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-    }
-    /* ---- Search + Filter toolbar ---- */
-    .sf-toolbar {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 8px;
-        padding: 14px 20px;
-        background: rgba(0,229,255,0.03);
-        border: 1px solid rgba(0,229,255,0.25);
-        border-top: none;
-        margin-bottom: 0;
-    }
-    .sf-toggle-filter {
-        background: transparent;
-        border: 1px solid var(--cyber-border);
-        color: var(--cyber-cyan);
-        font-family: 'Orbitron', sans-serif;
-        font-size: 0.85rem;
-        font-weight: 700;
-        padding: 9px 13px;
-        border-radius: 0;
-        transition: all 0.2s;
-        flex-shrink: 0;
-        cursor: pointer;
-    }
-    .sf-toggle-filter:hover, .sf-toggle-filter.active {
-        background: rgba(0,229,255,0.15);
-        box-shadow: 0 0 10px rgba(0,229,255,0.3);
-        border-color: var(--cyber-cyan);
-    }
-    .sf-search-group {
-        flex: 1;
-        min-width: 180px;
-        display: flex;
-    }
-    .sf-search-group input {
-        flex: 1;
-        background: #000;
-        border: 1px solid var(--cyber-cyan);
-        border-right: none;
-        color: #FFF;
-        font-family: 'Roboto Mono', monospace;
-        font-size: 0.9rem;
-        padding: 9px 16px;
-        border-radius: 0;
-        outline: none;
-    }
-    .sf-search-group input::placeholder { color: rgba(255,255,255,0.35); }
-    .sf-search-group input:focus { box-shadow: inset 0 0 8px rgba(0,229,255,0.15); }
-    .sf-search-btn {
-        background: transparent;
-        border: 1px solid var(--cyber-cyan);
-        color: var(--cyber-cyan);
-        font-family: 'Orbitron', sans-serif;
-        font-size: 0.78rem;
-        font-weight: 700;
-        padding: 9px 18px;
-        border-radius: 0;
-        transition: all 0.2s;
-        white-space: nowrap;
-        cursor: pointer;
-    }
-    .sf-search-btn:hover { background: var(--cyber-cyan); color: #000; }
-    /* Dropdown filter buttons */
-    .sf-filter-btn {
-        background: rgba(0,0,0,0.7);
-        border: 1px solid var(--cyber-border);
-        color: var(--cyber-text);
-        font-family: 'Orbitron', sans-serif;
-        font-size: 0.7rem;
-        font-weight: 700;
-        padding: 9px 13px;
-        border-radius: 0;
-        transition: all 0.2s;
-        text-transform: uppercase;
-        white-space: nowrap;
-        cursor: pointer;
-    }
-    .sf-filter-btn:hover, .sf-filter-btn.active {
-        border-color: var(--cyber-cyan);
-        color: var(--cyber-cyan);
-        box-shadow: 0 0 10px rgba(0,229,255,0.2);
-        background: rgba(0,229,255,0.08);
-    }
-    .sf-filter-btn.active i.fa-chevron-down { transform: rotate(180deg); transition: transform 0.2s; }
-    /* Dropdown panel */
-    .sf-dropdown-panel {
-        display: none;
-        position: absolute;
-        top: calc(100% + 4px);
-        left: 0;
-        z-index: 9999;
-        background: var(--cyber-surface);
-        border: 1px solid var(--cyber-cyan);
-        min-width: 210px;
-        max-height: 320px;
-        overflow-y: auto;
-        box-shadow: 0 8px 25px rgba(0,229,255,0.25);
-    }
-    .sf-dropdown-panel.open { display: block; }
-    .sf-dropdown-panel .sf-opt {
-        padding: 9px 16px;
-        font-family: 'Roboto Mono', monospace;
-        font-size: 0.82rem;
-        color: var(--cyber-text);
-        cursor: pointer;
-        border-bottom: 1px dashed rgba(0,229,255,0.12);
-        transition: all 0.15s;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .sf-dropdown-panel .sf-opt:hover { background: rgba(0,229,255,0.12); color: var(--cyber-cyan); }
-    .sf-dropdown-panel .sf-opt.selected { color: var(--cyber-emerald); }
-    /* Filter matrix sidebar */
-    .cyber-accordion .accordion-item {
-        background: var(--cyber-surface);
-        border: 1px solid var(--cyber-border);
-        margin-bottom: 8px;
-        border-radius: 0 !important;
-    }
-    .cyber-accordion .accordion-button {
-        background: rgba(0, 229, 255, 0.08);
-        color: var(--cyber-cyan);
-        font-family: 'Orbitron', sans-serif;
-        font-weight: 700;
-        font-size: 0.82rem;
-        border-radius: 0 !important;
-        box-shadow: none !important;
-    }
-    .cyber-accordion .accordion-button:not(.collapsed) {
-        background: rgba(0, 255, 102, 0.1);
-        color: var(--cyber-emerald);
-    }
-    .filter-tree-list {
-        list-style: none;
-        padding-left: 4px;
-        margin-bottom: 0;
-    }
-    .filter-tree-list li {
-        padding: 6px 8px;
-        border-bottom: 1px dashed rgba(0, 229, 255, 0.15);
-        cursor: pointer;
-        transition: all 0.2s;
-        font-family: 'Roboto Mono', monospace;
-        font-size: 0.8rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .filter-tree-list li:hover {
-        background: rgba(0, 229, 255, 0.15);
-        color: var(--cyber-cyan);
-        padding-left: 14px;
-    }
-    #filterMatrixPanel { display: none; }
-    #filterMatrixPanel.open { display: block; }
-</style>
+<!-- Styled via high-performance cached wwwroot/css/cyber-storefront.css -->
 
 <div class="container-fluid px-4 px-xl-5 my-4" style="max-width: 1800px;">
     <!-- Storefront Title Bar -->
@@ -236,7 +56,7 @@
                                     <div style="font-family:'VT323'; font-size:2.8rem; font-weight:bold; color:var(--cyber-cyan); text-shadow:0 0 12px rgba(0,229,255,0.6);">
                                         @feat.BasePrice.ToString("N0") VND
                                     </div>
-                                    <button class="btn btn-lg px-5 py-3" style="background:var(--cyber-cyan); color:#000; font-family:'Orbitron'; font-weight:900; border-radius:0; font-size:1rem; text-transform:uppercase;" onclick="addToStorefrontCart(@feat.ProductId, @feat.BasePrice, '@(feat.Unit?.UnitName ?? "Unit")')">
+                                    <button class="btn btn-lg px-5 py-3" style="background:var(--cyber-cyan); color:#000; font-family:'Orbitron'; font-weight:900; border-radius:0; font-size:1rem; text-transform:uppercase;" onclick="addToStorefrontCart(@feat.ProductId, @(feat.BasePrice.ToString(System.Globalization.CultureInfo.InvariantCulture)), '@(feat.Unit?.UnitName ?? "Unit")')">
                                         <i class="fa-solid fa-cart-plus me-2"></i> [ ACQUIRE ASSET ]
                                     </button>
                                 </div>
@@ -272,7 +92,7 @@
 
         <!-- Live Search bar -->
         <div class="sf-search-group">
-            <input type="text" id="searchInput" placeholder="Search name, SKU, slug, spec..." onkeypress="if(event.key==='Enter') triggerLiveSearch()" />
+            <input type="text" id="searchInput" placeholder="Search name, SKU, slug, spec..." oninput="triggerDebouncedSearch(this.value)" onkeypress="if(event.key==='Enter') triggerLiveSearch()" />
             <button class="sf-search-btn" type="button" onclick="triggerLiveSearch()">
                 <i class="fa-solid fa-magnifying-glass me-1"></i> SEARCH
             </button>
@@ -354,7 +174,7 @@
     <!-- MAIN GRID MATRIX -->
     <div class="row g-4">
         <!-- Left Sidebar Filter Matrix — hidden by default, toggled by ⊞ button -->
-        <div id="filterMatrixPanel" class="col-lg-2">
+        <div id="filterMatrixPanel" class="col-lg-3">
             <div class="p-3" style="background: var(--cyber-surface); border: 1px solid var(--cyber-cyan); position: sticky; top: 90px; box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);">
                 <div class="d-flex justify-content-between align-items-center mb-3 pb-2" style="border-bottom: 2px solid var(--cyber-cyan);">
                     <h5 style="font-family:'Orbitron'; font-weight:900; color:#FFF; margin:0; font-size:0.85rem;">
@@ -464,8 +284,8 @@
                     </h3>
                     <span style="font-family:'VT323'; font-size:1.4rem; color:var(--cyber-emerald);" id="filteredCountText">FOUND 0 ASSETS</span>
                 </div>
-                <!-- 4-column grid for filtered results -->
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4 mb-5" id="filteredProductsGrid"></div>
+                <!-- 4-column minimum grid for filtered results -->
+                <div class="row row-cols-2 row-cols-md-4 g-3 mb-5" id="filteredProductsGrid"></div>
             </div>
 
             <!-- Category Batch Sections -->
@@ -484,8 +304,8 @@
                                 [ VIEW ALL ] <i class="fa-solid fa-chevron-right ms-1"></i>
                             </button>
                         </div>
-                        <!-- 4 columns grid -->
-                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+                        <!-- 4 columns minimum grid -->
+                        <div class="row row-cols-2 row-cols-md-4 g-3">
                             @foreach (var prod in catProducts)
                             {
                                 var pImg = !string.IsNullOrEmpty(prod.ImageUrl) ? prod.ImageUrl : "/demo/products/default_cyber_product.png";
@@ -523,7 +343,7 @@
                                                     <span style="font-family:'Roboto Mono'; font-size:0.68rem; color:var(--cyber-muted);">LIST PRICE:</span>
                                                     <span style="font-family:'VT323'; font-size:1.7rem; color:var(--cyber-cyan); font-weight:bold; line-height:1;">@prod.BasePrice.ToString("N0") VND</span>
                                                 </div>
-                                                <button class="btn w-100 py-2" style="background:var(--cyber-cyan); color:#000; font-family:'Orbitron'; font-weight:900; border-radius:0; font-size:0.82rem; text-transform:uppercase;" onclick="addToStorefrontCart(@prod.ProductId, @prod.BasePrice, '@(prod.Unit?.UnitName ?? "Unit")')">
+                                                <button class="btn w-100 py-2" style="background:var(--cyber-cyan); color:#000; font-family:'Orbitron'; font-weight:900; border-radius:0; font-size:0.82rem; text-transform:uppercase;" onclick="addToStorefrontCart(@prod.ProductId, @(prod.BasePrice.ToString(System.Globalization.CultureInfo.InvariantCulture)), '@(prod.Unit?.UnitName ?? "Unit")')">
                                                     <i class="fa-solid fa-cart-plus me-2"></i> [ ADD TO STAGING CART ]
                                                 </button>
                                             </div>
@@ -552,10 +372,10 @@
             btn.classList.toggle('active', isOpen);
             if (isOpen) {
                 mainCol.classList.remove('col-12');
-                mainCol.classList.add('col-lg-10');
+                mainCol.classList.add('col-lg-9');
             } else {
                 mainCol.classList.add('col-12');
-                mainCol.classList.remove('col-lg-10');
+                mainCol.classList.remove('col-lg-9');
             }
         }
 
@@ -591,25 +411,89 @@
         });
 
         // ====================================================================
-        // FILTER & SEARCH LOGIC
+        // UNIFIED MULTI-FILTER & REAL-TIME DEBOUNCED SEARCH MATRIX
         // ====================================================================
+        const unifiedMatrixState = {
+            Query: '',
+            CategoryId: null,
+            ManufacturerId: null,
+            ProductTypeId: null,
+            ItemNatureId: null,
+            SortBy: 'name',
+            PageNumber: 1,
+            PageSize: 100
+        };
+
+        let liveSearchDebounceTimer = null;
+
+        function triggerDebouncedSearch(val) {
+            unifiedMatrixState.Query = val ? val.trim() : '';
+            clearTimeout(liveSearchDebounceTimer);
+            liveSearchDebounceTimer = setTimeout(() => {
+                evaluateAndExecuteMatrix();
+            }, 300);
+        }
+
         function filterByDropdown(type, id, sourceKey) {
             if (sourceKey) {
                 document.getElementById('ddPanel-' + sourceKey)?.classList.remove('open');
                 const srcBtn = document.getElementById('btn' + sourceKey.charAt(0).toUpperCase() + sourceKey.slice(1));
                 if (srcBtn) srcBtn.classList.remove('active');
             }
-            if (type === 'all' || id === 0) { resetAllFilters(); return; }
-            const payload = { PageNumber: 1, PageSize: 100, SortBy: 'name' };
-            if (type === 'cat') payload.CategoryId = id;
-            if (type === 'mfr') payload.ManufacturerId = id;
-            if (type === 'type') payload.ProductTypeId = id;
-            if (type === 'nature') payload.ItemNatureId = id;
-            executeSearchApi(payload, `FILTER ${type.toUpperCase()} #${id}`);
+            if (type === 'all' || id === 0) {
+                if (type === 'all' && !sourceKey) {
+                    resetAllFilters();
+                    return;
+                }
+                if (sourceKey === 'cat' || type === 'cat') unifiedMatrixState.CategoryId = null;
+                if (sourceKey === 'mfr' || type === 'mfr') unifiedMatrixState.ManufacturerId = null;
+                if (sourceKey === 'type' || type === 'type') unifiedMatrixState.ProductTypeId = null;
+                if (sourceKey === 'nature' || type === 'nature') unifiedMatrixState.ItemNatureId = null;
+            } else {
+                if (type === 'cat' || sourceKey === 'cat') unifiedMatrixState.CategoryId = id;
+                if (type === 'mfr' || sourceKey === 'mfr') unifiedMatrixState.ManufacturerId = id;
+                if (type === 'type' || sourceKey === 'type') unifiedMatrixState.ProductTypeId = id;
+                if (type === 'nature' || sourceKey === 'nature') unifiedMatrixState.ItemNatureId = id;
+                if (sourceKey) {
+                    const srcBtn = document.getElementById('btn' + sourceKey.charAt(0).toUpperCase() + sourceKey.slice(1));
+                    if (srcBtn) srcBtn.classList.add('active');
+                }
+            }
+            evaluateAndExecuteMatrix();
+        }
+
+        function triggerLiveSearch() {
+            unifiedMatrixState.Query = document.getElementById('searchInput').value.trim();
+            evaluateAndExecuteMatrix();
+        }
+
+        function evaluateAndExecuteMatrix() {
+            const hasQuery = Boolean(unifiedMatrixState.Query && unifiedMatrixState.Query.length > 0);
+            const hasFilter = unifiedMatrixState.CategoryId || unifiedMatrixState.ManufacturerId || unifiedMatrixState.ProductTypeId || unifiedMatrixState.ItemNatureId;
+            
+            if (!hasQuery && !hasFilter) {
+                document.getElementById('filteredResultsContainer').style.display = 'none';
+                document.getElementById('categoryBatchesContainer').style.display = 'block';
+                return;
+            }
+
+            let descParts = [];
+            if (hasQuery) descParts.push(`QUERY '${unifiedMatrixState.Query}'`);
+            if (unifiedMatrixState.CategoryId) descParts.push(`CAT #${unifiedMatrixState.CategoryId}`);
+            if (unifiedMatrixState.ManufacturerId) descParts.push(`MFR #${unifiedMatrixState.ManufacturerId}`);
+            if (unifiedMatrixState.ProductTypeId) descParts.push(`TYPE #${unifiedMatrixState.ProductTypeId}`);
+            if (unifiedMatrixState.ItemNatureId) descParts.push(`NATURE #${unifiedMatrixState.ItemNatureId}`);
+
+            executeSearchApi({ ...unifiedMatrixState }, descParts.join(' + '));
         }
 
         function resetAllFilters() {
             document.getElementById('searchInput').value = '';
+            unifiedMatrixState.Query = '';
+            unifiedMatrixState.CategoryId = null;
+            unifiedMatrixState.ManufacturerId = null;
+            unifiedMatrixState.ProductTypeId = null;
+            unifiedMatrixState.ItemNatureId = null;
             document.getElementById('filteredResultsContainer').style.display = 'none';
             document.getElementById('categoryBatchesContainer').style.display = 'block';
             dropdownKeys.forEach(k => {
@@ -617,12 +501,6 @@
                 const b = document.getElementById('btn' + k.charAt(0).toUpperCase() + k.slice(1));
                 if (b) b.classList.remove('active');
             });
-        }
-
-        function triggerLiveSearch() {
-            const query = document.getElementById('searchInput').value.trim();
-            if (!query) { resetAllFilters(); return; }
-            executeSearchApi({ Query: query, PageNumber: 1, PageSize: 100, SortBy: 'name' }, `SEARCH '${query}'`);
         }
 
         function executeSearchApi(payload, titleInfo) {

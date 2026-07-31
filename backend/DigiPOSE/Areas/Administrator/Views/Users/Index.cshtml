@@ -1,4 +1,4 @@
-@model IEnumerable<DigiPOSE.Models.User>
+﻿@model IEnumerable<DigiPOSE.Models.User>
 @{ ViewData["Title"] = "User Management"; }
 <div class="cyber-panel">
     <div class="cyber-panel-header">
@@ -27,7 +27,7 @@
                     <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.UserName)</th>
                     <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.FullName)</th>
                     <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.RoleId)</th>
-                    <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.BranchId)</th>
+                    <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.TenantId)</th>
                     <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.IsActive)</th>
                     <th style="width:120px; text-align:center; white-space:nowrap;">ACTIONS</th>
                 </tr>
@@ -74,7 +74,7 @@
                     { data: 'userName', name: 'UserName', render: d => `<i class="fa-solid fa-user me-2 text-cyan"></i><span style="font-family:'Rajdhani'; font-weight:600; color:#FFF;">${d}</span>` },
                     { data: 'fullName', name: 'FullName', render: d => d ? `<span style="color:#A0C0CE;">${d}</span>` : '' },
                     { data: 'roleName', name: 'Role.RoleName', render: d => d ? `<span style="color:#A0C0CE;">${d}</span>` : '' },
-                    { data: 'branchName', name: 'Branch.BranchName', render: d => d ? `<span style="color:#A0C0CE;">${d}</span>` : '' },
+                    { data: 'tenantName', name: 'Tenant.TenantName', render: d => d ? `<span style="color:#A0C0CE;">${d}</span>` : '' },
                     { 
                         data: 'isActive', 
                         name: 'IsActive',

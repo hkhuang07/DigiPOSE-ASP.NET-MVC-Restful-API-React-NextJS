@@ -219,7 +219,7 @@ $(document).ready(function () {
                 error: function (xhr) {
                     unlockFormSubmit($form);
                     if (typeof showCyberNotify === 'function') {
-                        showCyberNotify('NETWORK FAULT', 'Communication error with server.', 'green');
+                        showCyberNotify('NETWORK FAULT', 'Communication error with server.', 'error');
                     }
                 }
             });

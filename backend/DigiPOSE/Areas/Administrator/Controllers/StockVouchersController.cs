@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DigiPOSE.Models;
@@ -9,7 +9,7 @@ using System.Linq.Dynamic.Core;
 namespace DigiPOSE.Areas.Administrator.Controllers
 {
     [Area("Administrator")]
-    [Authorize(Roles = "Super Admin, Administrator, Branch Manager, POS Operator, Warehouse, Catalog, Accountant")]
+    [Authorize(Roles = "Super Admin, Administrator, Tenant Manager, POS Operator, Warehouse, Catalog, Accountant")]
     public class StockVouchersController : Controller
     {
         private readonly DigiPoseDbContext _context;
@@ -41,7 +41,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 int skip = start != null ? Convert.ToInt32(start) : 0;
 
                 var query = _context.StockVouchers
-                    .Include(v => v.Branch).Include(v => v.User).Include(v => v.Supplier)
+                    .Include(v => v.Tenant).Include(v => v.User).Include(v => v.Supplier)
                     .AsQueryable();
 
                 int totalRecords = query.Count();
@@ -51,7 +51,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 {
                     query = query.Where(m =>
                         (m.VoucherType != null && m.VoucherType.Contains(searchValue)) ||
-                        (m.Branch != null && m.Branch.BranchName != null && m.Branch.BranchName.Contains(searchValue)) ||
+                        (m.Tenant != null && m.Tenant.TenantName != null && m.Tenant.TenantName.Contains(searchValue)) ||
                         (m.User != null && m.User.UserName != null && m.User.UserName.Contains(searchValue)) ||
                         (m.Supplier != null && m.Supplier.SupplierName != null && m.Supplier.SupplierName.Contains(searchValue)));
                 }
@@ -72,7 +72,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 var dataList = query.Skip(skip).Take(pageSize).Select(m => new {
                     VoucherId = m.VoucherId,
                     VoucherType = m.VoucherType,
-                    BranchName = m.Branch != null ? m.Branch.BranchName : "",
+                    TenantName = m.Tenant != null ? m.Tenant.TenantName : "",
                     UserName = m.User != null ? m.User.UserName : "",
                     SupplierName = m.Supplier != null ? m.Supplier.SupplierName : "---",
                     TotalValue = m.TotalValue,
@@ -91,7 +91,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         public async Task<IActionResult> ExportExcel(string? searchValue)
         {
             var query = _context.StockVouchers
-                .Include(v => v.Branch)
+                .Include(v => v.Tenant)
                 .Include(v => v.User)
                 .Include(v => v.Supplier)
                 .AsQueryable();
@@ -99,13 +99,13 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             {
                 query = query.Where(m =>
                     (m.VoucherType != null && m.VoucherType.Contains(searchValue)) ||
-                    (m.Branch != null && m.Branch.BranchName != null && m.Branch.BranchName.Contains(searchValue)) ||
+                    (m.Tenant != null && m.Tenant.TenantName != null && m.Tenant.TenantName.Contains(searchValue)) ||
                     (m.Supplier != null && m.Supplier.SupplierName != null && m.Supplier.SupplierName.Contains(searchValue)));
             }
             var list = await query.Select(m => new {
                 m.VoucherId,
                 m.VoucherType,
-                BranchName = m.Branch != null ? m.Branch.BranchName : "",
+                TenantName = m.Tenant != null ? m.Tenant.TenantName : "",
                 UserName = m.User != null ? m.User.UserName : "",
                 SupplierName = m.Supplier != null ? m.Supplier.SupplierName : "---",
                 m.TotalValue,
@@ -119,7 +119,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
-            var item = await _context.StockVouchers.Include(v => v.Branch).Include(v => v.User).Include(v => v.Supplier)
+            var item = await _context.StockVouchers.Include(v => v.Tenant).Include(v => v.User).Include(v => v.Supplier)
                 .FirstOrDefaultAsync(m => m.VoucherId == id);
             if (item == null) return NotFound();
             return PartialView("_DetailsPartial", item);
@@ -141,7 +141,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 await _context.SaveChangesAsync(); 
                 return Json(new { success = true, message = "Stock voucher created in Draft status." }); 
             }
-            LoadViewBags(model.BranchId, model.UserId, model.SupplierId);
+            LoadViewBags(model.TenantId, model.UserId, model.SupplierId);
             return PartialView("_CreateOrEditPartial", model);
         }
 
@@ -154,7 +154,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             {
                 return BadRequest(">>> [IMMUTABLE_AUDIT_ERROR]: Posted inventory vouchers cannot be edited.");
             }
-            LoadViewBags(item.BranchId, item.UserId, item.SupplierId);
+            LoadViewBags(item.TenantId, item.UserId, item.SupplierId);
             return PartialView("_CreateOrEditPartial", item);
         }
 
@@ -172,7 +172,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 try { _context.Update(model); await _context.SaveChangesAsync(); return Json(new { success = true, message = "Stock voucher updated." }); }
                 catch (DbUpdateConcurrencyException) { }
             }
-            LoadViewBags(model.BranchId, model.UserId, model.SupplierId);
+            LoadViewBags(model.TenantId, model.UserId, model.SupplierId);
             return PartialView("_CreateOrEditPartial", model);
         }
 
@@ -189,7 +189,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
-            var item = await _context.StockVouchers.Include(v => v.Branch).Include(v => v.User).Include(v => v.Supplier)
+            var item = await _context.StockVouchers.Include(v => v.Tenant).Include(v => v.User).Include(v => v.Supplier)
                 .FirstOrDefaultAsync(m => m.VoucherId == id);
             if (item == null) return NotFound();
             return PartialView("_DeletePartial", item);
@@ -211,9 +211,9 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             return Json(new { success = true, message = "Stock voucher deleted." });
         }
 
-        private void LoadViewBags(int? branchId = null, int? userId = null, int? supplierId = null)
+        private void LoadViewBags(int? tenantId = null, int? userId = null, int? supplierId = null)
         {
-            ViewBag.BranchId = new SelectList(_context.Branches.Where(b => b.IsActive), "BranchId", "BranchName", branchId);
+            ViewBag.TenantId = new SelectList(_context.Tenants.Where(b => b.IsActive), "TenantId", "TenantName", tenantId);
             ViewBag.UserId = new SelectList(_context.Users.Where(u => u.IsActive), "UserId", "UserName", userId);
             ViewBag.SupplierId = new SelectList(_context.Suppliers.Where(s => s.IsActive), "SupplierId", "SupplierName", supplierId);
         }

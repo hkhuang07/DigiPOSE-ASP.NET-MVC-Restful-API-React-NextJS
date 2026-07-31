@@ -23,30 +23,44 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // 2. Theme Toggle Handling (Cyber Void vs Cyber Holographic - Icon Only)
+    // 2. Universal Theme Toggle Handling (Cyber Void vs Cyber Holographic)
     const themeToggleBtn = document.getElementById("themeToggleBtn");
-    const savedTheme = localStorage.getItem("digipose_global_theme") || localStorage.getItem("digipose_theme");
+    const savedTheme = localStorage.getItem("digipose_global_theme") || localStorage.getItem("digipose_theme") || localStorage.getItem("digipose_store_theme") || "dark";
 
-    if (savedTheme === "light") {
-        document.body.classList.add("light-theme");
+    function applyUniversalTheme(theme) {
+        const isLight = theme === "light";
+        if (isLight) {
+            document.body.classList.add("light-theme");
+            document.documentElement.setAttribute("data-theme", "light");
+        } else {
+            document.body.classList.remove("light-theme");
+            document.documentElement.setAttribute("data-theme", "dark");
+        }
+        localStorage.setItem("digipose_global_theme", theme);
+        localStorage.setItem("digipose_theme", theme);
+        localStorage.setItem("digipose_store_theme", theme);
         if (themeToggleBtn) {
-            themeToggleBtn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+            themeToggleBtn.innerHTML = isLight ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
+        }
+        const storeThemeIcon = document.getElementById("themeIcon");
+        if (storeThemeIcon && !themeToggleBtn?.contains(storeThemeIcon)) {
+            storeThemeIcon.className = isLight ? "fa-solid fa-moon" : "fa-solid fa-sun";
         }
     }
+    applyUniversalTheme(savedTheme);
 
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener("click", function () {
-            document.body.classList.toggle("light-theme");
-            const isLight = document.body.classList.contains("light-theme");
-            localStorage.setItem("digipose_global_theme", isLight ? "light" : "dark");
-            themeToggleBtn.innerHTML = isLight ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
+            const current = document.body.classList.contains("light-theme") ? "light" : "dark";
+            const nextTheme = current === "light" ? "dark" : "light";
+            applyUniversalTheme(nextTheme);
         });
     }
 
-    // 3. Language Selector Toggle (Icon + Text Label)
+    // 3. Universal Language Selector Toggle
     const langToggleBtn = document.getElementById("langToggleBtn");
     const langText = document.getElementById("langText");
-    let currentLang = localStorage.getItem("digipose_lang") || "EN";
+    let currentLang = localStorage.getItem("digipose_global_lang") || localStorage.getItem("digipose_lang") || localStorage.getItem("digipose_store_lang") || "EN";
 
     function applyLangState(lang) {
         if (langText) {
@@ -55,13 +69,17 @@ document.addEventListener("DOMContentLoaded", function () {
         if (langToggleBtn) {
             langToggleBtn.title = `Switch Language (Current: ${lang === "VI" ? "Tiếng Việt" : "English"})`;
         }
+        localStorage.setItem("digipose_global_lang", lang);
+        localStorage.setItem("digipose_lang", lang);
+        localStorage.setItem("digipose_store_lang", lang);
+        const storeLangSpan = document.getElementById("langShortCode");
+        if (storeLangSpan) storeLangSpan.textContent = lang;
     }
     applyLangState(currentLang);
 
     if (langToggleBtn) {
         langToggleBtn.addEventListener("click", function () {
             currentLang = currentLang === "EN" ? "VI" : "EN";
-            localStorage.setItem("digipose_lang", currentLang);
             applyLangState(currentLang);
         });
     }

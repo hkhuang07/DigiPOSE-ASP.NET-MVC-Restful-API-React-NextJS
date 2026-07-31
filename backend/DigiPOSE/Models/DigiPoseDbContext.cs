@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace DigiPOSE.Models
 {
@@ -6,18 +6,20 @@ namespace DigiPOSE.Models
     {
         public DigiPoseDbContext(DbContextOptions<DigiPoseDbContext> options) : base(options) { }
 
-        public DbSet<Branch> Branches { get; set; }
+        public DbSet<Tenant> Tenants { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<SystemModule> SystemModules { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<PermissionRole> PermissionRoles { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<UserTenant> UserTenants { get; set; }
         public DbSet<Counter> Counters { get; set; }
         public DbSet<Shift> Shifts { get; set; }
         public DbSet<ShiftStatus> ShiftStatuses { get; set; }
 
         public DbSet<CustomeType> CustomerTypes { get; set; }
         public DbSet<Customer> Customers { get; set; }
+        public DbSet<CustomerAddress> CustomerAddresses { get; set; }
         public DbSet<Supplier> Suppliers { get; set; }
 
         public DbSet<Category> Categories { get; set; }
@@ -47,7 +49,7 @@ namespace DigiPOSE.Models
         public DbSet<StorefrontCartItem> StorefrontCartItems { get; set; }
         public DbSet<Retail> Retails { get; set; } // >>> [ENTERPRISE_POS_ACCOUNTING]: Immutable retail trade documents & B2B vouchers
 
-        // >>> [ENTERPRISE_WAREHOUSE_DDD]: Dedicated entities for inter-branch inventory transfers and physical shelf audit reconciliation
+        // >>> [ENTERPRISE_WAREHOUSE_DDD]: Dedicated entities for inter-tenant inventory transfers and physical shelf audit reconciliation
         public DbSet<StockTransfer> StockTransfers { get; set; }
         public DbSet<StockTransferDetail> StockTransferDetails { get; set; }
         public DbSet<StockAudit> StockAudits { get; set; }
@@ -61,7 +63,7 @@ namespace DigiPOSE.Models
             // 0. EXPLICIT TABLE MAPPING (ARCHITECTURE STANDARDS)
             // Đảm bảo chính xác 29 Bảng trong Model hiện tại, không phụ thuộc Convention
             // ====================================================================
-            modelBuilder.Entity<Branch>().ToTable("Branches");
+            modelBuilder.Entity<Tenant>().ToTable("Tenants");
             modelBuilder.Entity<Role>().ToTable("Roles");
             modelBuilder.Entity<SystemModule>().ToTable("SystemModules");
             modelBuilder.Entity<Permission>().ToTable("Permissions");
@@ -74,6 +76,8 @@ namespace DigiPOSE.Models
             
             modelBuilder.Entity<CustomeType>().ToTable("CustomerTypes");
             modelBuilder.Entity<Customer>().ToTable("Customers");
+            modelBuilder.Entity<CustomerAddress>().ToTable("CustomerAddresses")
+                .HasIndex(ca => new { ca.CustomerId, ca.IsDefault }).HasDatabaseName("IX_CustomerAddresses_Customer_Default");
             modelBuilder.Entity<Supplier>().ToTable("Suppliers");
             
             modelBuilder.Entity<Category>().ToTable("Categories");
@@ -110,11 +114,11 @@ namespace DigiPOSE.Models
             modelBuilder.Entity<Order>().HasIndex(o => o.IdempotencyKey).IsUnique().HasDatabaseName("IX_Orders_IdempotencyKey");
             modelBuilder.Entity<Retail>().HasIndex(r => r.IdempotencyKey).IsUnique().HasDatabaseName("IX_Retails_IdempotencyKey");
             modelBuilder.Entity<Retail>().HasIndex(r => r.DocNo).IsUnique().HasDatabaseName("IX_Retails_DocNo");
-            modelBuilder.Entity<Retail>().HasIndex(r => new { r.BranchId, r.EndDate }).HasDatabaseName("IX_Retails_Branch_Date");
+            modelBuilder.Entity<Retail>().HasIndex(r => new { r.TenantId, r.EndDate }).HasDatabaseName("IX_Retails_Tenant_Date");
 
             // >>> [APPEND_ONLY_OPTIMIZATION]: Indexed purely for read aggregate speed, zero lock contention
             modelBuilder.Entity<InventoryTransaction>().HasIndex(e => new { e.ProductId, e.CreatedAt }).HasDatabaseName("IX_InventoryTx_Product_Date");
-            modelBuilder.Entity<InventoryTransaction>().HasIndex(e => new { e.BranchId, e.ProductId, e.CreatedAt }).HasDatabaseName("IX_InventoryTx_Branch_Product_Date");
+            modelBuilder.Entity<InventoryTransaction>().HasIndex(e => new { e.TenantId, e.ProductId, e.CreatedAt }).HasDatabaseName("IX_InventoryTx_Tenant_Product_Date");
             modelBuilder.Entity<StockVoucher>().HasIndex(v => v.VoucherCode).HasDatabaseName("IX_StockVouchers_Code");
             modelBuilder.Entity<StockTransfer>().HasIndex(t => t.TransferCode).IsUnique().HasDatabaseName("IX_StockTransfers_Code");
             modelBuilder.Entity<StockAudit>().HasIndex(a => a.AuditCode).IsUnique().HasDatabaseName("IX_StockAudits_Code");
@@ -135,12 +139,12 @@ namespace DigiPOSE.Models
             // 3. TỐI ƯU HIỆU NĂNG - INDEXING STRATEGY (SHARDING & LOW LATENCY)
             // Bảng Orders: Tránh Last Page Latch Contention khi có hàng ngàn Insert/giây
             modelBuilder.Entity<Order>().HasKey(o => o.OrderId).IsClustered(false);
-            modelBuilder.Entity<Order>().HasIndex(o => new { o.BranchId, o.CreatedAt }).IsClustered(true);
+            modelBuilder.Entity<Order>().HasIndex(o => new { o.TenantId, o.CreatedAt }).IsClustered(true);
             modelBuilder.Entity<Order>().HasIndex(o => o.ShiftId);
 
             // Bảng ProductInventory: Unique Index phức hợp (1 SP/1 Chi nhánh)
             modelBuilder.Entity<ProductInventory>()
-                .HasIndex(pi => new { pi.BranchId, pi.ProductId })
+                .HasIndex(pi => new { pi.TenantId, pi.ProductId })
                 .IsUnique();
 
             // Unique Indexes (Catalog Names & Codes)
@@ -163,7 +167,7 @@ namespace DigiPOSE.Models
             modelBuilder.Entity<InvoiceStatus>().HasIndex(i => i.StatusName).IsUnique();
             modelBuilder.Entity<CustomeType>().HasIndex(c => c.TypeName).IsUnique();
             modelBuilder.Entity<Counter>().HasIndex(c => c.CounterName).IsUnique();
-            modelBuilder.Entity<Branch>().HasIndex(b => b.BranchName).IsUnique();
+            modelBuilder.Entity<Tenant>().HasIndex(b => b.TenantName).IsUnique();
             
             // Tìm kiếm nhanh
             modelBuilder.Entity<Customer>().HasIndex(c => c.PhoneNumber);

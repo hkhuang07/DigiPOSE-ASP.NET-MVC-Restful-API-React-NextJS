@@ -1,0 +1,61 @@
+﻿@model DigiPOSE.Models.StockAudit
+<div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-clipboard-check text-cyan me-2"></i> @(Model.AuditId == 0 ? "INITIATE NEW" : "EDIT") STOCK AUDIT</h5>
+        <button type="button" class="btn-close-cyber" data-bs-dismiss="modal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form class="ajax-modal-form" asp-action="@(Model.AuditId == 0 ? "Create" : "Edit")" asp-controller="StockAudits" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="AuditId" />
+        <input type="hidden" asp-for="CreatedAt" />
+        <div class="modal-body">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3" style="font-family:'Roboto Mono'; font-size:0.85rem;"></div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="AuditCode" class="form-cyber-label"></label>
+                    <input asp-for="AuditCode" class="form-control form-cyber-control" readonly style="background:rgba(0,229,255,0.05);" />
+                    <span asp-validation-for="AuditCode" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="AuditDate" class="form-cyber-label"></label>
+                    <input asp-for="AuditDate" type="date" class="form-control form-cyber-control" />
+                    <span asp-validation-for="AuditDate" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="TenantId" class="form-cyber-label">TENANT</label>
+                    <select asp-for="TenantId" class="form-select form-cyber-control" asp-items="ViewBag.Tenants">
+                        <option value="">-- Select Target Tenant --</option>
+                    </select>
+                    <span asp-validation-for="TenantId" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="AuditorUserId" class="form-cyber-label">AUDITOR</label>
+                    <select asp-for="AuditorUserId" class="form-select form-cyber-control" asp-items="ViewBag.Users">
+                        <option value="">-- Select Assigned Auditor --</option>
+                    </select>
+                    <span asp-validation-for="AuditorUserId" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Status" class="form-cyber-label"></label>
+                <select asp-for="Status" class="form-select form-cyber-control" asp-items="Html.GetEnumSelectList<DigiPOSE.Models.StockAuditStatus>()"></select>
+                <span asp-validation-for="Status" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Notes" class="form-cyber-label"></label>
+                <textarea asp-for="Notes" rows="3" class="form-control form-cyber-control" placeholder="Enter shelf reconciliation notes and variances..."></textarea>
+                <span asp-validation-for="Notes" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-cyber-cancel" data-bs-dismiss="modal" style="border-top: 1px solid aliceblue !important; border-bottom: 1px solid aliceblue !important; border-left: none !important; border-right: none !important; color: aliceblue !important; background: #222222 !important;"><i class="fa-solid fa-xmark me-1"></i> CANCEL</button>
+            <button type="submit" class="btn-cyber-success"><i class="fa-solid fa-floppy-disk me-1"></i> SAVE AUDIT LOG</button>
+        </div>
+    </form>
+</div>

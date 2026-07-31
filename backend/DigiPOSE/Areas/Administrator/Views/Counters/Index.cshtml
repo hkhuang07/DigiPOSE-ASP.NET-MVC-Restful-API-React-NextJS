@@ -1,4 +1,4 @@
-@model IEnumerable<DigiPOSE.Models.Counter>
+﻿@model IEnumerable<DigiPOSE.Models.Counter>
 @{ ViewData["Title"] = "Counters"; }
 
 @Html.AntiForgeryToken()
@@ -27,7 +27,7 @@
                 <tr>
                     <th style="width:5%; text-align:center; white-space:nowrap;">#</th>
                     <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.CounterName)</th>
-                    <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.Branch)</th>
+                    <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.Tenant)</th>
                     <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.IsActive)</th>
                     <th style="width:120px; text-align:center; white-space:nowrap;">ACTIONS</th>
                 </tr>
@@ -56,7 +56,7 @@
                 columns: [
                     { data: null, name: null, sortable: false, render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
                     { data: 'counterName', name: 'CounterName', render: d => `<span style="font-family:'Rajdhani'; font-weight:600; color:#FFF; white-space:nowrap;"><i class="fa-solid fa-desktop me-2 text-cyan"></i>${d}</span>` },
-                    { data: 'branchName', name: 'BranchName', render: d => `<span style="color:#A0C0CE; font-family:'Roboto Mono'; font-size:0.85rem;">${d || ""}</span>` },
+                    { data: 'tenantName', name: 'TenantName', render: d => `<span style="color:#A0C0CE; font-family:'Roboto Mono'; font-size:0.85rem;">${d || ""}</span>` },
                     { 
                         data: 'isActive', 
                         name: 'IsActive',

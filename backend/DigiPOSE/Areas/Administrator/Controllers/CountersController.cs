@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DigiPOSE.Models;
 using System.Linq.Dynamic.Core;
@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 namespace DigiPOSE.Areas.Administrator.Controllers
 {
     [Area("Administrator")]
-    [Authorize(Roles = "Super Admin, Administrator, Branch Manager, POS Operator, Warehouse, Catalog, Accountant")]
+    [Authorize(Roles = "Super Admin, Administrator, Tenant Manager, POS Operator, Warehouse, Catalog, Accountant")]
     public class CountersController : Controller
     {
         private readonly DigiPoseDbContext _context;
@@ -15,7 +15,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
 
         public async Task<IActionResult> Index()
         {
-            ViewData["BranchId"] = new SelectList(_context.Branches, "BranchId", "BranchName");
+            ViewData["TenantId"] = new SelectList(_context.Tenants, "TenantId", "TenantName");
             return View();
         }
 
@@ -33,7 +33,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 int pageSize = length != null ? Convert.ToInt32(length) : 0;
                 int skip = start != null ? Convert.ToInt32(start) : 0;
 
-                var query = _context.Counters.Include(c => c.Branch).AsQueryable();
+                var query = _context.Counters.Include(c => c.Tenant).AsQueryable();
 
                 int totalRecords = query.Count();
 
@@ -42,7 +42,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 {
                     query = query.Where(m =>
                         (m.CounterName != null && m.CounterName.Contains(searchValue)) ||
-                        (m.Branch != null && m.Branch.BranchName != null && m.Branch.BranchName.Contains(searchValue)));
+                        (m.Tenant != null && m.Tenant.TenantName != null && m.Tenant.TenantName.Contains(searchValue)));
                 }
 
                 int filterRecords = query.Count();
@@ -57,7 +57,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 var dataList = query.Skip(skip).Take(pageSize).Select(m => new {
                     CounterId = m.CounterId,
                     CounterName = m.CounterName,
-                    BranchName = m.Branch != null ? m.Branch.BranchName : "",
+                    TenantName = m.Tenant != null ? m.Tenant.TenantName : "",
                     IsActive = m.IsActive
                 }).ToList();
 
@@ -72,17 +72,17 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         [HttpGet]
         public async Task<IActionResult> ExportExcel(string? searchValue)
         {
-            var query = _context.Counters.Include(c => c.Branch).AsQueryable();
+            var query = _context.Counters.Include(c => c.Tenant).AsQueryable();
             if (!string.IsNullOrEmpty(searchValue))
             {
                 query = query.Where(m =>
                     (m.CounterName != null && m.CounterName.Contains(searchValue)) ||
-                    (m.Branch != null && m.Branch.BranchName != null && m.Branch.BranchName.Contains(searchValue)));
+                    (m.Tenant != null && m.Tenant.TenantName != null && m.Tenant.TenantName.Contains(searchValue)));
             }
             var list = await query.Select(m => new {
                 m.CounterId,
                 m.CounterName,
-                BranchName = m.Branch != null ? m.Branch.BranchName : "",
+                TenantName = m.Tenant != null ? m.Tenant.TenantName : "",
                 IsActive = m.IsActive
             }).ToListAsync();
 
@@ -93,14 +93,14 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
-            var item = await _context.Counters.Include(c => c.Branch).FirstOrDefaultAsync(m => m.CounterId == id);
+            var item = await _context.Counters.Include(c => c.Tenant).FirstOrDefaultAsync(m => m.CounterId == id);
             if (item == null) return NotFound();
             return PartialView("_DetailsPartial", item);
         }
 
         public IActionResult Create()
         {
-            ViewBag.BranchId = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_context.Branches.Where(b => b.IsActive), "BranchId", "BranchName");
+            ViewBag.TenantId = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_context.Tenants.Where(b => b.IsActive), "TenantId", "TenantName");
             return PartialView("_CreateOrEditPartial", new Counter());
         }
 
@@ -109,7 +109,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         {
             if (!ModelState.IsValid)
             {
-                ViewBag.BranchId = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_context.Branches.Where(b => b.IsActive), "BranchId", "BranchName", model.BranchId);
+                ViewBag.TenantId = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_context.Tenants.Where(b => b.IsActive), "TenantId", "TenantName", model.TenantId);
                 return PartialView("_CreateOrEditPartial", model);
             }
             _context.Add(model);
@@ -122,7 +122,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             if (id == null) return NotFound();
             var item = await _context.Counters.FindAsync(id);
             if (item == null) return NotFound();
-            ViewBag.BranchId = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_context.Branches.Where(b => b.IsActive), "BranchId", "BranchName", item.BranchId);
+            ViewBag.TenantId = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_context.Tenants.Where(b => b.IsActive), "TenantId", "TenantName", item.TenantId);
             return PartialView("_CreateOrEditPartial", item);
         }
 
@@ -132,7 +132,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             if (id != model.CounterId) return Json(new { success = false, message = "ID mismatch." });
             if (!ModelState.IsValid)
             {
-                ViewBag.BranchId = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_context.Branches.Where(b => b.IsActive), "BranchId", "BranchName", model.BranchId);
+                ViewBag.TenantId = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_context.Tenants.Where(b => b.IsActive), "TenantId", "TenantName", model.TenantId);
                 return PartialView("_CreateOrEditPartial", model);
             }
             try { _context.Update(model); await _context.SaveChangesAsync(); }
@@ -143,7 +143,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
-            var item = await _context.Counters.Include(c => c.Branch).FirstOrDefaultAsync(m => m.CounterId == id);
+            var item = await _context.Counters.Include(c => c.Tenant).FirstOrDefaultAsync(m => m.CounterId == id);
             if (item == null) return NotFound();
             return PartialView("_DeletePartial", item);
         }

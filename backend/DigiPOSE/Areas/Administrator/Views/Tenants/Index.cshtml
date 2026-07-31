@@ -1,6 +1,6 @@
-@model IEnumerable<DigiPOSE.Models.Branch>
+﻿@model IEnumerable<DigiPOSE.Models.Tenant>
 @{
-    ViewData["Title"] = "Branch Management";
+    ViewData["Title"] = "Tenant Management";
 }
 
 @Html.AntiForgeryToken()
@@ -8,34 +8,34 @@
 <div class="cyber-panel">
     <div class="cyber-panel-header">
         <div class="cyber-panel-title">
-            <i class="fa-solid fa-building"></i> BRANCH MANAGEMENT
+            <i class="fa-solid fa-building"></i> TENANT MANAGEMENT
         </div>
-        <div class="cyber-panel-sub">[ORGANIZATION MODULE] // BRANCH REGISTRY</div>
+        <div class="cyber-panel-sub">[ORGANIZATION MODULE] // TENANT REGISTRY</div>
     </div>
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="d-flex align-items-center gap-2">
-            <button type="button" class="btn-cyber-success btn-show-modal" data-url="@Url.Action("Create", "Branches")">
-                <i class="fa-solid fa-plus me-1"></i> ADD NEW BRANCH
+    <div class="cyber-panel-toolbar">
+        <div class="cyber-panel-actions">
+            <button type="button" class="btn-cyber-success btn-show-modal" data-url="@Url.Action("Create", "Tenants")">
+                <i class="fa-solid fa-plus me-1"></i> ADD NEW TENANT
             </button>
-            <a href="@Url.Action("ExportExcel", "Branches")" class="btn-cyber-info btn-export-excel" style="text-decoration:none;">
+            <a href="@Url.Action("ExportExcel", "Tenants")" class="btn-cyber-info btn-export-excel btn-export-link">
                 <i class="fa-solid fa-file-excel me-1"></i> EXPORT EXCEL
             </a>
         </div>
-        <div style="font-family:'Roboto Mono'; font-size: 0.85rem; color: #00E5FF; white-space: nowrap;">
-            TOTAL RECORDS: <strong id="totalRecordsCount" style="color:#FFF; font-family:'VT323'; font-size:1.3rem;">--</strong>
+        <div class="cyber-records-counter">
+            TOTAL RECORDS: <strong id="totalRecordsCount" class="font-data-large">--</strong>
         </div>
     </div>
     <div class="table-responsive">
         <table id="datatable" class="table-cyber w-100">
             <thead>
                 <tr>
-                    <th style="width:5%; text-align:center; white-space:nowrap;">#</th>
-                    <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.BranchName)</th>
+                    <th class="th-num">#</th>
+                    <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.TenantName)</th>
                     <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.Slug)</th>
                     <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.Address)</th>
                     <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.ContactPhone)</th>
                     <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.IsActive)</th>
-                    <th style="width:120px; text-align:center; white-space:nowrap;">ACTIONS</th>
+                    <th class="th-actions">ACTIONS</th>
                 </tr>
             </thead>
         </table>
@@ -43,7 +43,7 @@
 </div>
 
 <div class="modal fade modal-cyber" id="globalModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 620px;" id="globalModalContainer"></div>
+    <div class="modal-dialog modal-dialog-centered modal-dialog-md" id="globalModalContainer"></div>
 </div>
 
 @section Scripts {
@@ -57,24 +57,24 @@
                 processing: true,
                 filter: true,
                 ajax: {
-                    url: '@Url.Action("Index_LoadData", "Branches")',
+                    url: '@Url.Action("Index_LoadData", "Tenants")',
                     type: "POST",
                     dataType: "JSON"
                 },
                 columns: [
                     { data: null, name: null, sortable: false, render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
-                    { data: 'branchName', name: 'BranchName', render: d => `<span style="font-family:'Rajdhani'; font-weight:600; color:#FFF;">${d}</span>` },
+                    { data: 'tenantName', name: 'TenantName', render: d => `<span class="font-header-title">${d}</span>` },
                     { data: 'slug', name: 'Slug', render: d => d ? d : 'N/A' },
-                    { data: 'address', name: 'Address', render: d => d ? `<div style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${d}">${d}</div>` : '' },
+                    { data: 'address', name: 'Address', render: d => d ? `<div class="text-ellipsis-box" title="${d}">${d}</div>` : '' },
                     { data: 'contactPhone', name: 'ContactPhone' },
                     { 
                         data: 'isActive', 
                         name: 'IsActive',
                         render: (d, t, r) => {
                             var antiForgery = $('input[name="__RequestVerificationToken"]').val() || '';
-                            return `<form class="toggle-active-form" action="/Administrator/Branches/ToggleActive/${r.branchId || r.BranchId}" method="post" style="display:inline;">
+                            return `<form class="toggle-active-form" action="/Administrator/Tenants/ToggleActive/${r.tenantId || r.TenantId}" method="post" style="display:inline;">
                                         <input name="__RequestVerificationToken" type="hidden" value="${antiForgery}" />
-                                        <button type="submit" class="badge ${d ? "bg-success" : "bg-secondary"} border-0" style="cursor:pointer; font-size:0.75rem; padding:4px 8px;" title="Click to toggle status">
+                                        <button type="submit" class="badge ${d ? "bg-success" : "bg-secondary"} badge-status-toggle" title="Click to toggle status">
                                             ${d ? "ACTIVE" : "INACTIVE"}
                                         </button>
                                     </form>`;
@@ -85,12 +85,12 @@
                         searchable: false, 
                         orderable: false, 
                         render: function (d, t, r) { 
-                            var detailsUrl = '@Url.Action("Details", "Branches")/' + r.branchId;
-                            var editUrl = '@Url.Action("Edit", "Branches")/' + r.branchId;
-                            var deleteUrl = '@Url.Action("Delete", "Branches")/' + r.branchId;
-                            return '<button type="button" class="btn-cyber-info btn-show-modal" data-url="' + detailsUrl + '" style="padding:4px 8px; font-size:0.75rem; border-color:#00E5FF; color:#00E5FF;"><i class="fa-solid fa-circle-info"></i></button> '
-                                 + '<button type="button" class="btn-cyber-primary btn-show-modal" data-url="' + editUrl + '" style="padding:4px 8px; font-size:0.75rem; border-color:#FFB000; color:#FFB000;"><i class="fa-solid fa-pen-to-square"></i></button> ' 
-                                 + '<button type="button" class="btn-cyber-danger btn-show-modal" data-url="' + deleteUrl + '" style="padding:4px 8px; font-size:0.75rem;"><i class="fa-solid fa-trash"></i></button>'; 
+                            var detailsUrl = '@Url.Action("Details", "Tenants")/' + r.tenantId;
+                            var editUrl = '@Url.Action("Edit", "Tenants")/' + r.tenantId;
+                            var deleteUrl = '@Url.Action("Delete", "Tenants")/' + r.tenantId;
+                            return `<button type="button" class="btn-cyber-info btn-show-modal btn-action-dt btn-action-info" data-url="${detailsUrl}"><i class="fa-solid fa-circle-info"></i></button> `
+                                 + `<button type="button" class="btn-cyber-primary btn-show-modal btn-action-dt btn-action-edit" data-url="${editUrl}"><i class="fa-solid fa-pen-to-square"></i></button> `
+                                 + `<button type="button" class="btn-cyber-danger btn-show-modal btn-action-dt btn-action-delete" data-url="${deleteUrl}"><i class="fa-solid fa-trash"></i></button>`; 
                         } 
                     }                        
                 ],

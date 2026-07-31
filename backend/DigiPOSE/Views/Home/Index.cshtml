@@ -1,156 +1,12 @@
-@{
+﻿@{
     Layout = "~/Views/Shared/_StorefrontLayout.cshtml";
     ViewData["Title"] = "Enterprise POS & Telemetry Ecosystem";
 }
 
-@section Styles {
-    <style>
-        .hero-section {
-            min-height: 85vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 80px 20px;
-            background: radial-gradient(circle at center, rgba(0, 229, 255, 0.12) 0%, var(--cyber-bg) 70%);
-            position: relative;
-            border-bottom: 2px solid var(--cyber-cyan);
-        }
-        .hero-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 5rem;
-            font-weight: 900;
-            color: var(--cyber-text);
-            text-shadow: 0 0 25px rgba(0, 229, 255, 0.6);
-            margin-bottom: 20px;
-            letter-spacing: 5px;
-        }
-        .hero-subtitle {
-            font-family: 'VT323', monospace;
-            font-size: 2.2rem;
-            color: var(--cyber-emerald);
-            margin-bottom: 45px;
-            letter-spacing: 2px;
-        }
-        .reticle {
-            position: absolute;
-            color: var(--cyber-amber);
-            font-weight: bold;
-            font-size: 1.5rem;
-            font-family: 'Roboto Mono';
-        }
-        .reticle-tl { top: 20px; left: 20px; }
-        .reticle-tr { top: 20px; right: 20px; }
-        .reticle-bl { bottom: 20px; left: 20px; }
-        .reticle-br { bottom: 20px; right: 20px; }
-
-        .section-header {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 3.2rem;
-            font-weight: 700;
-            color: var(--cyber-cyan);
-            text-align: center;
-            text-transform: uppercase;
-            margin: 80px 0 50px 0;
-            letter-spacing: 4px;
-            text-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
-        }
-        
-        .feature-card {
-            background: var(--cyber-surface);
-            border: 1px solid var(--cyber-border);
-            padding: 35px 30px;
-            height: 100%;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
-            border-radius: 0;
-            box-shadow: 0 0 15px rgba(0, 229, 255, 0.05);
-        }
-        .feature-card:hover {
-            border-color: var(--cyber-emerald);
-            box-shadow: 0 0 25px rgba(0, 255, 102, 0.25);
-            transform: translateY(-5px);
-        }
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 25px;
-            display: inline-block;
-        }
-        .feature-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.35rem;
-            color: var(--cyber-text);
-            font-weight: 700;
-            margin-bottom: 15px;
-            letter-spacing: 1px;
-        }
-        .feature-desc {
-            font-size: 0.95rem;
-            color: var(--cyber-muted);
-            line-height: 1.7;
-        }
-        
-        .cta-btn-primary {
-            background: var(--cyber-emerald);
-            color: #000000;
-            border: 1px solid var(--cyber-emerald);
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 900;
-            font-size: 1.15rem;
-            padding: 16px 40px;
-            text-transform: uppercase;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s;
-            box-shadow: 0 0 20px rgba(0, 255, 102, 0.4);
-            border-radius: 0;
-        }
-        .cta-btn-primary:hover {
-            background: #FFFFFF;
-            border-color: #FFFFFF;
-            color: #000000;
-            box-shadow: 0 0 30px #FFFFFF;
-            transform: scale(1.03);
-        }
-
-        .cta-btn-outline {
-            background: transparent;
-            color: var(--cyber-cyan);
-            border: 2px solid var(--cyber-cyan);
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
-            font-size: 1.15rem;
-            padding: 15px 38px;
-            text-transform: uppercase;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s;
-            border-radius: 0;
-        }
-        .cta-btn-outline:hover {
-            background: var(--cyber-cyan);
-            color: #000000;
-            box-shadow: 0 0 25px var(--cyber-cyan);
-            transform: scale(1.03);
-        }
-
-        .digital-banner {
-            background: linear-gradient(135deg, rgba(0, 229, 255, 0.1) 0%, rgba(0, 255, 102, 0.05) 100%);
-            border: 1px solid var(--cyber-cyan);
-            padding: 50px;
-            margin: 80px 0;
-            position: relative;
-        }
-    </style>
-}
+<!-- Styles served via cyber-storefront.css -->
 
 <!-- Hero Section -->
 <section class="hero-section">
-    <span class="reticle reticle-tl">+</span>
-    <span class="reticle reticle-tr">+</span>
-    <span class="reticle reticle-bl">+</span>
-    <span class="reticle reticle-br">+</span>
-    
     <div class="container">
         <div style="font-family:'VT323'; color:var(--cyber-cyan); font-size:1.4rem; margin-bottom:15px;">> DIGIPOSE_MASTER_GRID // NODE: NOMINAL_ONLINE_STATE _</div>
         <h1 class="hero-title">CYBER POS<br/>ARCHITECTURE</h1>
@@ -229,14 +85,14 @@
                     SCALE YOUR RETAIL CHAIN WITH CUSTOM DIGITAL POS LICENSES
                 </h2>
                 <p style="color:var(--cyber-muted); font-size:1.1rem; line-height:1.8;">
-                    Transition from legacy offline registers to cloud-native high-frequency transaction clusters. Our Digital POS commercial software subscriptions include instant branch replication, automated chart telemetry (Chart.js), VIP CRM loyalty processing, and real-time shift cash reconciliation.
+                    Transition from legacy offline registers to cloud-native high-frequency transaction clusters. Our Digital POS commercial software subscriptions include instant tenant replication, automated chart telemetry (Chart.js), VIP CRM loyalty processing, and real-time shift cash reconciliation.
                 </p>
                 <div class="d-flex gap-3 mt-4">
                     <span class="badge" style="background:#000; border:1px solid var(--cyber-emerald); color:var(--cyber-emerald); padding:10px 15px; font-size:0.9rem; border-radius:0;">
                         <i class="fa-solid fa-check me-2"></i> Instant License Activation
                     </span>
                     <span class="badge" style="background:#000; border:1px solid var(--cyber-cyan); color:var(--cyber-cyan); padding:10px 15px; font-size:0.9rem; border-radius:0;">
-                        <i class="fa-solid fa-network-wired me-2"></i> Multi-branch Synchronization
+                        <i class="fa-solid fa-network-wired me-2"></i> Multi-tenant Synchronization
                     </span>
                 </div>
             </div>

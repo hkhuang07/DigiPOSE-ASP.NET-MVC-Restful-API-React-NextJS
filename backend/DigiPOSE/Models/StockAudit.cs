@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DigiPOSE.Models
@@ -21,8 +21,8 @@ namespace DigiPOSE.Models
         public string AuditCode { get; set; } = string.Empty;
 
         [Required]
-        [Display(Name = "Branch")]
-        public int BranchId { get; set; }
+        [Display(Name = "Tenant")]
+        public int TenantId { get; set; }
 
         [Required]
         [Display(Name = "Audit Date")]
@@ -45,8 +45,8 @@ namespace DigiPOSE.Models
         [Display(Name = "Created At")]
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        [ForeignKey("BranchId")]
-        public Branch? Branch { get; set; }
+        [ForeignKey("TenantId")]
+        public Tenant? Tenant { get; set; }
 
         [ForeignKey("AuditorUserId")]
         public User? AuditorUser { get; set; }

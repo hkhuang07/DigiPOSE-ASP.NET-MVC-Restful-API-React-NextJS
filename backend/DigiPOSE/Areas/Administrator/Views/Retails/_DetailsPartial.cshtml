@@ -1,4 +1,4 @@
-@model DigiPOSE.Models.Retail
+﻿@model DigiPOSE.Models.Retail
 <div class="modal-content">
     <div class="modal-header">
         <h5 class="modal-title"><i class="fa-solid fa-file-invoice text-cyan me-2"></i> RETAIL DOCUMENT // @Model.DocNo</h5>
@@ -24,7 +24,7 @@
                 <div style="background:#060606; border:1px solid #1A1A1A; padding:14px;">
                     <div style="font-family:'Orbitron'; font-size:0.7rem; color:#00E5FF; text-transform:uppercase; margin-bottom:10px; border-bottom:1px solid #1A1A1A; padding-bottom:6px;"><i class="fa-solid fa-building me-1"></i> Transaction Info</div>
                     <table class="table-cyber" style="font-size:0.85rem;">
-                        <tr><td style="color:#555; width:45%;">Branch</td><td>@(Model.Branch?.BranchName ?? "--")</td></tr>
+                        <tr><td style="color:#555; width:45%;">Tenant</td><td>@(Model.Tenant?.TenantName ?? "--")</td></tr>
                         <tr><td style="color:#555;">Counter</td><td>@(Model.Counter?.CounterName ?? "--")</td></tr>
                         <tr><td style="color:#555;">Cashier</td><td>@(Model.User?.UserName ?? "--")</td></tr>
                         <tr><td style="color:#555;">Shift</td><td>#@Model.ShiftId</td></tr>

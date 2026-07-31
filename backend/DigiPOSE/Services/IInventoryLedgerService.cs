@@ -1,4 +1,4 @@
-using DigiPOSE.Models;
+﻿using DigiPOSE.Models;
 
 namespace DigiPOSE.Services
 {
@@ -9,7 +9,7 @@ namespace DigiPOSE.Services
         /// and synchronizes O(1) live RAM cache in real time.
         /// </summary>
         Task<(bool Success, string Message)> RecordTransactionAsync(
-            int branchId, 
+            int tenantId, 
             int productId, 
             int quantityDelta, 
             InventoryTxType txType, 
@@ -21,17 +21,17 @@ namespace DigiPOSE.Services
 
         /// <summary>
         /// Posts a completed StockVoucher (VoucherIn / VoucherOut / Adjustment), mutating warehouse balances and syncing RAM cache.
-        /// Enforces Branch Manager local branch boundary checks.
+        /// Enforces Tenant Manager local tenant boundary checks.
         /// </summary>
         Task<(bool Success, string Message)> PostVoucherAsync(int voucherId, int approverUserId);
 
         /// <summary>
-        /// Dispatches an inter-branch stock transfer, deducting quantity from source branch and setting state to InTransit.
+        /// Dispatches an inter-tenant stock transfer, deducting quantity from source tenant and setting state to InTransit.
         /// </summary>
         Task<(bool Success, string Message)> DispatchTransferAsync(int transferId, int dispatcherUserId);
 
         /// <summary>
-        /// Receives an inter-branch stock transfer at the target location, incrementing destination branch stock and syncing RAM cache.
+        /// Receives an inter-tenant stock transfer at the target location, incrementing destination tenant stock and syncing RAM cache.
         /// </summary>
         Task<(bool Success, string Message)> ReceiveTransferAsync(int transferId, int receiverUserId);
 

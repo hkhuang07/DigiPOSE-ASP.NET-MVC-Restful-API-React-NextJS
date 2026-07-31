@@ -1,4 +1,4 @@
-using DigiPOSE.Models;
+﻿using DigiPOSE.Models;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
@@ -80,7 +80,7 @@ namespace DigiPOSE.Helpers
                 <div style='background-color: #0A0A0A; padding: 15px; border-left: 4px solid #00FF66; margin: 15px 0;'>
                     <p><strong>Order ID:</strong> #{order?.OrderId ?? 0}</p>
                     <p><strong>Total Amount Charged:</strong> {(order?.TotalAmount ?? 0):N2} VND</p>
-                    <p><strong>Branch Source:</strong> POS Machine Gateway // Phase 6.2 Telemetry</p>
+                    <p><strong>Tenant Source:</strong> POS Machine Gateway // Phase 6.2 Telemetry</p>
                 </div>
                 <p style='font-size: 12px; color: #777777;'>This automated email receipt was generated asynchronously by DigiPOSE Core Engine (&lt; 15ms cashier latency penalty).</p>
             </div>";

@@ -1,0 +1,65 @@
+﻿@model DigiPOSE.Models.StockTransfer
+<div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-truck-ramp-box text-cyan me-2"></i> @(Model.TransferId == 0 ? "INITIATE NEW" : "EDIT") STOCK TRANSFER</h5>
+        <button type="button" class="btn-close-cyber" data-bs-dismiss="modal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form class="ajax-modal-form" asp-action="@(Model.TransferId == 0 ? "Create" : "Edit")" asp-controller="StockTransfers" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="TransferId" />
+        <input type="hidden" asp-for="CreatedAt" />
+        <div class="modal-body">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3" style="font-family:'Roboto Mono'; font-size:0.85rem;"></div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="TransferCode" class="form-cyber-label"></label>
+                    <input asp-for="TransferCode" class="form-control form-cyber-control" readonly style="background:rgba(0,229,255,0.05);" />
+                    <span asp-validation-for="TransferCode" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Status" class="form-cyber-label"></label>
+                    <select asp-for="Status" class="form-select form-cyber-control" asp-items="Html.GetEnumSelectList<DigiPOSE.Models.StockTransferStatus>()"></select>
+                    <span asp-validation-for="Status" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="SourceTenantId" class="form-cyber-label">SOURCE TENANT</label>
+                    <select asp-for="SourceTenantId" class="form-select form-cyber-control" asp-items="ViewBag.SourceTenants">
+                        <option value="">-- Origin Warehouse --</option>
+                    </select>
+                    <span asp-validation-for="SourceTenantId" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="DestinationTenantId" class="form-cyber-label">DESTINATION TENANT</label>
+                    <select asp-for="DestinationTenantId" class="form-select form-cyber-control" asp-items="ViewBag.DestinationTenants">
+                        <option value="">-- Destination Warehouse --</option>
+                    </select>
+                    <span asp-validation-for="DestinationTenantId" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label asp-for="InitiatorUserId" class="form-cyber-label">INITIATING OPERATOR</label>
+                    <select asp-for="InitiatorUserId" class="form-select form-cyber-control" asp-items="ViewBag.Users">
+                        <option value="">-- Select Operator --</option>
+                    </select>
+                    <span asp-validation-for="InitiatorUserId" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Notes" class="form-cyber-label">DISPATCH NOTES / WAYBILL SUMMARY</label>
+                <textarea asp-for="Notes" rows="3" class="form-control form-cyber-control" placeholder="Enter transfer remarks, carrier details, or transport waybill instructions..."></textarea>
+                <span asp-validation-for="Notes" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-cyber-cancel" data-bs-dismiss="modal" style="border-top: 1px solid aliceblue !important; border-bottom: 1px solid aliceblue !important; border-left: none !important; border-right: none !important; color: aliceblue !important; background: #222222 !important;"><i class="fa-solid fa-xmark me-1"></i> CANCEL</button>
+            <button type="submit" class="btn-cyber-success"><i class="fa-solid fa-floppy-disk me-1"></i> SAVE DISPATCH LOG</button>
+        </div>
+    </form>
+</div>

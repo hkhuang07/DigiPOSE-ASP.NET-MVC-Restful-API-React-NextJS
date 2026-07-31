@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DigiPOSE.Models;
@@ -130,12 +130,34 @@ namespace DigiPOSE.Controllers.Api
                 _ => query.OrderBy(p => p.ProductName)
             };
 
-            // 3. Pagination
-            int totalRecords = await query.CountAsync();
-            var pagedProducts = await query
-                .Skip((filter.PageNumber - 1) * filter.PageSize)
-                .Take(filter.PageSize)
-                .ToListAsync();
+            // 3. In-Stock (RAM Verified) Filtering & Pagination
+            var pagedProducts = new List<Product>();
+            int totalRecords = 0;
+            if (filter.InStockOnly)
+            {
+                var allCandidates = await query.ToListAsync();
+                var stockFiltered = new List<Product>();
+                foreach (var p in allCandidates)
+                {
+                    if (p.ItemNatureId == 2 || (await _inventoryRam.GetStockAsync(1, p.ProductId)) > 0)
+                    {
+                        stockFiltered.Add(p);
+                    }
+                }
+                totalRecords = stockFiltered.Count;
+                pagedProducts = stockFiltered
+                    .Skip((filter.PageNumber - 1) * filter.PageSize)
+                    .Take(filter.PageSize)
+                    .ToList();
+            }
+            else
+            {
+                totalRecords = await query.CountAsync();
+                pagedProducts = await query
+                    .Skip((filter.PageNumber - 1) * filter.PageSize)
+                    .Take(filter.PageSize)
+                    .ToListAsync();
+            }
 
             // 4. Transform to SEO-enriched responses
             var results = pagedProducts.Select(p => new SeoProductResponse
@@ -244,12 +266,48 @@ namespace DigiPOSE.Controllers.Api
         #region 4. CART MUTATIONS (addItem, addToCart, removeItem, removeAllItems, updateQuantity)
 
         /// <summary>
+        /// Retrieves active persistent DB cart session for authenticated users, replacing reliance on LocalStorage.
+        /// </summary>
+        [HttpGet("cart/active-session")]
+        public async Task<IActionResult> GetActiveDbCartSession()
+        {
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
+            {
+                return Unauthorized(new { Error = "UNAUTHENTICATED", Message = "No active database session for anonymous user." });
+            }
+
+            var cart = await _context.StorefrontCarts
+                .Include(c => c.Items)
+                .OrderByDescending(c => c.UpdatedAt)
+                .FirstOrDefaultAsync(c => c.CustomerIdentity == User.Identity.Name);
+
+            if (cart == null)
+            {
+                return NotFound(new { Error = "NO_ACTIVE_CART", Message = "No saved cart session in DB." });
+            }
+
+            return Ok(new
+            {
+                cartId = cart.CartId,
+                cartGuid = cart.CartGuid,
+                totalAmount = cart.TotalAmount,
+                itemCount = cart.Items?.Sum(i => i.Quantity) ?? 0
+            });
+        }
+
+        /// <summary>
         /// Adds product to dedicated online shopping cart (addItem / addToCart). Creates new StorefrontCart if cartId == 0.
         /// Features O(1) early RAM stock verification to protect shoppers from out-of-stock items.
+        /// Strictly mandates user login before allowing staging cart mutations.
         /// </summary>
         [HttpPost("cart/add")]
         public async Task<IActionResult> AddToCart([FromBody] CartItemRequest request)
         {
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
+            {
+                return Unauthorized(new { Error = "AUTHENTICATION_REQUIRED", Message = "Authentication strictly required. Anonymous staging carts are prohibited under enterprise business rules." });
+            }
+
             var product = await _context.Products
                 .AsNoTracking()
                 .Include(p => p.Unit)
@@ -259,13 +317,24 @@ namespace DigiPOSE.Controllers.Api
             if (product == null)
                 return NotFound(new { Error = "Product not found or inactive in catalog." });
 
-            StorefrontCart? cart;
-            if (request.CartId <= 0)
+            StorefrontCart? cart = null;
+            if (request.CartId > 0)
+            {
+                cart = await _context.StorefrontCarts.Include(c => c.Items).FirstOrDefaultAsync(c => c.CartId == request.CartId);
+            }
+
+            if (cart == null && User.Identity?.Name != null)
+            {
+                // Check database FIRST for an active persistent cart session for this authenticated user
+                cart = await _context.StorefrontCarts.Include(c => c.Items).OrderByDescending(c => c.UpdatedAt).FirstOrDefaultAsync(c => c.CustomerIdentity == User.Identity.Name);
+            }
+
+            if (cart == null)
             {
                 cart = new StorefrontCart
                 {
                     CartGuid = Guid.NewGuid(),
-                    CustomerIdentity = User.Identity?.Name ?? "Guest Shopper",
+                    CustomerIdentity = User.Identity?.Name ?? "Authenticated Shopper",
                     CreatedAt = DateTime.Now,
                     UpdatedAt = DateTime.Now,
                     GrossAmount = 0,
@@ -276,17 +345,11 @@ namespace DigiPOSE.Controllers.Api
                 _context.StorefrontCarts.Add(cart);
                 await _context.SaveChangesAsync();
             }
-            else
-            {
-                cart = await _context.StorefrontCarts.Include(c => c.Items).FirstOrDefaultAsync(c => c.CartId == request.CartId);
-                if (cart == null)
-                    return NotFound(new { Error = "Shopping cart session invalid or expired." });
-            }
 
             var existingItem = cart.Items?.FirstOrDefault(i => i.ProductId == request.ProductId);
 
             // >>> [O(1) EARLY STOCK GATE]: Prevent adding physical items exceeding live RAM stock balances
-            if (product.ItemNatureId == 1) // Physical goods (HQ Fulfillment BranchId = 1)
+            if (product.ItemNatureId == 1) // Physical goods (HQ Fulfillment TenantId = 1)
             {
                 int availableStock = await _inventoryRam.GetStockAsync(1, product.ProductId);
                 int projectedQty = (existingItem?.Quantity ?? 0) + request.Quantity;
@@ -457,7 +520,7 @@ namespace DigiPOSE.Controllers.Api
 
             var deductedProducts = new List<(int ProductId, int Quantity)>();
 
-            // 1. O(1) HOT-PATH RAM INVENTORY DEDUCTION FOR PHYSICAL GOODS (BranchId = 1)
+            // 1. O(1) HOT-PATH RAM INVENTORY DEDUCTION FOR PHYSICAL GOODS (TenantId = 1)
             foreach (var item in cart.Items)
             {
                 if (item.Product?.ItemNatureId == 1) // Physical Retail Asset
@@ -481,7 +544,7 @@ namespace DigiPOSE.Controllers.Api
             {
                 var newOrder = new Order
                 {
-                    BranchId = 1, // HQ Fulfillment branch for Online Web Orders
+                    TenantId = 1, // HQ Fulfillment tenant for Online Web Orders
                     ShiftId = 1, // Storefront general web fulfillment shift
                     UserId = 1, // Default system web worker
                     StatusId = 2, // 2: Completed / Processing E-Commerce Order
@@ -511,11 +574,33 @@ namespace DigiPOSE.Controllers.Api
                         // Award CRM loyalty points (10 points per 100,000 VND spent)
                         int earnedPoints = (int)(newOrder.TotalAmount / 100000) * 10;
                         customer.RewardPoints += earnedPoints;
+
+                        // >>> [GIS_3NF_PERSISTENCE]: Automatically attach geocoded OSM coordinates and admin boundary address
+                        if (!string.IsNullOrWhiteSpace(request.ProvinceName) && !string.IsNullOrWhiteSpace(request.DistrictName) && !string.IsNullOrWhiteSpace(request.WardName))
+                        {
+                            var addr = new CustomerAddress
+                            {
+                                CustomerId = customer.CustomerId,
+                                ProvinceCode = request.ProvinceCode ?? "00",
+                                ProvinceName = request.ProvinceName,
+                                DistrictCode = request.DistrictCode ?? "000",
+                                DistrictName = request.DistrictName,
+                                WardCode = request.WardCode ?? "00000",
+                                WardName = request.WardName,
+                                StreetAddress = request.ShippingAddress,
+                                Latitude = request.Latitude,
+                                Longitude = request.Longitude,
+                                IsDefault = true,
+                                Notes = request.CustomerNotes,
+                                CreatedAt = DateTime.Now
+                            };
+                            _context.CustomerAddresses.Add(addr);
+                        }
                     }
                 }
                 else
                 {
-                    newOrder.SnapshotCustomerName = cart.SnapshotCustomerName ?? request.CustomerNotes ?? "Online Shopper";
+                    newOrder.SnapshotCustomerName = request.ContactName ?? cart.SnapshotCustomerName ?? request.CustomerNotes ?? "Online Shopper";
                     newOrder.SnapshotCustomerPhone = request.ContactPhone ?? cart.SnapshotCustomerPhone;
                 }
 
@@ -554,7 +639,7 @@ namespace DigiPOSE.Controllers.Api
                     if (item.Product?.ItemNatureId == 1) // Physical asset -> Delegate to Enterprise DDD Ledger Service
                     {
                         await _ledgerService.RecordTransactionAsync(
-                            1, // HQ Fulfillment Branch
+                            1, // HQ Fulfillment Tenant
                             item.ProductId,
                             -item.Quantity,
                             InventoryTxType.WebSale,
@@ -601,7 +686,7 @@ namespace DigiPOSE.Controllers.Api
                 var printJob = new JobQueueItem
                 {
                     JobType = "EMAIL_STOREFRONT_INVOICE",
-                    PayloadJson = JsonSerializer.Serialize(new { OrderId = newOrder.OrderId, InvoiceNumber = newOrder.InvoiceNumber, BranchId = 1, Email = request.ShippingAddress }),
+                    PayloadJson = JsonSerializer.Serialize(new { OrderId = newOrder.OrderId, InvoiceNumber = newOrder.InvoiceNumber, TenantId = 1, Email = request.ShippingAddress }),
                     Status = "Pending",
                     CreatedAt = DateTime.Now
                 };
@@ -618,7 +703,7 @@ namespace DigiPOSE.Controllers.Api
                 _jobChannel.Writer.TryWrite(printJob);
 
                 var liveBalances = await _inventoryRam.GetBulkStockAsync(1, productIds);
-                await _hubContext.Clients.Group("Branch_1").SendAsync("OnStockChanged", liveBalances);
+                await _hubContext.Clients.Group("Tenant_1").SendAsync("OnStockChanged", liveBalances);
 
                 var lowStockAlerts = new List<string>();
                 foreach (var kvp in liveBalances)
@@ -626,7 +711,7 @@ namespace DigiPOSE.Controllers.Api
                     if (kvp.Value <= 5)
                     {
                         var prodName = cart.Items.FirstOrDefault(d => d.ProductId == kvp.Key)?.Product?.ProductName ?? $"SKU #{kvp.Key}";
-                        lowStockAlerts.Add($"[CRITICAL_STOCK]: {prodName} dropped to {kvp.Value} unit(s) at HQ Branch #1 due to Storefront web order");
+                        lowStockAlerts.Add($"[CRITICAL_STOCK]: {prodName} dropped to {kvp.Value} unit(s) at HQ Tenant #1 due to Storefront web order");
                     }
                 }
 
@@ -638,7 +723,7 @@ namespace DigiPOSE.Controllers.Api
                     RevenueDelta = newOrder.TotalAmount,
                     ShippingFee = newOrder.ShippingFee,
                     ShippingAddress = newOrder.ShippingAddress ?? "N/A",
-                    BranchId = 1,
+                    TenantId = 1,
                     ProcessedAt = newOrder.CreatedAt.ToString("HH:mm:ss"),
                     LowStockAlerts = lowStockAlerts
                 };

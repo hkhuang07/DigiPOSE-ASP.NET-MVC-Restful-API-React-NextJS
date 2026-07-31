@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using DigiPOSE.Models;
 using System.Text.RegularExpressions;
@@ -22,7 +22,7 @@ namespace DigiPOSE.Services
         }
 
         public async Task<(bool Success, string Message)> RecordTransactionAsync(
-            int branchId, 
+            int tenantId, 
             int productId, 
             int quantityDelta, 
             InventoryTxType txType, 
@@ -35,18 +35,18 @@ namespace DigiPOSE.Services
             try
             {
                 var inv = await _context.ProductInventories
-                    .FirstOrDefaultAsync(i => i.BranchId == branchId && i.ProductId == productId);
+                    .FirstOrDefaultAsync(i => i.TenantId == tenantId && i.ProductId == productId);
 
                 if (inv == null)
                 {
                     if (quantityDelta < 0 && txType != InventoryTxType.EmergencyOverride)
                     {
-                        return (false, $"Cannot deduct stock: no inventory record exists for Product #{productId} at Branch #{branchId}.");
+                        return (false, $"Cannot deduct stock: no inventory record exists for Product #{productId} at Tenant #{tenantId}.");
                     }
 
                     inv = new ProductInventory
                     {
-                        BranchId = branchId,
+                        TenantId = tenantId,
                         ProductId = productId,
                         StockQuantity = 0,
                         MinStockLevel = 5
@@ -64,7 +64,7 @@ namespace DigiPOSE.Services
 
                 var tx = new InventoryTransaction
                 {
-                    BranchId = branchId,
+                    TenantId = tenantId,
                     ProductId = productId,
                     QuantityDelta = quantityDelta,
                     BeforeQuantity = beforeQty,
@@ -82,9 +82,9 @@ namespace DigiPOSE.Services
                 await _context.SaveChangesAsync();
 
                 // >>> [O(1) REAL-TIME RAM CACHE SYNC]: Prevent stale POS reads instantly without server reboot
-                _ramService.InitializeOrUpdateStock(branchId, productId, afterQty);
+                _ramService.InitializeOrUpdateStock(tenantId, productId, afterQty);
 
-                _logger.LogInformation(">>> [LEDGER_RECORD_SUCCESS]: Branch {BranchId} Product {ProductId} mutated from {Before} to {After} via {TxType}", branchId, productId, beforeQty, afterQty, txType);
+                _logger.LogInformation(">>> [LEDGER_RECORD_SUCCESS]: Tenant {TenantId} Product {ProductId} mutated from {Before} to {After} via {TxType}", tenantId, productId, beforeQty, afterQty, txType);
                 return (true, "Transaction successfully recorded and RAM cache synchronized.");
             }
             catch (DbUpdateConcurrencyException ex)
@@ -131,7 +131,7 @@ namespace DigiPOSE.Services
                 }
 
                 var res = await RecordTransactionAsync(
-                    voucher.BranchId,
+                    voucher.TenantId,
                     detail.ProductId,
                     delta,
                     txType,
@@ -171,7 +171,7 @@ namespace DigiPOSE.Services
             foreach (var detail in transfer.StockTransferDetails)
             {
                 var res = await RecordTransactionAsync(
-                    transfer.SourceBranchId,
+                    transfer.SourceTenantId,
                     detail.ProductId,
                     -Math.Abs(detail.Quantity),
                     InventoryTxType.TransferOut,
@@ -179,7 +179,7 @@ namespace DigiPOSE.Services
                     transfer.TransferCode,
                     dispatcherUserId,
                     detail.UnitCost,
-                    $"Inter-branch dispatch to Branch #{transfer.DestinationBranchId}");
+                    $"Inter-tenant dispatch to Tenant #{transfer.DestinationTenantId}");
 
                 if (!res.Success)
                     return (false, $"Failed deducting item #{detail.ProductId} at source: {res.Message}");
@@ -208,7 +208,7 @@ namespace DigiPOSE.Services
             {
                 int qtyToAdd = detail.ReceivedQuantity > 0 ? detail.ReceivedQuantity : detail.Quantity;
                 var res = await RecordTransactionAsync(
-                    transfer.DestinationBranchId,
+                    transfer.DestinationTenantId,
                     detail.ProductId,
                     Math.Abs(qtyToAdd),
                     InventoryTxType.TransferIn,
@@ -216,7 +216,7 @@ namespace DigiPOSE.Services
                     transfer.TransferCode,
                     receiverUserId,
                     detail.UnitCost,
-                    $"Inter-branch receipt from Branch #{transfer.SourceBranchId}");
+                    $"Inter-tenant receipt from Tenant #{transfer.SourceTenantId}");
 
                 if (!res.Success)
                     return (false, $"Failed incrementing item #{detail.ProductId} at destination: {res.Message}");
@@ -251,7 +251,7 @@ namespace DigiPOSE.Services
                     continue; // Zero variance, physical count matches system
 
                 var res = await RecordTransactionAsync(
-                    audit.BranchId,
+                    audit.TenantId,
                     detail.ProductId,
                     detail.VarianceQuantity,
                     InventoryTxType.StockAudit,
@@ -304,7 +304,7 @@ namespace DigiPOSE.Services
             _context.ProductInventories.Update(inv);
 
             var res = await RecordTransactionAsync(
-                inv.BranchId,
+                inv.TenantId,
                 inv.ProductId,
                 delta,
                 InventoryTxType.EmergencyOverride,

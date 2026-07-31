@@ -1,4 +1,4 @@
-@model DigiPOSE.Models.User
+﻿@model DigiPOSE.Models.User
 @{
     ViewData["Title"] = "Operator Profile Telemetry";
     string? avatarPath = string.IsNullOrEmpty(Model.ImageUrl) 
@@ -11,7 +11,7 @@
     <!-- Technical HUD Title Header -->
     <div class="d-flex justify-content-between align-items-center mb-4" style="border-bottom: 2px solid #00E5FF; padding-bottom: 12px; background: rgba(0, 229, 255, 0.05); padding: 15px;">
         <div>
-            <div style="font-family: 'VT323', monospace; font-size: 1.1rem; color: #00FF66;">> SYSTEM_IAM_IDENTITY_VERIFIED // SESSION_NODE: @(Model.Branch?.BranchName ?? "CORE_CLUSTER") _</div>
+            <div style="font-family: 'VT323', monospace; font-size: 1.1rem; color: #00FF66;">> SYSTEM_IAM_IDENTITY_VERIFIED // SESSION_NODE: @(Model.Tenant?.TenantName ?? "CORE_CLUSTER") _</div>
             <h2 style="font-family: 'Orbitron', sans-serif; color: #FFFFFF; font-weight: 700; margin: 0; text-shadow: 0 0 12px rgba(0, 229, 255, 0.5);">
                 <i class="fa-solid fa-id-card-clip text-cyan me-2"></i> @Model.UserName.ToUpper() [ PERSONNEL FILE ]
             </h2>
@@ -80,7 +80,7 @@
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span>CLUSTER ASSIGNMENT:</span>
-                            <span style="color: #FFF; font-weight: bold;">@(Model.Branch?.BranchName ?? "HQ")</span>
+                            <span style="color: #FFF; font-weight: bold;">@(Model.Tenant?.TenantName ?? "HQ")</span>
                         </div>
                         <div class="d-flex justify-content-between">
                             <span>BIOMETRIC HASH:</span>

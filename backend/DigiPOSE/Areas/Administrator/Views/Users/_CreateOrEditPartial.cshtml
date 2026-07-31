@@ -1,4 +1,4 @@
-@model DigiPOSE.Models.User
+﻿@model DigiPOSE.Models.User
 
 <div class="modal-content">
     <div class="modal-header">
@@ -15,9 +15,9 @@
                 <span asp-validation-for="RoleId" class="text-danger"></span>
             </div>
             <div class="mb-3">
-                <label asp-for="BranchId" class="form-cyber-label">@Html.DisplayNameFor(model => model.BranchId) <span style="color:#FF3333;">*</span></label>
-                <select asp-for="BranchId" asp-items="ViewBag.BranchId" class="form-control form-cyber-control"></select>
-                <span asp-validation-for="BranchId" class="text-danger"></span>
+                <label asp-for="TenantId" class="form-cyber-label">@Html.DisplayNameFor(model => model.TenantId) <span style="color:#FF3333;">*</span></label>
+                <select asp-for="TenantId" asp-items="ViewBag.TenantId" class="form-control form-cyber-control"></select>
+                <span asp-validation-for="TenantId" class="text-danger"></span>
             </div>
             <div class="mb-3">
                 <label asp-for="UserName" class="form-cyber-label"></label>
@@ -30,9 +30,9 @@
                 <span asp-validation-for="Role" class="text-danger"></span>
             </div>
             <div class="mb-3">
-                <label asp-for="Branch" class="form-cyber-label"></label>
-                <input asp-for="Branch" class="form-control form-cyber-control" />
-                <span asp-validation-for="Branch" class="text-danger"></span>
+                <label asp-for="Tenant" class="form-cyber-label"></label>
+                <input asp-for="Tenant" class="form-control form-cyber-control" />
+                <span asp-validation-for="Tenant" class="text-danger"></span>
             </div>
         </div>
         <div class="modal-footer">

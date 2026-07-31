@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DigiPOSE.Models;
@@ -9,7 +9,7 @@ using System.Linq.Dynamic.Core;
 namespace DigiPOSE.Areas.Administrator.Controllers
 {
     [Area("Administrator")]
-    [Authorize(Roles = "Super Admin, Administrator, Branch Manager, POS Operator, Warehouse, Catalog, Accountant")]
+    [Authorize(Roles = "Super Admin, Administrator, Tenant Manager, POS Operator, Warehouse, Catalog, Accountant")]
     public class ProductInventoriesController : Controller
     {
         private readonly DigiPoseDbContext _context;
@@ -42,7 +42,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 int pageSize = length != null ? Convert.ToInt32(length) : 0;
                 int skip = start != null ? Convert.ToInt32(start) : 0;
 
-                var query = _context.ProductInventories.Include(p => p.Branch).Include(p => p.Product).AsQueryable();
+                var query = _context.ProductInventories.Include(p => p.Tenant).Include(p => p.Product).AsQueryable();
 
                 int totalRecords = query.Count();
 
@@ -51,7 +51,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 {
                     query = query.Where(m =>
                         (m.Product != null && m.Product.ProductName != null && m.Product.ProductName.Contains(searchValue)) ||
-                        (m.Branch != null && m.Branch.BranchName != null && m.Branch.BranchName.Contains(searchValue)));
+                        (m.Tenant != null && m.Tenant.TenantName != null && m.Tenant.TenantName.Contains(searchValue)));
                 }
 
                 int filterRecords = query.Count();
@@ -66,7 +66,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 var dataList = query.Skip(skip).Take(pageSize).Select(m => new {
                     InventoryId = m.InventoryId,
                     ProductName = m.Product != null ? m.Product.ProductName : "",
-                    BranchName = m.Branch != null ? m.Branch.BranchName : "",
+                    TenantName = m.Tenant != null ? m.Tenant.TenantName : "",
                     StockQuantity = m.StockQuantity,
                     MinStockLevel = m.MinStockLevel
                 }).ToList();
@@ -82,17 +82,17 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         [HttpGet]
         public async Task<IActionResult> ExportExcel(string? searchValue)
         {
-            var query = _context.ProductInventories.Include(p => p.Branch).Include(p => p.Product).AsQueryable();
+            var query = _context.ProductInventories.Include(p => p.Tenant).Include(p => p.Product).AsQueryable();
             if (!string.IsNullOrEmpty(searchValue))
             {
                 query = query.Where(m =>
                     (m.Product != null && m.Product.ProductName != null && m.Product.ProductName.Contains(searchValue)) ||
-                    (m.Branch != null && m.Branch.BranchName != null && m.Branch.BranchName.Contains(searchValue)));
+                    (m.Tenant != null && m.Tenant.TenantName != null && m.Tenant.TenantName.Contains(searchValue)));
             }
             var list = await query.Select(m => new {
                 m.InventoryId,
                 ProductName = m.Product != null ? m.Product.ProductName : "",
-                BranchName = m.Branch != null ? m.Branch.BranchName : "",
+                TenantName = m.Tenant != null ? m.Tenant.TenantName : "",
                 m.StockQuantity,
                 m.MinStockLevel
             }).ToListAsync();
@@ -104,14 +104,14 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
-            var item = await _context.ProductInventories.Include(p => p.Branch).Include(p => p.Product).FirstOrDefaultAsync(m => m.InventoryId == id);
+            var item = await _context.ProductInventories.Include(p => p.Tenant).Include(p => p.Product).FirstOrDefaultAsync(m => m.InventoryId == id);
             if (item == null) return NotFound();
             return PartialView("_DetailsPartial", item);
         }
 
         public IActionResult Create()
         {
-            ViewBag.BranchId = new SelectList(_context.Branches.Where(b => b.IsActive), "BranchId", "BranchName");
+            ViewBag.TenantId = new SelectList(_context.Tenants.Where(b => b.IsActive), "TenantId", "TenantName");
             ViewBag.ProductId = new SelectList(_context.Products.Where(p => p.IsActive), "ProductId", "ProductName");
             return PartialView("_CreateOrEditPartial", new ProductInventory());
         }
@@ -125,7 +125,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 if (int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out int uid)) userId = uid;
 
                 var res = await _ledgerService.RecordTransactionAsync(
-                    model.BranchId,
+                    model.TenantId,
                     model.ProductId,
                     model.StockQuantity,
                     InventoryTxType.Restock,
@@ -140,7 +140,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 
                 return Json(new { success = false, message = res.Message });
             }
-            ViewBag.BranchId = new SelectList(_context.Branches.Where(b => b.IsActive), "BranchId", "BranchName", model.BranchId);
+            ViewBag.TenantId = new SelectList(_context.Tenants.Where(b => b.IsActive), "TenantId", "TenantName", model.TenantId);
             ViewBag.ProductId = new SelectList(_context.Products.Where(p => p.IsActive), "ProductId", "ProductName", model.ProductId);
             return PartialView("_CreateOrEditPartial", model);
         }
@@ -150,7 +150,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             if (id == null) return NotFound();
             var item = await _context.ProductInventories.FindAsync(id);
             if (item == null) return NotFound();
-            ViewBag.BranchId = new SelectList(_context.Branches.Where(b => b.IsActive), "BranchId", "BranchName", item.BranchId);
+            ViewBag.TenantId = new SelectList(_context.Tenants.Where(b => b.IsActive), "TenantId", "TenantName", item.TenantId);
             ViewBag.ProductId = new SelectList(_context.Products.Where(p => p.IsActive), "ProductId", "ProductName", item.ProductId);
             return PartialView("_CreateOrEditPartial", item);
         }
@@ -204,7 +204,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                     return Json(new { success = false, message = "Concurrency conflict. Please reload and try again." });
                 }
             }
-            ViewBag.BranchId = new SelectList(_context.Branches.Where(b => b.IsActive), "BranchId", "BranchName", model.BranchId);
+            ViewBag.TenantId = new SelectList(_context.Tenants.Where(b => b.IsActive), "TenantId", "TenantName", model.TenantId);
             ViewBag.ProductId = new SelectList(_context.Products.Where(p => p.IsActive), "ProductId", "ProductName", model.ProductId);
             return PartialView("_CreateOrEditPartial", model);
         }
@@ -212,7 +212,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
-            var item = await _context.ProductInventories.Include(p => p.Branch).Include(p => p.Product).FirstOrDefaultAsync(m => m.InventoryId == id);
+            var item = await _context.ProductInventories.Include(p => p.Tenant).Include(p => p.Product).FirstOrDefaultAsync(m => m.InventoryId == id);
             if (item == null) return NotFound();
             return PartialView("_DeletePartial", item);
         }
@@ -226,7 +226,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 _context.ProductInventories.Remove(item);
                 await _context.SaveChangesAsync();
                 // >>> [O(1) CACHE PURGE]: Reset live RAM stock balance to 0 for deleted record
-                _ramService.InitializeOrUpdateStock(item.BranchId, item.ProductId, 0);
+                _ramService.InitializeOrUpdateStock(item.TenantId, item.ProductId, 0);
             }
             return Json(new { success = true, message = "Inventory record deleted." });
         }

@@ -1,0 +1,73 @@
+@model DigiPOSE.Models.Subscription
+<div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-key text-cyan me-2"></i> @(Model.SubscriptionId == 0 ? "REGISTER NEW" : "EDIT") SAAS SUBSCRIPTION</h5>
+        <button type="button" class="btn-close-cyber" data-bs-dismiss="modal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form class="ajax-modal-form" asp-action="@(Model.SubscriptionId == 0 ? "Create" : "Edit")" asp-controller="Subscriptions" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="SubscriptionId" />
+        <input type="hidden" asp-for="CreatedAt" />
+        <div class="modal-body">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3" style="font-family:'Roboto Mono'; font-size:0.85rem;"></div>
+            
+            <div class="row">
+                <div class="col-md-7 mb-3">
+                    <label asp-for="LicenseKey" class="form-cyber-label">LICENSE TOKEN</label>
+                    <input asp-for="LicenseKey" class="form-control form-cyber-control" style="font-family:'VT323'; font-size:1.2rem; color:#00FF66; background:rgba(0,255,102,0.05);" />
+                    <span asp-validation-for="LicenseKey" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                </div>
+                <div class="col-md-5 mb-3">
+                    <label asp-for="Status" class="form-cyber-label">STATUS</label>
+                    <select asp-for="Status" class="form-select form-cyber-control">
+                        <option value="ACTIVE">ACTIVE</option>
+                        <option value="EXPIRED">EXPIRED</option>
+                        <option value="CANCELED">CANCELED</option>
+                    </select>
+                    <span asp-validation-for="Status" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="CustomerId" class="form-cyber-label">CUSTOMER / TENANT</label>
+                    <select asp-for="CustomerId" class="form-select form-cyber-control" asp-items="ViewBag.Customers">
+                        <option value="">-- Select Corporate Customer --</option>
+                    </select>
+                    <span asp-validation-for="CustomerId" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="ProductId" class="form-cyber-label">SAAS PRODUCT PACKAGE</label>
+                    <select asp-for="ProductId" class="form-select form-cyber-control" asp-items="ViewBag.Products">
+                        <option value="">-- Select Package --</option>
+                    </select>
+                    <span asp-validation-for="ProductId" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label asp-for="OrderId" class="form-cyber-label">ORDER ID</label>
+                    <select asp-for="OrderId" class="form-select form-cyber-control" asp-items="ViewBag.Orders">
+                        <option value="">-- Order Reference --</option>
+                    </select>
+                    <span asp-validation-for="OrderId" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="StartDate" class="form-cyber-label">START DATE</label>
+                    <input asp-for="StartDate" type="date" class="form-control form-cyber-control" />
+                    <span asp-validation-for="StartDate" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="EndDate" class="form-cyber-label">EXPIRY DATE</label>
+                    <input asp-for="EndDate" type="date" class="form-control form-cyber-control" />
+                    <span asp-validation-for="EndDate" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-cyber-cancel" data-bs-dismiss="modal" style="border-top: 1px solid aliceblue !important; border-bottom: 1px solid aliceblue !important; border-left: none !important; border-right: none !important; color: aliceblue !important; background: #222222 !important;"><i class="fa-solid fa-xmark me-1"></i> CANCEL</button>
+            <button type="submit" class="btn-cyber-success"><i class="fa-solid fa-floppy-disk me-1"></i> SAVE SUBSCRIPTION</button>
+        </div>
+    </form>
+</div>

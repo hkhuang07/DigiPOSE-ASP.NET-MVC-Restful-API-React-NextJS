@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DigiPOSE.Models
@@ -21,12 +21,12 @@ namespace DigiPOSE.Models
         public string TransferCode { get; set; } = string.Empty;
 
         [Required]
-        [Display(Name = "Source Branch")]
-        public int SourceBranchId { get; set; }
+        [Display(Name = "Source Tenant")]
+        public int SourceTenantId { get; set; }
 
         [Required]
-        [Display(Name = "Destination Branch")]
-        public int DestinationBranchId { get; set; }
+        [Display(Name = "Destination Tenant")]
+        public int DestinationTenantId { get; set; }
 
         [Required]
         [Display(Name = "Initiator")]
@@ -51,11 +51,11 @@ namespace DigiPOSE.Models
         [Display(Name = "Created At")]
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        [ForeignKey("SourceBranchId")]
-        public Branch? SourceBranch { get; set; }
+        [ForeignKey("SourceTenantId")]
+        public Tenant? SourceTenant { get; set; }
 
-        [ForeignKey("DestinationBranchId")]
-        public Branch? DestinationBranch { get; set; }
+        [ForeignKey("DestinationTenantId")]
+        public Tenant? DestinationTenant { get; set; }
 
         [ForeignKey("InitiatorUserId")]
         public User? InitiatorUser { get; set; }

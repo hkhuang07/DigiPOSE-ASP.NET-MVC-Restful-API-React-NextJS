@@ -1,0 +1,96 @@
+﻿@model IEnumerable<DigiPOSE.Models.StockAudit>
+@{ ViewData["Title"] = "Stock Audits"; }
+
+<div class="cyber-panel">
+    <div class="cyber-panel-header">
+        <div class="cyber-panel-title"><i class="fa-solid fa-clipboard-check"></i> STOCK AUDITS REGISTRY</div>
+        <div class="cyber-panel-sub">[INVENTORY MODULE] // PHYSICAL SHELF RECONCILIATION AUDIT LOG</div>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn-cyber-success btn-show-modal" data-url="@Url.Action("Create", "StockAudits")">
+                <i class="fa-solid fa-plus me-1"></i> INITIATE STOCK AUDIT
+            </button>
+            <a href="@Url.Action("ExportExcel", "StockAudits")" class="btn-cyber-info btn-export-excel" style="text-decoration:none;">
+                <i class="fa-solid fa-file-excel me-1"></i> EXPORT EXCEL
+            </a>
+        </div>
+        <div style="font-family:'Roboto Mono'; font-size:0.85rem; color:#00E5FF; white-space:nowrap;">
+            TOTAL AUDITS: <strong id="totalRecordsCount" style="color:#FFF; font-family:'VT323'; font-size:1.3rem;">--</strong>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table id="datatable" class="table-cyber w-100">
+            <thead>
+                <tr>
+                    <th style="width:5%; text-align:center; white-space:nowrap;">#</th>
+                    <th style="white-space:nowrap;">AUDIT CODE</th>
+                    <th style="white-space:nowrap;">TENANT</th>
+                    <th style="white-space:nowrap;">AUDIT DATE</th>
+                    <th style="white-space:nowrap;">STATUS</th>
+                    <th style="white-space:nowrap;">AUDITOR</th>
+                    <th style="white-space:nowrap;">NOTES</th>
+                    <th style="width:120px; text-align:center; white-space:nowrap;">ACTIONS</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+<div class="modal fade modal-cyber" id="globalModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:680px;" id="globalModalContainer"></div>
+</div>
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script src="~/lib/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/lib/datatables/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            var table = $('#datatable').DataTable({
+                serverSide: true,
+                processing: true,
+                filter: true,
+                ajax: {
+                    url: '@Url.Action("Index_LoadData", "StockAudits")',
+                    type: "POST",
+                    dataType: "JSON"
+                },
+                columns: [
+                    { data: null, name: null, sortable: false, render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
+                    { data: 'auditCode', name: 'AuditCode', render: d => `<span style="font-family:'Rajdhani'; font-weight:700; color:#00E5FF; white-space:nowrap;"><i class="fa-solid fa-barcode me-2"></i>${d}</span>` },
+                    { data: 'tenantName', name: 'TenantName', render: d => `<span style="color:#FFF; font-weight:600;">${d}</span>` },
+                    { data: 'auditDate', name: 'AuditDate', render: d => `<span style="color:#A0C0CE; font-family:'Roboto Mono'; font-size:0.85rem;">${d}</span>` },
+                    { data: 'status', name: 'Status', render: d => {
+                        let color = '#FFB000';
+                        if (d === 'ReconciledAndPosted') color = '#00FF66';
+                        else if (d === 'Cancelled') color = '#FF3333';
+                        return `<span style="border:1px solid ${color}; color:${color}; padding:2px 8px; font-size:0.75rem; font-family:'VT323'; letter-spacing:1px; text-transform:uppercase;">${d}</span>`;
+                    }},
+                    { data: 'auditorName', name: 'AuditorName', render: d => `<span style="color:#FFF;">${d}</span>` },
+                    { data: 'notes', name: 'Notes', render: d => `<div style="color:#888; font-family:'Roboto Mono'; font-size:0.8rem; max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${d || ''}">${d || "N/A"}</div>` },
+                    { 
+                        data: null, 
+                        searchable: false, 
+                        orderable: false, 
+                        render: function (d, t, r) { 
+                            var detailsUrl = '@Url.Action("Details", "StockAudits")/' + r.auditId;
+                            var editUrl = '@Url.Action("Edit", "StockAudits")/' + r.auditId;
+                            var deleteUrl = '@Url.Action("Delete", "StockAudits")/' + r.auditId;
+                            return '<div style="text-align:center;">'
+                                 + '<button type="button" class="btn-cyber-info btn-show-modal" data-url="' + detailsUrl + '" style="padding:4px 8px; font-size:0.75rem;"><i class="fa-solid fa-circle-info"></i></button> '
+                                 + '<button type="button" class="btn-cyber-primary btn-show-modal" data-url="' + editUrl + '" style="padding:4px 8px; font-size:0.75rem;"><i class="fa-solid fa-pen-to-square"></i></button> ' 
+                                 + '<button type="button" class="btn-cyber-danger btn-show-modal" data-url="' + deleteUrl + '" style="padding:4px 8px; font-size:0.75rem;"><i class="fa-solid fa-trash"></i></button>'
+                                 + '</div>'; 
+                        } 
+                    }                        
+                ],
+                drawCallback: function (settings) {
+                    var api = this.api();
+                    var json = api.ajax.json();
+                    if (json && json.recordsTotal !== undefined) {
+                        $('#totalRecordsCount').text(json.recordsTotal);
+                    }
+                }
+            });   
+        });
+    </script>
+}

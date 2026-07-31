@@ -6,7 +6,7 @@ using System.Linq.Dynamic.Core;
 namespace DigiPOSE.Areas.Administrator.Controllers
 {
     [Area("Administrator")]
-    [Authorize(Roles = "Super Admin, Administrator, Branch Manager, Accountant")]
+    [Authorize(Roles = "Super Admin, Administrator, Tenant Manager, Accountant")]
     public class RetailsController : Controller
     {
         private readonly DigiPoseDbContext _context;
@@ -32,7 +32,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 int skip = start != null ? Convert.ToInt32(start) : 0;
 
                 var query = _context.Retails
-                    .Include(r => r.Branch)
+                    .Include(r => r.Tenant)
                     .Include(r => r.User)
                     .Include(r => r.PaymentMethod)
                     .AsQueryable();
@@ -45,7 +45,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                         m.DocNo.Contains(searchValue) ||
                         (m.RetailNo != null && m.RetailNo.Contains(searchValue)) ||
                         (m.BuyerLegalName != null && m.BuyerLegalName.Contains(searchValue)) ||
-                        (m.Branch != null && m.Branch.BranchName != null && m.Branch.BranchName.Contains(searchValue)));
+                        (m.Tenant != null && m.Tenant.TenantName != null && m.Tenant.TenantName.Contains(searchValue)));
                 }
 
                 int filterRecords = query.Count();
@@ -60,7 +60,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                     DocNo = m.DocNo,
                     RetailNo = m.RetailNo ?? "",
                     DocType = m.DocType,
-                    BranchName = m.Branch != null ? m.Branch.BranchName : "",
+                    TenantName = m.Tenant != null ? m.Tenant.TenantName : "",
                     BuyerName = m.BuyerLegalName ?? "Walk-in",
                     PaymentMethod = m.PaymentMethod != null ? m.PaymentMethod.MethodName : "",
                     TotalAmount = m.TotalAmount,
@@ -80,14 +80,14 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         public async Task<IActionResult> ExportExcel(string? searchValue)
         {
             var query = _context.Retails
-                .Include(r => r.Branch).Include(r => r.User).Include(r => r.PaymentMethod)
+                .Include(r => r.Tenant).Include(r => r.User).Include(r => r.PaymentMethod)
                 .AsQueryable();
             if (!string.IsNullOrEmpty(searchValue))
                 query = query.Where(m => m.DocNo.Contains(searchValue) || (m.BuyerLegalName != null && m.BuyerLegalName.Contains(searchValue)));
 
             var list = await query.OrderByDescending(r => r.EndDate).Select(m => new {
                 m.RetailId, m.DocNo, m.RetailNo, m.DocType,
-                Branch = m.Branch != null ? m.Branch.BranchName : "",
+                Tenant = m.Tenant != null ? m.Tenant.TenantName : "",
                 Cashier = m.User != null ? m.User.UserName : "",
                 BuyerName = m.BuyerLegalName ?? "Walk-in",
                 m.BuyerTaxCode,
@@ -108,7 +108,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             if (id == null) return NotFound();
             var item = await _context.Retails
                 .Include(r => r.Order).ThenInclude(o => o!.OrderDetails!)
-                .Include(r => r.Branch).Include(r => r.Counter).Include(r => r.Shift)
+                .Include(r => r.Tenant).Include(r => r.Counter).Include(r => r.Shift)
                 .Include(r => r.User).Include(r => r.Customer).Include(r => r.PaymentMethod)
                 .FirstOrDefaultAsync(m => m.RetailId == id);
             if (item == null) return NotFound();
@@ -119,7 +119,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         {
             if (id == null) return NotFound();
             var item = await _context.Retails
-                .Include(r => r.Branch).Include(r => r.User)
+                .Include(r => r.Tenant).Include(r => r.User)
                 .FirstOrDefaultAsync(m => m.RetailId == id);
             if (item == null) return NotFound();
             return PartialView("_DeletePartial", item);

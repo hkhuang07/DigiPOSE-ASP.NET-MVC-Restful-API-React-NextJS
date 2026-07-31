@@ -1,4 +1,4 @@
-global using Microsoft.AspNetCore.Mvc;
+﻿global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.AspNetCore.Authorization;
 using DigiPOSE.Models;
 using DigiPOSE.Helpers;
@@ -32,6 +32,9 @@ builder.Services.AddSingleton(Channel.CreateUnbounded<JobQueueItem>(new Unbounde
 builder.Services.AddHostedService<ResilientInvoiceWorker>();
 builder.Services.AddMemoryCache();
 builder.Services.AddSignalR();
+// >>> [RESILIENT_GIS_BFF_LAYER]: Register Polly v8 Standard Resilience Pipeline for offline-first GIS caching
+builder.Services.AddHttpClient<IGisResilienceService, GisResilienceService>()
+    .AddStandardResilienceHandler();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
 {
@@ -47,7 +50,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddAuthorization(options =>
 {
     var permissions = new[] {
-        "System.Config.Manage", "System.Branch.Manage", "System.Role.Manage", "System.User.Manage",
+        "System.Config.Manage", "System.Tenant.Manage", "System.Role.Manage", "System.User.Manage",
         "POS.Shift.Open", "POS.Shift.Close", "POS.Order.Create", "POS.Order.Void", "POS.Discount.Apply",
         "Warehouse.Inventory.View", "Warehouse.Voucher.Create", "Warehouse.Voucher.Approve", "Warehouse.Inventory.Adjust", "Warehouse.Supplier.Manage",
         "Catalog.Product.Manage", "Catalog.Category.Manage", "Catalog.Price.Manage",

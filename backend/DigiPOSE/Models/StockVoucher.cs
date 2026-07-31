@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DigiPOSE.Models
@@ -19,9 +19,9 @@ namespace DigiPOSE.Models
         [Display(Name = "Voucher Code")]
         public string VoucherCode { get; set; } = string.Empty;
 
-        [Display(Name = "Branch")] 
-        [Required(ErrorMessage = "Please select a branch.")]
-        public int BranchId { get; set; }
+        [Display(Name = "Tenant")] 
+        [Required(ErrorMessage = "Please select a tenant.")]
+        public int TenantId { get; set; }
         
         [Display(Name = "Employee")] 
         [Required(ErrorMessage = "Please select an employee.")]
@@ -51,7 +51,7 @@ namespace DigiPOSE.Models
         [Display(Name = "Created At")] 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        public Branch? Branch { get; set; }
+        public Tenant? Tenant { get; set; }
         [ForeignKey("UserId")]
         public User? User { get; set; }
         [ForeignKey("ApprovedByUserId")]

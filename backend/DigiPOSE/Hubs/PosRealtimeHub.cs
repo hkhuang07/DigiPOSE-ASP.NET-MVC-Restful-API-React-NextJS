@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
 namespace DigiPOSE.Hubs
@@ -12,16 +12,16 @@ namespace DigiPOSE.Hubs
             _logger = logger;
         }
 
-        public async Task JoinBranchGroup(int branchId)
+        public async Task JoinTenantGroup(int tenantId)
         {
-            string groupName = $"Branch_{branchId}";
+            string groupName = $"Tenant_{tenantId}";
             await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
             _logger.LogInformation(">>> [SIGNALR_JOIN]: POS Terminal (ConnId: {ConnId}) joined LAN group [{Group}].", Context.ConnectionId, groupName);
         }
 
-        public async Task LeaveBranchGroup(int branchId)
+        public async Task LeaveTenantGroup(int tenantId)
         {
-            string groupName = $"Branch_{branchId}";
+            string groupName = $"Tenant_{tenantId}";
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
             _logger.LogInformation(">>> [SIGNALR_LEAVE]: POS Terminal (ConnId: {ConnId}) left LAN group [{Group}].", Context.ConnectionId, groupName);
         }

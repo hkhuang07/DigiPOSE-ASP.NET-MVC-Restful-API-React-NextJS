@@ -1,17 +1,17 @@
-using Microsoft.EntityFrameworkCore.Infrastructure;
+﻿using Microsoft.EntityFrameworkCore.Infrastructure;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema; 
 using Microsoft.AspNetCore.Http;
 
 namespace DigiPOSE.Models
 {
-    public class Branch
+    public class Tenant
     {
-        [Key] public int BranchId { get; set; }
-        [Required(ErrorMessage = "Branch Name cannot be empty.")]
-        [StringLength(150, ErrorMessage = "Branch Name cannot exceed 150 characters.")]
-        [Display(Name = "Branch Name")] 
-        public string BranchName { get; set; } = null!;
+        [Key] public int TenantId { get; set; }
+        [Required(ErrorMessage = "Tenant Name cannot be empty.")]
+        [StringLength(150, ErrorMessage = "Tenant Name cannot exceed 150 characters.")]
+        [Display(Name = "Tenant Name")] 
+        public string TenantName { get; set; } = null!;
         
         [StringLength(200, ErrorMessage = "Slug cannot exceed 200 characters.")] 
         public string? Slug { get; set; }

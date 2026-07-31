@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DigiPOSE.Models
@@ -17,9 +17,9 @@ namespace DigiPOSE.Models
         [Display(Name = "Invoice Number")]
         public string? InvoiceNumber { get; set; }
         
-        [Display(Name = "Branch")] 
-        [Required(ErrorMessage = "Please select a branch.")]
-        public int BranchId { get; set; }
+        [Display(Name = "Tenant")] 
+        [Required(ErrorMessage = "Please select a tenant.")]
+        public int TenantId { get; set; }
         
         [Display(Name = "Shift")] 
         [Required(ErrorMessage = "Please select a shift.")]

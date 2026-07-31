@@ -1,0 +1,40 @@
+﻿@model DigiPOSE.Models.StockTransfer
+<div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-truck-ramp-box text-cyan me-2"></i> STOCK TRANSFER DETAILS</h5>
+        <button type="button" class="btn-close-cyber" data-bs-dismiss="modal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+        <div style="background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(0, 229, 255, 0.3); padding: 1.25rem;">
+            <div class="row mb-3 align-items-center">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">TRANSFER CODE:</div>
+                <div class="col-8" style="font-family:'VT323'; font-size:1.4rem; color:#00FF66;">@Model.TransferCode</div>
+            </div>
+            <div class="row mb-3 align-items-center">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">ROUTE:</div>
+                <div class="col-8" style="font-family:'Rajdhani'; font-size:1.1rem; font-weight:bold; color:#FFF;">
+                    @(Model.SourceTenant?.TenantName ?? "N/A") <i class="fa-solid fa-arrow-right text-warning mx-2"></i> @(Model.DestinationTenant?.TenantName ?? "N/A")
+                </div>
+            </div>
+            <div class="row mb-3 align-items-center">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">INITIATED BY:</div>
+                <div class="col-8" style="font-family:'Rajdhani'; font-size:1.1rem; color:#FFF;">@(Model.InitiatorUser?.UserName ?? "N/A")</div>
+            </div>
+            <div class="row mb-3 align-items-center">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">STATUS:</div>
+                <div class="col-8">
+                    <span style="border:1px solid #00E5FF; color:#00E5FF; padding:2px 8px; font-size:0.8rem; font-family:'VT323';">@Model.Status</span>
+                </div>
+            </div>
+            <div class="row align-items-start">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">REMARKS:</div>
+                <div class="col-8" style="font-family:'Roboto Mono'; font-size:0.9rem; color:#A0C0CE; line-height:1.5; word-break:break-word;">@(string.IsNullOrEmpty(Model.Notes) ? "No dispatch notes provided." : Model.Notes)</div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn-cyber-cancel" data-bs-dismiss="modal">
+            <i class="fa-solid fa-xmark me-1"></i> CLOSE
+        </button>
+    </div>
+</div>

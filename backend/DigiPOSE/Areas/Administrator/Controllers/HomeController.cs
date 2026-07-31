@@ -1,4 +1,4 @@
-using DigiPOSE.Models;
+﻿using DigiPOSE.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
@@ -36,7 +36,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 // Map tables dynamically based on Module Name stored in DB
                 if (sm.ModuleName == "System")
                 {
-                    mod.Tables.Add(new TableTelemetryInfo { TableName = "Branch", ControllerName = "Branches", RecordCount = await _context.Branches.CountAsync() });
+                    mod.Tables.Add(new TableTelemetryInfo { TableName = "Tenant", ControllerName = "Tenants", RecordCount = await _context.Tenants.CountAsync() });
                     mod.Tables.Add(new TableTelemetryInfo { TableName = "Counter", ControllerName = "Counters", RecordCount = await _context.Counters.CountAsync() });
                     mod.Tables.Add(new TableTelemetryInfo { TableName = "Permission", ControllerName = "Permissions", RecordCount = await _context.Permissions.CountAsync() });
                     mod.Tables.Add(new TableTelemetryInfo { TableName = "PermissionRole", ControllerName = "PermissionRoles", RecordCount = await _context.PermissionRoles.CountAsync() });
@@ -51,12 +51,15 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                     mod.Tables.Add(new TableTelemetryInfo { TableName = "CustomerType", ControllerName = "CustomerTypes", RecordCount = await _context.CustomerTypes.CountAsync() });
                     mod.Tables.Add(new TableTelemetryInfo { TableName = "Customer", ControllerName = "Customers", RecordCount = await _context.Customers.CountAsync() });
                     mod.Tables.Add(new TableTelemetryInfo { TableName = "Supplier", ControllerName = "Suppliers", RecordCount = await _context.Suppliers.CountAsync() });
+                    mod.Tables.Add(new TableTelemetryInfo { TableName = "Retail", ControllerName = "Retails", RecordCount = await _context.Retails.CountAsync() });
                 }
                 else if (sm.ModuleName == "Warehouse")
                 {
                     mod.Tables.Add(new TableTelemetryInfo { TableName = "ProductInventory", ControllerName = "ProductInventories", RecordCount = await _context.ProductInventories.CountAsync() });
                     mod.Tables.Add(new TableTelemetryInfo { TableName = "StockVoucher", ControllerName = "StockVouchers", RecordCount = await _context.StockVouchers.CountAsync() });
                     mod.Tables.Add(new TableTelemetryInfo { TableName = "StockVoucherDetail", ControllerName = "StockVoucherDetails", RecordCount = await _context.StockVoucherDetails.CountAsync() });
+                    mod.Tables.Add(new TableTelemetryInfo { TableName = "StockTransfer", ControllerName = "StockTransfers", RecordCount = await _context.StockTransfers.CountAsync() });
+                    mod.Tables.Add(new TableTelemetryInfo { TableName = "StockAudit", ControllerName = "StockAudits", RecordCount = await _context.StockAudits.CountAsync() });
                 }
                 else if (sm.ModuleName == "Catalog")
                 {
@@ -77,6 +80,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                     mod.Tables.Add(new TableTelemetryInfo { TableName = "InvoiceStatus", ControllerName = "InvoiceStatuses", RecordCount = await _context.InvoiceStatuses.CountAsync() });
                     mod.Tables.Add(new TableTelemetryInfo { TableName = "InvoiceType", ControllerName = "InvoiceTypes", RecordCount = await _context.InvoiceTypes.CountAsync() });
                     mod.Tables.Add(new TableTelemetryInfo { TableName = "Invoice", ControllerName = "Invoices", RecordCount = await _context.Invoices.CountAsync() });
+                    mod.Tables.Add(new TableTelemetryInfo { TableName = "Subscription", ControllerName = "Subscriptions", RecordCount = await _context.Subscriptions.CountAsync() });
                 }
                 
                 mod.TableCount = mod.Tables.Count;

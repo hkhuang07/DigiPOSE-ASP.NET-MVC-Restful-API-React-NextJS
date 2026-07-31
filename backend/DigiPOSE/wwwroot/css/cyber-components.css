@@ -1,0 +1,120 @@
+/* ====================================================================
+   [DIGIPOSE CYBER-COMPONENTS DESIGN SYSTEM // O(1) OVERHEAD TOKENS]
+   ==================================================================== */
+
+/* --- TYPOGRAPHY & DATA LABELS --- */
+.font-mono-sub {
+    font-family: 'Roboto Mono', monospace !important;
+    font-size: 0.85rem !important;
+}
+.font-mono-sm {
+    font-family: 'Roboto Mono', monospace !important;
+    font-size: 0.8rem !important;
+}
+.font-mono-xs {
+    font-family: 'Roboto Mono', monospace !important;
+    font-size: 0.75rem !important;
+}
+.font-data-large {
+    font-family: 'VT323', monospace !important;
+    font-size: 1.3rem !important;
+    color: #FFF !important;
+}
+.font-header-title {
+    font-family: 'Rajdhani', sans-serif !important;
+    font-weight: 600 !important;
+    color: #FFF !important;
+}
+
+/* --- TEXT ELLIPSIS & CONTAINERS --- */
+.text-ellipsis-box {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --- BUTTON & BADGE ACTION TOKENS --- */
+.btn-cyber-cancel {
+    border-top: 1px solid aliceblue !important;
+    border-bottom: 1px solid aliceblue !important;
+    border-left: none !important;
+    border-right: none !important;
+    color: aliceblue !important;
+    background: #222222 !important;
+    padding: 6px 16px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    transition: all 0.2s ease-in-out;
+}
+.btn-cyber-cancel:hover {
+    background: #333333 !important;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.badge-status-toggle {
+    cursor: pointer;
+    font-size: 0.75rem !important;
+    padding: 4px 8px !important;
+    border: 0 !important;
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 0.5px;
+}
+
+/* Table action buttons in DataTables */
+.btn-action-dt {
+    padding: 4px 8px !important;
+    font-size: 0.75rem !important;
+}
+.btn-action-info {
+    border-color: #00E5FF !important;
+    color: #00E5FF !important;
+}
+.btn-action-edit {
+    border-color: #FFB000 !important;
+    color: #FFB000 !important;
+}
+.btn-action-delete {
+    border-color: #FF2E63 !important;
+    color: #FF2E63 !important;
+}
+
+/* --- FORM CYBER CONTROLS & CHECKBOXES --- */
+.form-cyber-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    color: #00E5FF;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+.form-cyber-control {
+    background: #0D0D0D !important;
+    border: 1px solid #222 !important;
+    color: #FFF !important;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.95rem !important;
+}
+.form-cyber-control:focus {
+    border-color: #00E5FF !important;
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.3) !important;
+}
+.form-check-cyber {
+    background-color: #111 !important;
+    border: 1px solid #00E5FF !important;
+    width: 20px;
+    height: 20px;
+}
+.form-check-cyber:checked {
+    background-color: #00FF66 !important;
+    border-color: #00FF66 !important;
+    box-shadow: 0 0 8px rgba(0, 255, 102, 0.5);
+}
+
+/* --- CYBER MODAL UTILITIES --- */
+.modal-cyber .modal-dialog-md {
+    max-width: 620px !important;
+}
+.modal-cyber .modal-dialog-lg {
+    max-width: 850px !important;
+}

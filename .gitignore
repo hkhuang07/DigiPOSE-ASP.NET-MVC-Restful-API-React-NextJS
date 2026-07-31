@@ -53,7 +53,7 @@ docs/pos
 docs/store
 docs/walkthought.md
 docs/implementation_plan.md
-
+docs/Design.docx
 
 # ── Cryptographic Secrets & SSL Certificates ──
 *.pfx

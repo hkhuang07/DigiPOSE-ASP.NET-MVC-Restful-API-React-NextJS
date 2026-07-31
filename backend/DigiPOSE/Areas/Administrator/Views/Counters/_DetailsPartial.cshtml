@@ -1,4 +1,4 @@
-@model DigiPOSE.Models.Counter
+﻿@model DigiPOSE.Models.Counter
 <div class="modal-content">
     <div class="modal-header">
         <h5 class="modal-title"><i class="fa-solid fa-desktop text-cyan me-2"></i> COUNTER DETAILS</h5>
@@ -7,7 +7,7 @@
     <div class="modal-body">
         <table class="table-cyber" style="font-family:'Roboto Mono'; font-size:0.9rem;">
             <tr><td style="color:#00E5FF; width:35%;">@Html.DisplayNameFor(model => model.CounterId)</td><td>@Model.CounterId</td></tr>
-            <tr><td style="color:#00E5FF;">@Html.DisplayNameFor(model => model.Branch)</td><td>@Model.Branch?.BranchName</td></tr>
+            <tr><td style="color:#00E5FF;">@Html.DisplayNameFor(model => model.Tenant)</td><td>@Model.Tenant?.TenantName</td></tr>
             <tr><td style="color:#00E5FF;">@Html.DisplayNameFor(model => model.CounterName)</td><td style="font-weight:600;">@Model.CounterName</td></tr>
             <tr><td style="color:#00E5FF;">STATUS</td><td><span class="badge @(Model.IsActive ? "bg-success" : "bg-secondary")">@(Model.IsActive ? "ACTIVE" : "INACTIVE")</span></td></tr>
         </table>

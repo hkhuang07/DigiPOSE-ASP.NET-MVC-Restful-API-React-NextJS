@@ -85,5 +85,6 @@ namespace DigiPOSE.Models
         public bool IsActive { get; set; } = true;
 
         public CustomeType? CustomeType { get; set; }
+        public virtual ICollection<CustomerAddress>? Addresses { get; set; } = new List<CustomerAddress>();
     }
 }

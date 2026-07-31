@@ -1,0 +1,97 @@
+/* ====================================================================
+   [DIGIPOSE CYBER-ADMIN DESIGN MODULE // ENTERPRISE COMMAND HUD]
+   ==================================================================== */
+
+.cyber-panel-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.cyber-panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cyber-records-counter {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.85rem;
+    color: #00E5FF;
+    white-space: nowrap;
+    background: rgba(0, 229, 255, 0.05);
+    padding: 4px 12px;
+    border-left: 2px solid #00E5FF;
+}
+
+.table-cyber th.th-num {
+    width: 5%;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.table-cyber th.th-actions {
+    width: 120px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.table-cyber th, .table-cyber td {
+    vertical-align: middle;
+    padding: 10px 12px;
+    border-color: #1A1A1A !important;
+}
+
+.table-cyber tbody tr:hover {
+    background: rgba(0, 229, 255, 0.04) !important;
+    box-shadow: inset 2px 0 0 0 #00E5FF;
+}
+
+.btn-export-link {
+    text-decoration: none !important;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* --- TELEMETRY HAZARD DASHBOARD FEED --- */
+.hazard-feed-container {
+    background: #09090A;
+    border: 1px solid #FF2E63;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 0 100%);
+}
+
+.hazard-feed-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed rgba(255, 46, 99, 0.4);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    color: #FF2E63;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    letter-spacing: 1px;
+    font-size: 1.1rem;
+}
+
+.hazard-list-item {
+    padding: 0.5rem;
+    border-left: 3px solid #FF2E63;
+    background: rgba(255, 46, 99, 0.05);
+    margin-bottom: 0.5rem;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.82rem;
+    color: #EEE;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.hazard-list-item:last-child {
+    margin-bottom: 0;
+}

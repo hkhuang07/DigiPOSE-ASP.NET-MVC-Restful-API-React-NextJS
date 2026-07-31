@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
@@ -38,7 +38,7 @@ namespace DigiPOSE.Services.Background
 
                 foreach (var inv in allInventories)
                 {
-                    _ramService.InitializeOrUpdateStock(inv.BranchId, inv.ProductId, inv.StockQuantity);
+                    _ramService.InitializeOrUpdateStock(inv.TenantId, inv.ProductId, inv.StockQuantity);
                 }
 
                 _logger.LogInformation(">>> [WARMUP_SUCCESS]: Successfully cached {Count} SKU balances into ConcurrentDictionary.", allInventories.Count);

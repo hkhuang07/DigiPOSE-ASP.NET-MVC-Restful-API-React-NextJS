@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DigiPOSE.Models;
 using DigiPOSE.Web.Helpers;
@@ -8,12 +8,12 @@ using System.Linq.Dynamic.Core;
 namespace DigiPOSE.Areas.Administrator.Controllers
 {
     [Area("Administrator")]
-    [Authorize(Roles = "Super Admin, Administrator, Branch Manager, POS Operator, Warehouse, Catalog, Accountant")]
-    public class BranchesController : Controller
+    [Authorize(Roles = "Super Admin, Administrator, Tenant Manager, POS Operator, Warehouse, Catalog, Accountant")]
+    public class TenantsController : Controller
     {
         
         private readonly DigiPoseDbContext _context;
-        public BranchesController(DigiPoseDbContext context) { _context = context; }
+        public TenantsController(DigiPoseDbContext context) { _context = context; }
 
         public async Task<IActionResult> Index()
         {
@@ -34,7 +34,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 int pageSize = length != null ? Convert.ToInt32(length) : 0;
                 int skip = start != null ? Convert.ToInt32(start) : 0;
 
-                var query = _context.Branches.AsQueryable();
+                var query = _context.Tenants.AsQueryable();
 
                 int totalRecords = query.Count();
 
@@ -42,7 +42,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 if (!string.IsNullOrEmpty(searchValue))
                 {
                     query = query.Where(m =>
-                        (m.BranchName != null && m.BranchName.Contains(searchValue)) ||
+                        (m.TenantName != null && m.TenantName.Contains(searchValue)) ||
                         (m.Address != null && m.Address.Contains(searchValue)) ||
                         (m.ContactPhone != null && m.ContactPhone.Contains(searchValue)) ||
                         (m.Email != null && m.Email.Contains(searchValue)));
@@ -58,8 +58,8 @@ namespace DigiPOSE.Areas.Administrator.Controllers
 
                 // Paging & Mapping
                 var dataList = query.Skip(skip).Take(pageSize).Select(m => new {
-                    BranchId = m.BranchId,
-                    BranchName = m.BranchName,
+                    TenantId = m.TenantId,
+                    TenantName = m.TenantName,
                     Slug = m.Slug,
                     Address = m.Address,
                     ContactPhone = m.ContactPhone,
@@ -78,18 +78,18 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         [HttpGet]
         public async Task<IActionResult> ExportExcel(string? searchValue)
         {
-            var query = _context.Branches.AsQueryable();
+            var query = _context.Tenants.AsQueryable();
             if (!string.IsNullOrEmpty(searchValue))
             {
                 query = query.Where(m =>
-                    (m.BranchName != null && m.BranchName.Contains(searchValue)) ||
+                    (m.TenantName != null && m.TenantName.Contains(searchValue)) ||
                     (m.Address != null && m.Address.Contains(searchValue)) ||
                     (m.ContactPhone != null && m.ContactPhone.Contains(searchValue)) ||
                     (m.Email != null && m.Email.Contains(searchValue)));
             }
             var list = await query.Select(m => new {
-                m.BranchId,
-                m.BranchName,
+                m.TenantId,
+                m.TenantName,
                 m.Slug,
                 m.Address,
                 m.ContactPhone,
@@ -98,28 +98,28 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 IsActive = m.IsActive
             }).ToListAsync();
 
-            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "Branches", "Branch Directory Export");
-            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Branches_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
+            var bytes = DigiPOSE.Services.CyberExcelExportService.ExportToExcel(list, "Tenants", "Tenant Directory Export");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Tenants_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
         }
 
         public async Task<IActionResult> Details(int? id) //Lấy thông tin chi tiết 1 sản phẩm
         {
             if (id == null) 
                 return NotFound();
-            var item = await _context.Branches.FirstOrDefaultAsync(m => m.BranchId == id);
+            var item = await _context.Tenants.FirstOrDefaultAsync(m => m.TenantId == id);
             if (item == null) 
                 return NotFound();
             return PartialView("_DetailsPartial", item);
         }
 
         public IActionResult Create()
-            => PartialView("_CreateOrEditPartial", new Branch());
+            => PartialView("_CreateOrEditPartial", new Tenant());
 
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Branch model)
+        public async Task<IActionResult> Create(Tenant model)
         {
             if (string.IsNullOrWhiteSpace(model.Slug))
-                model.Slug = SlugHelper.GenerateSlug(model.BranchName);
+                model.Slug = SlugHelper.GenerateSlug(model.TenantName);
             ModelState.Remove("Slug");
 
             if (!ModelState.IsValid)
@@ -127,24 +127,24 @@ namespace DigiPOSE.Areas.Administrator.Controllers
 
             _context.Add(model);
             await _context.SaveChangesAsync();
-            return Json(new { success = true, message = "Branch created successfully." });
+            return Json(new { success = true, message = "Tenant created successfully." });
         }
 
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
-            var item = await _context.Branches.FindAsync(id);
+            var item = await _context.Tenants.FindAsync(id);
             if (item == null) return NotFound();
             return PartialView("_CreateOrEditPartial", item);
         }
 
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Branch model)
+        public async Task<IActionResult> Edit(int id, Tenant model)
         {
-            if (id != model.BranchId) return Json(new { success = false, message = "ID mismatch." });
+            if (id != model.TenantId) return Json(new { success = false, message = "ID mismatch." });
 
             if (string.IsNullOrWhiteSpace(model.Slug))
-                model.Slug = SlugHelper.GenerateSlug(model.BranchName);
+                model.Slug = SlugHelper.GenerateSlug(model.TenantName);
             ModelState.Remove("Slug");
 
             if (!ModelState.IsValid)
@@ -154,7 +154,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             {
                 _context.Update(model);
                 await _context.SaveChangesAsync();
-                return Json(new { success = true, message = "Branch updated successfully." });
+                return Json(new { success = true, message = "Tenant updated successfully." });
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -165,7 +165,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
-            var item = await _context.Branches.FirstOrDefaultAsync(m => m.BranchId == id);
+            var item = await _context.Tenants.FirstOrDefaultAsync(m => m.TenantId == id);
             if (item == null) return NotFound();
             return PartialView("_DeletePartial", item);
         }
@@ -173,17 +173,17 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var item = await _context.Branches.FindAsync(id);
+            var item = await _context.Tenants.FindAsync(id);
             if (item == null) return Json(new { success = false, message = "Record not found." });
-            _context.Branches.Remove(item);
+            _context.Tenants.Remove(item);
             await _context.SaveChangesAsync();
-            return Json(new { success = true, message = "Branch permanently deleted." });
+            return Json(new { success = true, message = "Tenant permanently deleted." });
         }
 
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleActive(int id)
         {
-            var item = await _context.Branches.FindAsync(id);
+            var item = await _context.Tenants.FindAsync(id);
             if (item == null) return Json(new { success = false });
             item.IsActive = !item.IsActive;
             await _context.SaveChangesAsync();

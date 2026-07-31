@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DigiPOSE.Models;
@@ -9,7 +9,7 @@ using System.Linq.Dynamic.Core;
 namespace DigiPOSE.Areas.Administrator.Controllers
 {
     [Area("Administrator")]
-    [Authorize(Roles = "Super Admin, Administrator, Branch Manager")]
+    [Authorize(Roles = "Super Admin, Administrator, Tenant Manager")]
     public class UsersController : Controller
     {
         private readonly DigiPoseDbContext _context;
@@ -41,7 +41,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 int skip = start != null ? Convert.ToInt32(start) : 0;
 
                 var query = _context.Users
-                    .Include(u => u.Branch)
+                    .Include(u => u.Tenant)
                     .Include(u => u.Role)
                     .AsQueryable();
 
@@ -54,7 +54,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                         (m.UserName != null && m.UserName.Contains(searchValue)) ||
                         (m.FullName != null && m.FullName.Contains(searchValue)) ||
                         (m.Email != null && m.Email.Contains(searchValue)) ||
-                        (m.Branch != null && m.Branch.BranchName.Contains(searchValue)) ||
+                        (m.Tenant != null && m.Tenant.TenantName.Contains(searchValue)) ||
                         (m.Role != null && m.Role.RoleName.Contains(searchValue)));
                 }
 
@@ -74,7 +74,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                     Email = m.Email,
                     PhoneNumber = m.PhoneNumber,
                     RoleName = m.Role != null ? m.Role.RoleName : "",
-                    BranchName = m.Branch != null ? m.Branch.BranchName : "",
+                    TenantName = m.Tenant != null ? m.Tenant.TenantName : "",
                     ImageUrl = m.ImageUrl ?? "",
                     IsActive = m.IsActive
                 }).ToList();
@@ -92,7 +92,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         {
             var query = _context.Users
                 .Include(u => u.Role)
-                .Include(u => u.Branch)
+                .Include(u => u.Tenant)
                 .AsQueryable();
             if (!string.IsNullOrEmpty(searchValue))
             {
@@ -109,7 +109,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 m.Email,
                 m.PhoneNumber,
                 RoleName = m.Role != null ? m.Role.RoleName : "",
-                BranchName = m.Branch != null ? m.Branch.BranchName : "",
+                TenantName = m.Tenant != null ? m.Tenant.TenantName : "",
                 m.IsActive
             }).ToListAsync();
 
@@ -121,7 +121,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         {
             if (id == null) return NotFound();
             var item = await _context.Users
-                .Include(u => u.Branch)
+                .Include(u => u.Tenant)
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(m => m.UserId == id);
             if (item == null) return NotFound();
@@ -130,7 +130,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
 
         public IActionResult Create()
         {
-            ViewBag.BranchId = new SelectList(_context.Branches.Where(b => b.IsActive), "BranchId", "BranchName");
+            ViewBag.TenantId = new SelectList(_context.Tenants.Where(b => b.IsActive), "TenantId", "TenantName");
             ViewBag.RoleId = new SelectList(_context.Roles, "RoleId", "RoleName");
             return PartialView("_CreatePartial", new User());
         }
@@ -144,7 +144,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
 
             if (!ModelState.IsValid)
             {
-                ViewBag.BranchId = new SelectList(_context.Branches.Where(b => b.IsActive), "BranchId", "BranchName", model.BranchId);
+                ViewBag.TenantId = new SelectList(_context.Tenants.Where(b => b.IsActive), "TenantId", "TenantName", model.TenantId);
                 ViewBag.RoleId = new SelectList(_context.Roles, "RoleId", "RoleName", model.RoleId);
                 return PartialView("_CreatePartial", model);
             }
@@ -181,7 +181,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             if (id == null) return NotFound();
             var item = await _context.Users.FindAsync(id);
             if (item == null) return NotFound();
-            ViewBag.BranchId = new SelectList(_context.Branches.Where(b => b.IsActive), "BranchId", "BranchName", item.BranchId);
+            ViewBag.TenantId = new SelectList(_context.Tenants.Where(b => b.IsActive), "TenantId", "TenantName", item.TenantId);
             ViewBag.RoleId = new SelectList(_context.Roles, "RoleId", "RoleName", item.RoleId);
             return PartialView("_EditPartial", item);
         }
@@ -199,7 +199,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
 
             if (!ModelState.IsValid)
             {
-                ViewBag.BranchId = new SelectList(_context.Branches.Where(b => b.IsActive), "BranchId", "BranchName", model.BranchId);
+                ViewBag.TenantId = new SelectList(_context.Tenants.Where(b => b.IsActive), "TenantId", "TenantName", model.TenantId);
                 ViewBag.RoleId = new SelectList(_context.Roles, "RoleId", "RoleName", model.RoleId);
                 return PartialView("_EditPartial", model);
             }
@@ -251,7 +251,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             }
             catch (DbUpdateConcurrencyException) { }
 
-            ViewBag.BranchId = new SelectList(_context.Branches.Where(b => b.IsActive), "BranchId", "BranchName", model.BranchId);
+            ViewBag.TenantId = new SelectList(_context.Tenants.Where(b => b.IsActive), "TenantId", "TenantName", model.TenantId);
             ViewBag.RoleId = new SelectList(_context.Roles, "RoleId", "RoleName", model.RoleId);
             return PartialView("_EditPartial", model);
         }
@@ -260,7 +260,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         {
             if (id == null) return NotFound();
             var item = await _context.Users
-                .Include(u => u.Branch).Include(u => u.Role)
+                .Include(u => u.Tenant).Include(u => u.Role)
                 .FirstOrDefaultAsync(m => m.UserId == id);
             if (item == null) return NotFound();
             return PartialView("_DeletePartial", item);

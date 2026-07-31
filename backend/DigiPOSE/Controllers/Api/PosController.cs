@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DigiPOSE.Models;
@@ -47,7 +47,7 @@ namespace DigiPOSE.Controllers.Api
 
         // >>> [LAN TELEMETRY]: Fast SKU/Barcode real-time lookup in O(1) database index & RAM Engine
         [HttpGet("catalog/lookup")]
-        public async Task<IActionResult> LookupBySku([FromQuery] string sku, [FromQuery] int branchId = 1)
+        public async Task<IActionResult> LookupBySku([FromQuery] string sku, [FromQuery] int tenantId = 1)
         {
             if (string.IsNullOrWhiteSpace(sku))
                 return BadRequest(new { Error = "SKU parameter cannot be empty." });
@@ -61,7 +61,7 @@ namespace DigiPOSE.Controllers.Api
             if (product == null)
                 return NotFound(new { Error = "SKU not registered in database inventory." });
 
-            int stock = await _inventoryRam.GetStockAsync(branchId, product.ProductId);
+            int stock = await _inventoryRam.GetStockAsync(tenantId, product.ProductId);
             return Ok(new
             {
                 ProductId = product.ProductId,
@@ -118,7 +118,7 @@ namespace DigiPOSE.Controllers.Api
 
             var order = new Order
             {
-                BranchId = request.BranchId,
+                TenantId = request.TenantId,
                 ShiftId = request.ShiftId,
                 UserId = request.UserId,
                 StatusId = 4, // 4: Draft
@@ -150,40 +150,66 @@ namespace DigiPOSE.Controllers.Api
             });
         }
 
-        // >>> [SETUP CONTEXT]: Return active branches for pre-POS device setup form
-        [HttpGet("setup/branches")]
-        public async Task<IActionResult> GetBranches()
+        // >>> [TELEMETRY SENTINEL]: Expose real-time hazard stream for Administrator Command Center
+        [HttpGet("telemetry/hazards")]
+        public IActionResult GetHazards([FromQuery] int limit = 20)
         {
-            var branches = await _context.Branches.AsNoTracking()
-                .Where(b => b.IsActive)
-                .Select(b => new { b.BranchId, b.BranchName, b.Address, b.ContactPhone })
-                .ToListAsync();
-            return Ok(branches);
+            return Ok(AnomalyTelemetrySentinel.GetRecentHazards(limit));
         }
 
-        // >>> [SETUP CONTEXT]: Return counters for selected branch
-        [HttpGet("setup/branches/{branchId}/counters")]
-        public async Task<IActionResult> GetCounters(int branchId)
+        // >>> [SETUP CONTEXT]: Return active tenants for pre-POS device setup form
+        [HttpGet("setup/tenants")]
+        public async Task<IActionResult> GetTenants()
+        {
+            var tenants = await _context.Tenants.AsNoTracking()
+                .Where(b => b.IsActive)
+                .Select(b => new { b.TenantId, b.TenantName, b.Address, b.ContactPhone })
+                .ToListAsync();
+            return Ok(tenants);
+        }
+
+        // >>> [SETUP CONTEXT]: Return counters for selected tenant (with auto-seeding resilience)
+        [HttpGet("setup/tenants/{tenantId}/counters")]
+        public async Task<IActionResult> GetCounters(int tenantId)
         {
             var counters = await _context.Counters.AsNoTracking()
-                .Where(c => c.BranchId == branchId && c.IsActive)
-                .Select(c => new { c.CounterId, c.CounterName, c.BranchId })
+                .Where(c => c.TenantId == tenantId && c.IsActive)
+                .Select(c => new { c.CounterId, c.CounterName, c.TenantId })
                 .ToListAsync();
+
+            if (!counters.Any() && tenantId > 0)
+            {
+                var tenantExists = await _context.Tenants.AnyAsync(b => b.TenantId == tenantId);
+                if (tenantExists || tenantId == 1)
+                {
+                    var defaultCounter = new Counter
+                    {
+                        TenantId = tenantId,
+                        CounterName = $"Terminal #1 - Tenant {tenantId}",
+                        IsActive = true,
+                        CreatedAt = DateTime.Now
+                    };
+                    _context.Counters.Add(defaultCounter);
+                    await _context.SaveChangesAsync();
+                    return Ok(new[] { new { defaultCounter.CounterId, defaultCounter.CounterName, defaultCounter.TenantId } });
+                }
+            }
+
             return Ok(counters);
         }
 
-        // >>> [SETUP CONTEXT]: Return product inventory summary for selected branch
-        [HttpGet("setup/branches/{branchId}/inventory-summary")]
-        public async Task<IActionResult> GetInventorySummary(int branchId)
+        // >>> [SETUP CONTEXT]: Return product inventory summary for selected tenant
+        [HttpGet("setup/tenants/{tenantId}/inventory-summary")]
+        public async Task<IActionResult> GetInventorySummary(int tenantId)
         {
             var totalProducts = await _context.ProductInventories.AsNoTracking()
-                .Where(i => i.BranchId == branchId && i.StockQuantity > 0)
+                .Where(i => i.TenantId == tenantId && i.StockQuantity > 0)
                 .CountAsync();
             var lowStockCount = await _context.ProductInventories.AsNoTracking()
-                .Where(i => i.BranchId == branchId && i.StockQuantity <= i.MinStockLevel && i.StockQuantity > 0)
+                .Where(i => i.TenantId == tenantId && i.StockQuantity <= i.MinStockLevel && i.StockQuantity > 0)
                 .CountAsync();
             var outOfStockCount = await _context.ProductInventories.AsNoTracking()
-                .Where(i => i.BranchId == branchId && i.StockQuantity == 0)
+                .Where(i => i.TenantId == tenantId && i.StockQuantity == 0)
                 .CountAsync();
             return Ok(new { TotalProducts = totalProducts, LowStock = lowStockCount, OutOfStock = outOfStockCount });
         }
@@ -202,11 +228,11 @@ namespace DigiPOSE.Controllers.Api
         [HttpPost("shift/start")]
         public async Task<IActionResult> StartShift([FromBody] StartShiftRequest request)
         {
-            // Verify counter exists for this branch
+            // Verify counter exists for this tenant
             var counter = await _context.Counters.AsNoTracking()
-                .FirstOrDefaultAsync(c => c.CounterId == request.CounterId && c.BranchId == request.BranchId);
+                .FirstOrDefaultAsync(c => c.CounterId == request.CounterId && c.TenantId == request.TenantId);
             if (counter == null)
-                return BadRequest(new { Error = "INVALID_COUNTER", Message = "Counter not found for this branch." });
+                return BadRequest(new { Error = "INVALID_COUNTER", Message = "Counter not found for this tenant." });
 
             // Check if user already has an open shift on this counter
             var existingOpenShift = await _context.Shifts.AsNoTracking()
@@ -268,7 +294,7 @@ namespace DigiPOSE.Controllers.Api
             });
         }
 
-        // >>> [SHIFT MANAGEMENT]: Close the active work shift — sets EndTime, EndCash, StatusId = 2
+        // >>> [SHIFT MANAGEMENT]: Close the active work shift — sets EndTime, EndCash, StatusId = 2 and verifies cash balancing
         [HttpPost("shift/close")]
         public async Task<IActionResult> CloseShift([FromBody] CloseShiftRequest request)
         {
@@ -284,6 +310,16 @@ namespace DigiPOSE.Controllers.Api
                 .Select(g => new { TotalRevenue = g.Sum(o => o.TotalAmount), OrderCount = g.Count() })
                 .FirstOrDefaultAsync();
 
+            decimal totalRevenue = shiftSummary?.TotalRevenue ?? 0;
+            int orderCount = shiftSummary?.OrderCount ?? 0;
+            decimal expectedEndCash = shift.StartCash + totalRevenue;
+            decimal difference = request.EndCash - expectedEndCash;
+            bool isBalanced = Math.Abs(difference) <= 1000m; // allow minimal VAT rounding tolerance <= 1000 VND
+            if (!isBalanced)
+            {
+                AnomalyTelemetrySentinel.RecordHazard("BLIND_CLOSE_DISCREPANCY", $"Cash Drawer Imbalance Delta detected on Shift #{shift.ShiftId}. Expected: {expectedEndCash:N0} ₫, Declared: {request.EndCash:N0} ₫ (Delta: {difference:N0} ₫).", "CRITICAL HAZARD", $"Tenant Shift #{shift.ShiftId}");
+            }
+
             shift.EndTime = DateTime.Now;
             shift.EndCash = request.EndCash;
             shift.StatusId = 2; // 2: Closed
@@ -292,28 +328,33 @@ namespace DigiPOSE.Controllers.Api
             return Ok(new
             {
                 ShiftId = shift.ShiftId,
-                Message = "Shift closed successfully.",
+                Message = isBalanced ? "Shift closed and cash drawer verified balanced successfully." : $"Shift closed with cash imbalance of {difference:N0} ₫.",
                 StartTime = shift.StartTime,
                 EndTime = shift.EndTime,
                 StartCash = shift.StartCash,
                 EndCash = shift.EndCash,
-                TotalRevenue = shiftSummary?.TotalRevenue ?? 0,
-                OrderCount = shiftSummary?.OrderCount ?? 0
+                ExpectedEndCash = expectedEndCash,
+                CashDifference = difference,
+                IsBalanced = isBalanced,
+                TotalRevenue = totalRevenue,
+                OrderCount = orderCount
             });
         }
 
         // >>> [DASHBOARD ANALYTICS]: Extended date-range analytics for Chart.js dashboard
         [HttpGet("dashboard/analytics")]
-        public async Task<IActionResult> GetAnalytics([FromQuery] int branchId, [FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null)
+        public async Task<IActionResult> GetAnalytics([FromQuery] int tenantId, [FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null, [FromQuery] DateTime? fromDate = null, [FromQuery] DateTime? toDate = null)
         {
-            var fromDate = from?.Date ?? DateTime.Today.AddDays(-29);
-            var toDate = (to?.Date ?? DateTime.Today).AddDays(1);
+            var targetFrom = fromDate ?? from ?? DateTime.Today.AddDays(-29);
+            var targetTo = toDate ?? to ?? DateTime.Today.AddDays(1);
+            var startRange = (fromDate.HasValue || from.HasValue) ? targetFrom : targetFrom.Date;
+            var endRange = (toDate.HasValue || to.HasValue) ? targetTo : targetTo.Date.AddDays(1);
 
             var completedOrders = await _context.Orders.AsNoTracking()
                 .Include(o => o.OrderDetails!)
                 .Include(o => o.PaymentMethod)
-                .Where(o => o.BranchId == branchId && o.StatusId == 1
-                    && o.CreatedAt >= fromDate && o.CreatedAt < toDate)
+                .Where(o => o.TenantId == tenantId && o.StatusId == 1
+                    && o.CreatedAt >= startRange && o.CreatedAt <= endRange)
                 .ToListAsync();
 
             // Revenue by day
@@ -362,8 +403,8 @@ namespace DigiPOSE.Controllers.Api
             var avgOrder = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
             return Ok(new {
-                FromDate = fromDate.ToString("yyyy-MM-dd"),
-                ToDate = to?.Date.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"),
+                FromDate = targetFrom.ToString("yyyy-MM-dd"),
+                ToDate = targetTo.ToString("yyyy-MM-dd"),
                 TotalRevenue = totalRevenue,
                 TotalOrders = totalOrders,
                 AvgOrderValue = avgOrder,
@@ -402,13 +443,21 @@ namespace DigiPOSE.Controllers.Api
         {
             var customer = await _context.Customers.FindAsync(id);
             if (customer == null) return NotFound(new { Error = "Customer not found." });
-            customer.FullName = request.FullName ?? customer.FullName;
-            customer.PhoneNumber = request.PhoneNumber ?? customer.PhoneNumber;
-            customer.Email = request.Email ?? customer.Email;
-            customer.Address = request.Address ?? customer.Address;
+            if (!string.IsNullOrWhiteSpace(request.FullName)) customer.FullName = request.FullName.Trim();
+            if (request.PhoneNumber != null) customer.PhoneNumber = request.PhoneNumber.Trim();
+            if (request.Email != null) customer.Email = request.Email.Trim();
+            if (request.Address != null) customer.Address = request.Address.Trim();
             if (request.CustomerTypeId.HasValue) customer.CustomeTypeId = request.CustomerTypeId.Value;
             await _context.SaveChangesAsync();
-            return Ok(new { CustomerId = customer.CustomerId, Message = "Customer updated." });
+            return Ok(new { 
+                customerId = customer.CustomerId, 
+                fullName = customer.FullName,
+                phoneNumber = customer.PhoneNumber,
+                email = customer.Email,
+                address = customer.Address,
+                rewardPoints = customer.RewardPoints,
+                Message = "Customer updated successfully." 
+            });
         }
 
         // >>> [VIP CUSTOMER MANAGEMENT]: Delete VIP customer from POS
@@ -433,9 +482,9 @@ namespace DigiPOSE.Controllers.Api
             return Ok(new { CustomerId = id, TotalPoints = customer.RewardPoints, Added = request.Points });
         }
 
-        // >>> [TODAY'S ORDERS]: Real-time order list for current branch/shift — no mock
+        // >>> [TODAY'S ORDERS]: Real-time order list for current tenant/shift — no mock
         [HttpGet("orders/today")]
-        public async Task<IActionResult> GetOrdersToday([FromQuery] int branchId, [FromQuery] int? shiftId = null, [FromQuery] string? invoiceNo = null, [FromQuery] decimal? minAmount = null)
+        public async Task<IActionResult> GetOrdersToday([FromQuery] int tenantId, [FromQuery] int? shiftId = null, [FromQuery] string? invoiceNo = null, [FromQuery] decimal? minAmount = null)
         {
             var today = DateTime.Today;
             var tomorrow = today.AddDays(1);
@@ -443,7 +492,7 @@ namespace DigiPOSE.Controllers.Api
             var query = _context.Orders.AsNoTracking()
                 .Include(o => o.PaymentMethod)
                 .Include(o => o.OrderDetails)
-                .Where(o => o.BranchId == branchId && o.CreatedAt >= today && o.CreatedAt < tomorrow && o.StatusId == 1);
+                .Where(o => o.TenantId == tenantId && o.CreatedAt >= today && o.CreatedAt < tomorrow && o.StatusId == 1);
 
             if (shiftId.HasValue) query = query.Where(o => o.ShiftId == shiftId.Value);
             if (!string.IsNullOrEmpty(invoiceNo)) query = query.Where(o => (o.InvoiceNumber ?? "").Contains(invoiceNo));
@@ -472,15 +521,64 @@ namespace DigiPOSE.Controllers.Api
             return Ok(summary);
         }
 
+        // >>> [EXPANDED TRANSACTION BREAKDOWN]: Comprehensive fiscal settlement and item detail inspection for POS modal
+        [HttpGet("orders/{orderId}/details")]
+        public async Task<IActionResult> GetOrderDetails(int orderId)
+        {
+            var order = await _context.Orders.AsNoTracking()
+                .Include(o => o.PaymentMethod)
+                .Include(o => o.Shift)
+                .Include(o => o.User)
+                .Include(o => o.Customer)
+                .Include(o => o.OrderDetails!)
+                .ThenInclude(d => d.Product)
+                .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
+            if (order == null)
+                return NotFound(new { Error = "Order not found." });
+
+            var retail = await _context.Retails.AsNoTracking().FirstOrDefaultAsync(r => r.OrderId == orderId);
+
+            return Ok(new
+            {
+                order.OrderId,
+                InvoiceNumber = order.InvoiceNumber ?? $"INV-{order.OrderId}",
+                DocNo = retail?.DocNo ?? "N/A",
+                DocType = retail?.DocType ?? "POS_RETAIL",
+                CreatedAt = order.CreatedAt,
+                CashierName = order.User?.UserName ?? $"User #{order.UserId}",
+                ShiftNumber = order.ShiftId,
+                CustomerName = order.SnapshotCustomerName ?? order.Customer?.FullName ?? "Walk-in Customer",
+                CustomerPhone = order.SnapshotCustomerPhone ?? order.Customer?.PhoneNumber ?? "",
+                RewardPointsTotal = order.Customer?.RewardPoints ?? 0,
+                PaymentMethod = order.PaymentMethod?.MethodName ?? "Cash",
+                GrossAmount = order.GrossAmount,
+                DiscountAmount = order.DiscountAmount,
+                TaxAmount = order.TaxAmount,
+                TotalAmount = order.TotalAmount,
+                TenderedAmount = order.TenderedAmount > 0 ? order.TenderedAmount : order.TotalAmount,
+                ChangeAmount = order.ChangeAmount,
+                Items = order.OrderDetails?.Select(d => new
+                {
+                    d.ProductId,
+                    Sku = d.Product?.SKU ?? $"SKU-{d.ProductId}",
+                    d.ProductName,
+                    d.Quantity,
+                    d.UnitPrice,
+                    LineTotal = d.TotalAmount
+                })
+            });
+        }
+
         // >>> [POS DASHBOARD]: Real KPIs for today — revenue, orders, top products
         [HttpGet("dashboard/summary")]
-        public async Task<IActionResult> GetDashboardSummary([FromQuery] int branchId, [FromQuery] int? shiftId = null)
+        public async Task<IActionResult> GetDashboardSummary([FromQuery] int tenantId, [FromQuery] int? shiftId = null)
         {
             var today = DateTime.Today;
             var tomorrow = today.AddDays(1);
 
             var ordersQuery = _context.Orders.AsNoTracking()
-                .Where(o => o.BranchId == branchId && o.CreatedAt >= today && o.CreatedAt < tomorrow && o.StatusId == 1);
+                .Where(o => o.TenantId == tenantId && o.CreatedAt >= today && o.CreatedAt < tomorrow && o.StatusId == 1);
 
             if (shiftId.HasValue) ordersQuery = ordersQuery.Where(o => o.ShiftId == shiftId.Value);
 
@@ -490,7 +588,7 @@ namespace DigiPOSE.Controllers.Api
 
             var topProducts = await _context.OrderDetails.AsNoTracking()
                 .Include(d => d.Order)
-                .Where(d => d.Order != null && d.Order.BranchId == branchId
+                .Where(d => d.Order != null && d.Order.TenantId == tenantId
                     && d.Order.CreatedAt >= today && d.Order.CreatedAt < tomorrow
                     && d.Order.StatusId == 1)
                 .GroupBy(d => new { d.ProductId, d.ProductName })
@@ -547,6 +645,17 @@ namespace DigiPOSE.Controllers.Api
 
             if (order == null) return BadRequest(new { Error = "Draft order not found." });
 
+            // >>> [SERVER-SIDE SHIFT INTEGRITY INTERCEPT]: Block client-side DOM bypassing of Stale Shift lockdown
+            if (order.ShiftId > 0)
+            {
+                var activeShift = await _context.Shifts.AsNoTracking().FirstOrDefaultAsync(s => s.ShiftId == order.ShiftId && s.StatusId == 1);
+                if (activeShift == null || DateTime.Now.Date > activeShift.StartTime.Date)
+                {
+                    AnomalyTelemetrySentinel.RecordHazard("STALE_SHIFT_BYPASS_ATTEMPT", $"Intercepted illegal retail trading action on expired/closed shift #{order.ShiftId}. Action rejected at server boundary.", "CRITICAL HAZARD", $"Order #{order.OrderId}");
+                    return StatusCode(403, new { error = "STALE_SHIFT_VIOLATION", message = "Server-Side Security Intercept: Trading operations frozen under Blind Close rules. Active shift belongs to a previous date and must be closed immediately." });
+                }
+            }
+
             // >>> [HIGH-PERFORMANCE I/O]: AsNoTracking prevents EF Core GC memory bloat during frequent catalog checkups
             var product = await _context.Products
                 .AsNoTracking()
@@ -561,7 +670,7 @@ namespace DigiPOSE.Controllers.Api
             // >>> [EARLY O(1) STOCK GATE]: Refuse item admission if existing physical stock in RAM is insufficient
             if (product.ItemNatureId == 1) // Physical goods
             {
-                int availableStock = await _inventoryRam.GetStockAsync(order.BranchId, product.ProductId);
+                int availableStock = await _inventoryRam.GetStockAsync(order.TenantId, product.ProductId);
                 int projectedQty = (existingDetail?.Quantity ?? 0) + request.Quantity;
                 if (availableStock < projectedQty)
                 {
@@ -683,12 +792,23 @@ namespace DigiPOSE.Controllers.Api
                 if (completedOrder != null)
                 {
                     var existingRetail = await _context.Retails.AsNoTracking().FirstOrDefaultAsync(r => r.OrderId == completedOrder.OrderId);
-                    var existingBalances = await _inventoryRam.GetBulkStockAsync(completedOrder.BranchId, new List<int>());
+                    var existingBalances = await _inventoryRam.GetBulkStockAsync(completedOrder.TenantId, new List<int>());
                     var fallbackResponse = new CheckoutResponseDto(completedOrder.OrderId, existingRetail?.RetailId ?? 0, completedOrder.InvoiceNumber ?? $"INV-{completedOrder.OrderId}", existingRetail?.DocNo ?? $"BL-{completedOrder.OrderId}", existingRetail?.DocType ?? "POS_RETAIL", completedOrder.CreatedAt, true, existingBalances, completedOrder.TenderedAmount, completedOrder.ChangeAmount);
                     _cache.Set(idempCacheKey, fallbackResponse, TimeSpan.FromHours(24));
                     return Ok(fallbackResponse);
                 }
                 return BadRequest(new { Error = "Draft order not found or already completed." });
+            }
+
+            // >>> [SERVER-SIDE SHIFT INTEGRITY INTERCEPT]: Verify active work shift before finalizing checkout
+            if (order.ShiftId > 0)
+            {
+                var activeShift = await _context.Shifts.AsNoTracking().FirstOrDefaultAsync(s => s.ShiftId == order.ShiftId && s.StatusId == 1);
+                if (activeShift == null || DateTime.Now.Date > activeShift.StartTime.Date)
+                {
+                    AnomalyTelemetrySentinel.RecordHazard("STALE_SHIFT_CHECKOUT_ATTEMPT", $"Blocked unauthorized checkout attempt on expired/closed shift #{order.ShiftId}.", "CRITICAL HAZARD", $"Order #{order.OrderId}");
+                    return StatusCode(403, new { error = "STALE_SHIFT_VIOLATION", message = "Server-Side Security Intercept: Trading operations frozen under Blind Close rules. Active shift belongs to a previous date and must be closed immediately." });
+                }
             }
 
             var deductedProducts = new List<(int ProductId, int Quantity)>();
@@ -698,12 +818,12 @@ namespace DigiPOSE.Controllers.Api
             {
                 if (detail.NatureId == 1) // Physical goods only
                 {
-                    if (!await _inventoryRam.TryDeductStockAsync(order.BranchId, detail.ProductId, detail.Quantity))
+                    if (!await _inventoryRam.TryDeductStockAsync(order.TenantId, detail.ProductId, detail.Quantity))
                     {
                         // Rollback in-memory deducted stock for items already processed in this request
                         foreach (var deducted in deductedProducts)
                         {
-                            _inventoryRam.RestoreStock(order.BranchId, deducted.ProductId, deducted.Quantity);
+                            _inventoryRam.RestoreStock(order.TenantId, deducted.ProductId, deducted.Quantity);
                         }
                         return BadRequest(new { Error = "OUT_OF_STOCK", ProductId = detail.ProductId, ProductName = detail.ProductName });
                     }
@@ -727,11 +847,18 @@ namespace DigiPOSE.Controllers.Api
 
                 if (request.CustomerId.HasValue)
                 {
-                    var customer = await _context.Customers.FindAsync(request.CustomerId.Value);
+                    var customer = await _context.Customers.Include(c => c.CustomeType).FirstOrDefaultAsync(c => c.CustomerId == request.CustomerId.Value);
                     if (customer != null)
                     {
                         order.SnapshotCustomerName = customer.FullName;
                         order.SnapshotCustomerPhone = customer.PhoneNumber;
+
+                        // >>> [VIP REWARDS EVALUATION & REAL DB POINT CALCULATION]: Calculate loyalty points earned based on TotalAmount
+                        int basePoints = (int)(order.TotalAmount / 100000m) * 10; // 1 point per 10,000 VND spent
+                        int multiplier = customer.CustomeTypeId > 1 ? 2 : 1; // Double reward multiplier for VIP tiers
+                        int pointsEarned = basePoints * multiplier;
+                        customer.RewardPoints += pointsEarned;
+                        _context.Customers.Update(customer);
                     }
                 }
 
@@ -745,8 +872,8 @@ namespace DigiPOSE.Controllers.Api
                 // >>> [ENTERPRISE_POS_ACCOUNTING]: Generate immutable Retail trade document & corporate tax voucher per docs/pos domain standards
                 string docType = !string.IsNullOrWhiteSpace(request.DocType) ? request.DocType : (!string.IsNullOrWhiteSpace(request.BuyerTaxCode) ? "B2B_INVOICE" : "POS_RETAIL");
                 string prefix = docType == "B2B_INVOICE" ? "HD" : "BL";
-                string docNo = $"{prefix}-{order.BranchId:D2}-{DateTime.Now:yyyyMMdd}-{order.OrderId:D5}";
-                string retailNo = $"REC-{order.BranchId:D2}-{order.OrderId:D5}";
+                string docNo = $"{prefix}-{order.TenantId:D2}-{DateTime.Now:yyyyMMdd}-{order.OrderId:D5}";
+                string retailNo = $"REC-{order.TenantId:D2}-{order.OrderId:D5}";
                 decimal totalQty = order.OrderDetails!.Sum(d => (decimal)d.Quantity);
 
                 var retailDoc = new Retail
@@ -755,8 +882,8 @@ namespace DigiPOSE.Controllers.Api
                     DocNo = docNo,
                     RetailNo = retailNo,
                     DocType = docType,
-                    BranchId = order.BranchId,
-                    WarehouseId = request.WarehouseId ?? order.BranchId,
+                    TenantId = order.TenantId,
+                    WarehouseId = request.WarehouseId ?? order.TenantId,
                     CounterId = request.CounterId ?? shift?.CounterId,
                     ShiftId = order.ShiftId,
                     UserId = order.UserId,
@@ -790,7 +917,7 @@ namespace DigiPOSE.Controllers.Api
                     if (detail.NatureId == 1) // Physical Product - Delegate to Enterprise DDD Ledger Service
                     {
                         await _ledgerService.RecordTransactionAsync(
-                            order.BranchId,
+                            order.TenantId,
                             detail.ProductId,
                             -detail.Quantity, // Negative delta for sales deduction
                             InventoryTxType.PosSale,
@@ -833,7 +960,7 @@ namespace DigiPOSE.Controllers.Api
                 var printJob = new JobQueueItem
                 {
                     JobType = "PRINT_AND_EMAIL_INVOICE",
-                    PayloadJson = JsonSerializer.Serialize(new { OrderId = order.OrderId, InvoiceNumber = order.InvoiceNumber, BranchId = order.BranchId }),
+                    PayloadJson = JsonSerializer.Serialize(new { OrderId = order.OrderId, InvoiceNumber = order.InvoiceNumber, TenantId = order.TenantId }),
                     Status = "Pending",
                     CreatedAt = DateTime.Now
                 };
@@ -845,10 +972,10 @@ namespace DigiPOSE.Controllers.Api
                 // Push to real-time RAM channel for < 50ms background printer dispatch
                 _jobChannel.Writer.TryWrite(printJob);
 
-                var liveBalances = await _inventoryRam.GetBulkStockAsync(order.BranchId, productIds);
+                var liveBalances = await _inventoryRam.GetBulkStockAsync(order.TenantId, productIds);
 
-                // >>> [REALTIME SIGNALR LAN BROADCAST]: Push instantaneous stock updates across all branch terminals (<1ms)
-                await _hubContext.Clients.Group($"Branch_{order.BranchId}").SendAsync("OnStockChanged", liveBalances);
+                // >>> [REALTIME SIGNALR LAN BROADCAST]: Push instantaneous stock updates across all tenant terminals (<1ms)
+                await _hubContext.Clients.Group($"Tenant_{order.TenantId}").SendAsync("OnStockChanged", liveBalances);
 
                 // >>> [REALTIME CYBER TELEMETRY RADAR]: Detect low stock triggers (<= 5) and push live transaction ticks to Admin HUD
                 var lowStockAlerts = new List<string>();
@@ -857,7 +984,7 @@ namespace DigiPOSE.Controllers.Api
                     if (kvp.Value <= 5)
                     {
                         var prodName = order.OrderDetails!.FirstOrDefault(d => d.ProductId == kvp.Key)?.ProductName ?? $"SKU #{kvp.Key}";
-                        lowStockAlerts.Add($"[CRITICAL_STOCK]: {prodName} dropped to {kvp.Value} unit(s) at Branch #{order.BranchId}");
+                        lowStockAlerts.Add($"[CRITICAL_STOCK]: {prodName} dropped to {kvp.Value} unit(s) at Tenant #{order.TenantId}");
                     }
                 }
 
@@ -869,7 +996,7 @@ namespace DigiPOSE.Controllers.Api
                     DocNo = retailDoc.DocNo,
                     InvoiceNumber = order.InvoiceNumber,
                     RevenueDelta = order.TotalAmount,
-                    BranchId = order.BranchId,
+                    TenantId = order.TenantId,
                     ProcessedAt = order.CreatedAt.ToString("HH:mm:ss"),
                     LowStockAlerts = lowStockAlerts
                 };
@@ -888,7 +1015,7 @@ namespace DigiPOSE.Controllers.Api
                 // >>> [ZERO-TRUST DB IDEMPOTENCY SAFETY NET]: Defensive database constraint against multithreaded edge races
                 foreach (var deducted in deductedProducts)
                 {
-                    _inventoryRam.RestoreStock(order.BranchId, deducted.ProductId, deducted.Quantity);
+                    _inventoryRam.RestoreStock(order.TenantId, deducted.ProductId, deducted.Quantity);
                 }
 
                 var existingOrder = await _context.Orders
@@ -901,7 +1028,7 @@ namespace DigiPOSE.Controllers.Api
                 }
 
                 var productIds = order.OrderDetails!.Select(d => d.ProductId).ToList();
-                var currentBalances = await _inventoryRam.GetBulkStockAsync(existingOrder.BranchId, productIds);
+                var currentBalances = await _inventoryRam.GetBulkStockAsync(existingOrder.TenantId, productIds);
                 var existingRetail = await _context.Retails.AsNoTracking().FirstOrDefaultAsync(r => r.OrderId == existingOrder.OrderId);
                 var conflictDto = new CheckoutResponseDto(existingOrder.OrderId, existingRetail?.RetailId ?? 0, existingOrder.InvoiceNumber ?? $"INV-{existingOrder.OrderId}", existingRetail?.DocNo ?? $"BL-{existingOrder.OrderId}", existingRetail?.DocType ?? "POS_RETAIL", existingOrder.CreatedAt, true, currentBalances, existingOrder.TenderedAmount, existingOrder.ChangeAmount);
                 _cache.Set(idempCacheKey, conflictDto, TimeSpan.FromHours(24));
@@ -913,7 +1040,7 @@ namespace DigiPOSE.Controllers.Api
                 await transaction.RollbackAsync();
                 foreach (var deducted in deductedProducts)
                 {
-                    _inventoryRam.RestoreStock(order.BranchId, deducted.ProductId, deducted.Quantity);
+                    _inventoryRam.RestoreStock(order.TenantId, deducted.ProductId, deducted.Quantity);
                 }
                 return StatusCode(500, new { Error = "Checkout execution failed: " + ex.Message });
             }
@@ -935,9 +1062,9 @@ namespace DigiPOSE.Controllers.Api
             return Ok(new { Categories = categories, Manufacturers = manufacturers, ProductTypes = productTypes, Units = units, Customers = vipCustomers });
         }
 
-        // >>> [REAL-TIME RAM INVENTORY PRODUCT GRID]: Dynamic product filter queries with O(1) branch inventory integration
+        // >>> [REAL-TIME RAM INVENTORY PRODUCT GRID]: Dynamic product filter queries with O(1) tenant inventory integration
         [HttpGet("catalog/products")]
-        public async Task<IActionResult> GetCatalogProducts([FromQuery] int branchId = 1, [FromQuery] int? categoryId = null, [FromQuery] int? manufacturerId = null, [FromQuery] int? productTypeId = null, [FromQuery] int? unitId = null, [FromQuery] string? query = null, [FromQuery] string? filterType = null)
+        public async Task<IActionResult> GetCatalogProducts([FromQuery] int tenantId = 1, [FromQuery] int? categoryId = null, [FromQuery] int? manufacturerId = null, [FromQuery] int? productTypeId = null, [FromQuery] int? unitId = null, [FromQuery] string? query = null, [FromQuery] string? filterType = null)
         {
             var dbQuery = _context.Products
                 .AsNoTracking()
@@ -964,7 +1091,7 @@ namespace DigiPOSE.Controllers.Api
 
             var list = await dbQuery.Take(100).ToListAsync();
             var productIds = list.Select(p => p.ProductId).ToList();
-            var stockBalances = await _inventoryRam.GetBulkStockAsync(branchId, productIds);
+            var stockBalances = await _inventoryRam.GetBulkStockAsync(tenantId, productIds);
 
             var results = list.Select(p => new
             {

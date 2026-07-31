@@ -1,9 +1,9 @@
-@model IEnumerable<DigiPOSE.Models.ProductInventory>
+﻿@model IEnumerable<DigiPOSE.Models.ProductInventory>
 @{ ViewData["Title"] = "Product Inventory"; }
 <div class="cyber-panel">
     <div class="cyber-panel-header">
         <div class="cyber-panel-title"><i class="fa-solid fa-warehouse"></i> PRODUCT INVENTORY</div>
-        <div class="cyber-panel-sub">[WAREHOUSE MODULE] // STOCK LEVELS BY BRANCH</div>
+        <div class="cyber-panel-sub">[WAREHOUSE MODULE] // STOCK LEVELS BY TENANT</div>
     </div>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="d-flex align-items-center gap-2">
@@ -18,7 +18,7 @@
                 <tr>
                     <th style="width:5%; text-align:center; white-space:nowrap;">#</th>
                     <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.ProductId)</th>
-                    <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.BranchId)</th>
+                    <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.TenantId)</th>
                     <th style="white-space:nowrap; text-align:right;">@Html.DisplayNameFor(model => model.StockQuantity)</th>
                     <th style="white-space:nowrap; text-align:right;">@Html.DisplayNameFor(model => model.MinStockLevel)</th>
                     <th style="white-space:nowrap; text-align:center;">STATUS</th>
@@ -49,7 +49,7 @@
                 columns: [
                     { data: null, name: null, sortable: false, render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
                     { data: 'productName', name: 'Product.ProductName', render: d => `<span style="font-family:'Rajdhani'; font-weight:600; color:#FFF;"><i class="fa-solid fa-box me-2 text-cyan"></i>${d}</span>` },
-                    { data: 'branchName', name: 'Branch.BranchName', render: d => `<span style="color:#A0C0CE;">${d}</span>` },
+                    { data: 'tenantName', name: 'Tenant.TenantName', render: d => `<span style="color:#A0C0CE;">${d}</span>` },
                     { 
                         data: 'stockQuantity', 
                         name: 'StockQuantity', 

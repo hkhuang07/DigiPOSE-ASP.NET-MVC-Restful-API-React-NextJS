@@ -1,4 +1,4 @@
-@model DigiPOSE.Models.User
+﻿@model DigiPOSE.Models.User
 <div class="modal-content">
     <div class="modal-header">
         <h5 class="modal-title"><i class="fa-solid fa-user-pen text-cyan me-2"></i> EDIT USER</h5>
@@ -19,11 +19,11 @@
                     <span asp-validation-for="RoleId" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
                 </div>
                 <div class="col-md-6 mb-2">
-                    <label asp-for="BranchId" class="form-cyber-label">@Html.DisplayNameFor(model => model.BranchId) <span style="color:#FF3333;">*</span></label>
-                    <select asp-for="BranchId" class="form-select form-cyber-control" asp-items="ViewBag.BranchId">
-                        <option value="">-- SELECT BRANCH --</option>
+                    <label asp-for="TenantId" class="form-cyber-label">@Html.DisplayNameFor(model => model.TenantId) <span style="color:#FF3333;">*</span></label>
+                    <select asp-for="TenantId" class="form-select form-cyber-control" asp-items="ViewBag.TenantId">
+                        <option value="">-- SELECT TENANT --</option>
                     </select>
-                    <span asp-validation-for="BranchId" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
+                    <span asp-validation-for="TenantId" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.8rem;"></span>
                 </div>
                 <div class="col-md-6 mb-2">
                     <label asp-for="UserName" class="form-cyber-label">@Html.DisplayNameFor(model => model.UserName) <span style="color:#FF3333;">*</span></label>

@@ -1,11 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace DigiPOSE.Models.DTOs
 {
     public class CreateDraftRequest
     {
         [Required]
-        public int BranchId { get; set; }
+        public int TenantId { get; set; }
         
         [Required]
         public int ShiftId { get; set; }
@@ -85,7 +85,7 @@ namespace DigiPOSE.Models.DTOs
     public class StartShiftRequest
     {
         [Required] public int UserId { get; set; }
-        [Required] public int BranchId { get; set; }
+        [Required] public int TenantId { get; set; }
         [Required] public int CounterId { get; set; }
         [Range(0, (double)decimal.MaxValue)] public decimal StartCash { get; set; } = 0;
     }

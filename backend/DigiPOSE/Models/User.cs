@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema; 
 using Microsoft.AspNetCore.Http;
 
@@ -13,9 +13,9 @@ namespace DigiPOSE.Models
         [Required(ErrorMessage = "Please select a role.")]
         public int RoleId { get; set; }
         
-        [Display(Name = "Branch")] 
-        [Required(ErrorMessage = "Please select a branch.")]
-        public int BranchId { get; set; }
+        [Display(Name = "Tenant")] 
+        [Required(ErrorMessage = "Please select a tenant.")]
+        public int TenantId { get; set; }
         
         [Required(ErrorMessage = "Username cannot be blank.")]
         [StringLength(50, MinimumLength = 4, ErrorMessage = "Username must be between 4 and 50 characters.")]
@@ -50,6 +50,6 @@ namespace DigiPOSE.Models
         public bool IsActive { get; set; } = true;
 
         public Role? Role { get; set; }
-        public Branch? Branch { get; set; }
+        public Tenant? Tenant { get; set; }
     }
 }

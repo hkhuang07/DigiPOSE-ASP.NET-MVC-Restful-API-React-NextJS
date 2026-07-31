@@ -1,4 +1,4 @@
-@model DigiPOSE.Models.User
+﻿@model DigiPOSE.Models.User
 
 <div class="modal-content">
     <div class="modal-header">
@@ -50,8 +50,8 @@
                 <div class="col-8" style="font-family:'Roboto Mono'; font-size:0.95rem; color:#FFB000;">[@(Model.Role != null ? Model.Role.RoleName : "NONE")]</div>
             </div>
             <div class="row mb-3 align-items-center">
-                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">Branch:</div>
-                <div class="col-8" style="font-family:'Roboto Mono'; font-size:0.95rem; color:#00FF66;">@(Model.Branch != null ? Model.Branch.BranchName : "GLOBAL")</div>
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">Tenant:</div>
+                <div class="col-8" style="font-family:'Roboto Mono'; font-size:0.95rem; color:#00FF66;">@(Model.Tenant != null ? Model.Tenant.TenantName : "GLOBAL")</div>
             </div>
             <div class="row align-items-center">
                 <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">Status:</div>

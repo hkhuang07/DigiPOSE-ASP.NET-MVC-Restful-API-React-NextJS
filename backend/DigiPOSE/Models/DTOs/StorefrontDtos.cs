@@ -43,9 +43,18 @@ namespace DigiPOSE.Models.DTOs
         [Required]
         public int PaymentMethodId { get; set; }
         public int? CustomerId { get; set; }
+        public string? ContactName { get; set; }
         public string? ShippingAddress { get; set; }
         public string? ContactPhone { get; set; }
         public string? CustomerNotes { get; set; }
+        public string? ProvinceCode { get; set; }
+        public string? ProvinceName { get; set; }
+        public string? DistrictCode { get; set; }
+        public string? DistrictName { get; set; }
+        public string? WardCode { get; set; }
+        public string? WardName { get; set; }
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
 
         // Mandatory client-generated UUID to prevent double-billing on network retries
         [Required]

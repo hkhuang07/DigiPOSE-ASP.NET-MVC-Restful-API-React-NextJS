@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DigiPOSE.Models
@@ -33,8 +33,8 @@ namespace DigiPOSE.Models
 
         // >>> [MULTI-TENANT & DEVICE SCOPING]: Exact location, warehouse, station & cashier accountability
         [Required]
-        [Display(Name = "Branch ID")]
-        public int BranchId { get; set; }
+        [Display(Name = "Tenant ID")]
+        public int TenantId { get; set; }
 
         [Display(Name = "Warehouse ID")]
         public int? WarehouseId { get; set; }
@@ -141,7 +141,7 @@ namespace DigiPOSE.Models
 
         // Navigation Properties
         public Order? Order { get; set; }
-        public Branch? Branch { get; set; }
+        public Tenant? Tenant { get; set; }
         public Counter? Counter { get; set; }
         public Shift? Shift { get; set; }
         public User? User { get; set; }

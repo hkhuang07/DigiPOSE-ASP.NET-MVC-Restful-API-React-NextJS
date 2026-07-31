@@ -1,4 +1,4 @@
-@model IEnumerable<DigiPOSE.Models.StockVoucher>
+﻿@model IEnumerable<DigiPOSE.Models.StockVoucher>
 @{ ViewData["Title"] = "Stock Vouchers"; }
 <div class="cyber-panel">
     <div class="cyber-panel-header">
@@ -18,7 +18,7 @@
                 <tr>
                     <th style="width:5%; text-align:center; white-space:nowrap;">#</th>
                     <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.VoucherType)</th>
-                    <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.BranchId)</th>
+                    <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.TenantId)</th>
                     <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.UserId)</th>
                     <th style="white-space:nowrap;">@Html.DisplayNameFor(model => model.SupplierId)</th>
                     <th style="white-space:nowrap; text-align:right;">@Html.DisplayNameFor(model => model.TotalValue)</th>
@@ -58,7 +58,7 @@
                             return `<span class="badge ${badgeClass}" style="font-family:'Rajdhani'; font-weight:600;">${d}</span>`;
                         }
                     },
-                    { data: 'branchName', name: 'Branch.BranchName', render: d => `<span style="color:#A0C0CE;">${d}</span>` },
+                    { data: 'tenantName', name: 'Tenant.TenantName', render: d => `<span style="color:#A0C0CE;">${d}</span>` },
                     { data: 'userName', name: 'User.UserName', render: d => `<span style="color:#A0C0CE;">${d}</span>` },
                     { data: 'supplierName', name: 'Supplier.SupplierName', render: d => `<span style="color:#A0C0CE;">${d}</span>` },
                     { 

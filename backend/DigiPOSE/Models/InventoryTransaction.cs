@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DigiPOSE.Models
@@ -29,8 +29,8 @@ namespace DigiPOSE.Models
         public int ProductId { get; set; }
 
         [Required]
-        [Display(Name = "Branch ID")]
-        public int BranchId { get; set; }
+        [Display(Name = "Tenant ID")]
+        public int TenantId { get; set; }
 
         [Required]
         [Display(Name = "Quantity Delta")]
@@ -70,7 +70,7 @@ namespace DigiPOSE.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         public Product? Product { get; set; }
-        public Branch? Branch { get; set; }
+        public Tenant? Tenant { get; set; }
         [ForeignKey("OperatorUserId")]
         public User? OperatorUser { get; set; }
     }

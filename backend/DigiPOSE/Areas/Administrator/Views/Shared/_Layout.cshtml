@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="~/lib/font-awesome/css/all.min.css" />
     <!-- Cyber-Cinematic Military HUD Custom CSS -->
     <link rel="stylesheet" href="~/css/cyber-hud.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/cyber-components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/cyber-admin.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     
     <!-- DataTables CSS -->
@@ -57,19 +59,19 @@
             <!-- Right Navbar Actions -->
             <div class="hud-navbar-right">
                 <!-- Language Selector (Icon + Text) -->
-                <button type="button" class="hud-lang-btn" id="langToggleBtn" title="Switch Language (English / Tiếng Việt)">
-                    <i class="fa-solid fa-globe"></i>
+                <button type="button" class="hud-lang-btn cyber-parallelogram-btn" id="langToggleBtn" title="Switch Language (English / Tiếng Việt)">
+                    <i class="fa-solid fa-globe me-1"></i>
                     <span id="langText">English</span>
                 </button>
 
                 <!-- Dark / Light Mode Switcher (Icon Only) -->
-                <button type="button" class="hud-nav-icon-btn" id="themeToggleBtn" title="Toggle Dark (Void) / Light (Holo) Mode">
+                <button type="button" class="hud-nav-icon-btn cyber-parallelogram-btn" id="themeToggleBtn" title="Toggle Dark (Void) / Light (Holo) Mode">
                     <i class="fa-solid fa-sun" id="themeIcon"></i>
                 </button>
 
                 <!-- Notification Dropdown (Icon Only + Red Badge) -->
                 <div class="dropdown hud-notif-wrapper">
-                    <button class="hud-notif-btn" type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                    <button class="hud-notif-btn cyber-parallelogram-btn" type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
                         <i class="fa-solid fa-bell" style="font-size: 1.1rem; color: #FFFFFF;"></i>
                         <span class="hud-notif-badge" id="hudNotifBadge">3</span>
                     </button>
@@ -84,6 +86,7 @@
                 <!-- Profile Dropdown (Matching Reference Image) -->
                 @{
                     string? adminAvatar = User.FindFirst("AvatarUrl")?.Value;
+                    var currentPath = Context.Request.Path.Value?.ToLower() ?? "";
                 }
                 <div class="dropdown">
                     <div class="hud-profile-trigger dropdown-toggle" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -101,14 +104,25 @@
                             <span class="hud-user-name">@(User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "COMMANDER")</span>
                             <span class="hud-user-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "SYSTEM ADMIN")</span>
                         </div>
-                        <i class="fa-solid fa-caret-down text-cyan ms-2" id="hudProfileCaret" style="font-size: 0.75rem; transition: transform 0.2s ease;"></i>
+                        <i class="fa-solid fa-caret-down text-cyan ms-2 caret-indicator" id="hudProfileCaret" style="font-size: 0.75rem;"></i>
                     </div>
                     <ul class="dropdown-menu dropdown-menu-end hud-dropdown-menu" aria-labelledby="profileDropdown">
+                        @if (!currentPath.StartsWith("/home/index") && currentPath != "/")
+                        {
+                            <li><a class="dropdown-item" href="/Home/Index"><i class="fa-solid fa-house-user me-2" style="color: #00E5FF;"></i> User Portal Home</a></li>
+                        }
+                        @if (!currentPath.StartsWith("/pos"))
+                        {
+                            <li><a class="dropdown-item" href="/POS/Index"><i class="fa-solid fa-cash-register me-2" style="color: #00FF66;"></i> Access POS Cluster</a></li>
+                        }
+                        @if (!currentPath.StartsWith("/home/storefront") && !currentPath.StartsWith("/storefront"))
+                        {
+                            <li><a class="dropdown-item" href="/Home/Storefront/Index"><i class="fa-solid fa-store me-2" style="color: #0088FF;"></i> Corporate Storefront</a></li>
+                        }
+                        <li><hr class="dropdown-divider" style="border-color: rgba(0, 229, 255, 0.2);"></li>
                         <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Index"><i class="fa-solid fa-id-card me-2" style="color: #00E5FF;"></i> View Profile</a></li>
                         <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Index" asp-fragment="orders-tab"><i class="fa-solid fa-boxes-stacked me-2" style="color: #00FF66;"></i> My Orders</a></li>
                         <li><a class="dropdown-item" asp-area="" asp-controller="Auth" asp-action="ChangePassword"><i class="fa-solid fa-key me-2" style="color: #FFB000;"></i> Change Password</a></li>
-                        <li><a class="dropdown-item" asp-area="" asp-controller="Storefront" asp-action="Index"><i class="fa-solid fa-cart-shopping me-2" style="color: #00E5FF;"></i> Corporate Storefront</a></li>
-                        <li><a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="DashboardRouter"><i class="fa-solid fa-gauge-high me-2" style="color: #00FF66;"></i> Access POS Cluster</a></li>
                         <li><hr class="dropdown-divider" style="border-color: rgba(0, 229, 255, 0.2);"></li>
                         <li><a class="dropdown-item text-danger" asp-area="" asp-controller="Auth" asp-action="Logout"><i class="fa-solid fa-power-off me-2"></i> Log Out</a></li>
                     </ul>
@@ -124,7 +138,7 @@
             <!-- Left Sidebar -->
             <aside class="hud-sidebar" id="hudSidebar">
                 <!-- MODULE 1: SYSTEM & IAM -->
-                @if (User.HasClaim("Permission", "System.Config.Manage") || User.HasClaim("Permission", "System.Branch.Manage") || User.HasClaim("Permission", "System.Role.Manage") || User.HasClaim("Permission", "System.User.Manage") || User.HasClaim("Permission", "POS.Shift.Open"))
+                @if (User.HasClaim("Permission", "System.Config.Manage") || User.HasClaim("Permission", "System.Tenant.Manage") || User.HasClaim("Permission", "System.Role.Manage") || User.HasClaim("Permission", "System.User.Manage") || User.HasClaim("Permission", "POS.Shift.Open"))
                 {
                 <div class="hud-menu-group">
                     <div class="hud-menu-category-title">
@@ -132,11 +146,11 @@
                         <i class="fa-solid fa-chevron-down text-cyan" style="font-size:0.6rem;"></i>
                     </div>
                     <ul class="hud-menu-list">
-                        @if(User.HasClaim("Permission", "System.Branch.Manage")){
+                        @if(User.HasClaim("Permission", "System.Tenant.Manage")){
                         <li class="hud-menu-item">
-                            <a class="hud-menu-link" asp-controller="Branches" asp-action="Index">
-                                <i class="fa-solid fa-code-branch"></i>
-                                <span class="hud-menu-text">Branches</span>
+                            <a class="hud-menu-link" asp-controller="Tenants" asp-action="Index">
+                                <i class="fa-solid fa-code-tenant"></i>
+                                <span class="hud-menu-text">Tenants</span>
                                 <span class="hud-menu-badge">TBL-01</span>
                             </a>
                         </li>
@@ -247,6 +261,15 @@
                             </a>
                         </li>
                         }
+                        @if(User.HasClaim("Permission", "POS.Order.Create") || User.IsInRole("Super Admin") || User.IsInRole("Tenant Manager")){
+                        <li class="hud-menu-item">
+                            <a class="hud-menu-link" asp-controller="Retails" asp-action="Index">
+                                <i class="fa-solid fa-store-slash"></i>
+                                <span class="hud-menu-text">Retail Trade Logs</span>
+                                <span class="hud-menu-badge">TBL-30</span>
+                            </a>
+                        </li>
+                        }
                     </ul>
                 </div>
                 }
@@ -341,6 +364,20 @@
                                 <span class="hud-menu-badge">TBL-19</span>
                             </a>
                         </li>
+                        <li class="hud-menu-item">
+                            <a class="hud-menu-link" asp-controller="StockTransfers" asp-action="Index">
+                                <i class="fa-solid fa-truck-ramp-box"></i>
+                                <span class="hud-menu-text">Stock Transfers</span>
+                                <span class="hud-menu-badge">TBL-31</span>
+                            </a>
+                        </li>
+                        <li class="hud-menu-item">
+                            <a class="hud-menu-link" asp-controller="StockAudits" asp-action="Index">
+                                <i class="fa-solid fa-clipboard-check"></i>
+                                <span class="hud-menu-text">Stock Audits</span>
+                                <span class="hud-menu-badge">TBL-32</span>
+                            </a>
+                        </li>
                         }
                     </ul>
                 </div>
@@ -412,12 +449,21 @@
                             </a>
                         </li>
                         }
+                        @if(User.IsInRole("Super Admin") || User.IsInRole("Tenant Manager") || User.HasClaim("Permission", "Finance.Invoice.View")){
+                        <li class="hud-menu-item">
+                            <a class="hud-menu-link" asp-controller="Subscriptions" asp-action="Index">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                                <span class="hud-menu-text">SaaS Subscriptions</span>
+                                <span class="hud-menu-badge">TBL-33</span>
+                            </a>
+                        </li>
+                        }
                     </ul>
                 </div>
                 }
 
                 <!-- MODULE 5: LINKS & TERMINALS -->
-                @if (User.IsInRole("Super Admin") || User.IsInRole("Branch Manager") || User.IsInRole("POS Operator") || User.IsInRole("Catalog") || User.HasClaim("Permission", "POS.Order.Create"))
+                @if (User.IsInRole("Super Admin") || User.IsInRole("Tenant Manager") || User.IsInRole("POS Operator") || User.IsInRole("Catalog") || User.HasClaim("Permission", "POS.Order.Create"))
                 {
                 <div class="hud-menu-group">
                     <div class="hud-menu-category-title text-success" style="border-color: rgba(0, 255, 102, 0.3);">
@@ -425,7 +471,7 @@
                         <i class="fa-solid fa-chevron-down text-success" style="font-size:0.6rem;"></i>
                     </div>
                     <ul class="hud-menu-list">
-                        @if (User.IsInRole("Super Admin") || User.IsInRole("Branch Manager") || User.IsInRole("POS Operator") || User.HasClaim("Permission", "POS.Order.Create"))
+                        @if (User.IsInRole("Super Admin") || User.IsInRole("Tenant Manager") || User.IsInRole("POS Operator") || User.HasClaim("Permission", "POS.Order.Create"))
                         {
                         <li class="hud-menu-item">
                             <a class="hud-menu-link border border-success mb-1" asp-area="" asp-controller="POS" asp-action="Index" style="box-shadow: 0 0 10px rgba(0, 255, 102, 0.15); background: rgba(0, 255, 102, 0.03);">
@@ -457,15 +503,21 @@
              FOOTER TELEMETRY STRIP
              ==================================================================== -->
         <footer class="hud-footer">
-            <div class="hud-footer-status">
-                <span class="hud-ping-dot"></span>
-                <span>SYSTEM STATUS: <strong style="color:#00FF66;">ONLINE</strong></span>
+            <div class="hud-footer-status" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:0.75rem;">
+                <div style="display:flex; align-items:center; gap:4px;">
+                    <span class="hud-ping-dot" id="globalPingDot"></span>
+                    <span>SYSTEM STATUS: <strong id="globalStatusLabel" style="color:#00FF66;">CHECKING...</strong></span>
+                </div>
                 <span>|</span>
-                <span>SECURITY: <strong style="color:#00E5FF;">ZERO-TRUST ENCRYPTED</strong></span>
+                <div style="display:flex; align-items:center; gap:4px;">
+                    <span>LAN SYN: <strong id="globalPingVal" style="color:#00E5FF;">--ms</strong></span>
+                </div>
+                <span>|</span>
+                <span>TENANT: <strong style="color:#00E5FF;">@(User.FindFirst("TenantName")?.Value ?? "Enterprise HQ")</strong></span>
             </div>
             <div class="hud-footer-time">
-                <i class="fa-solid fa-microchip me-1"></i>
-                <span id="hudFooterClock">2026-07-19 02:00:00.00 UTC+7</span>
+                <i class="fa-solid fa-microchip me-1" style="color:#00E5FF;"></i>
+                <span id="hudFooterClock" style="font-family:'Roboto Mono', 'VT323', monospace; font-size:0.8rem; color:#E0E0E0;">2026-07-27 00:00:00.000 UTC+7</span>
             </div>
         </footer>
     </div>
@@ -506,5 +558,6 @@
         });
     </script>
     @await RenderSectionAsync("Scripts", required: false)
+    @await Html.PartialAsync("~/Views/Shared/_CyberNotificationModal.cshtml")
 </body>
 </html>

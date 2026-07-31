@@ -6,9 +6,9 @@ namespace DigiPOSE.Models
     public class Counter
     {
         [Key] public int CounterId { get; set; }
-        [Display(Name = "Branch")] 
-        [Required(ErrorMessage = "Please select a branch.")]
-        public int BranchId { get; set; }
+        [Display(Name = "Tenant")] 
+        [Required(ErrorMessage = "Please select a tenant.")]
+        public int TenantId { get; set; }
         
         [Required(ErrorMessage = "Counter Name cannot be empty.")]
         [StringLength(50, ErrorMessage = "Counter Name cannot exceed 50 characters.")]
@@ -18,7 +18,10 @@ namespace DigiPOSE.Models
         [Display(Name = "Is Active")]
         public bool IsActive { get; set; } = true;
 
-        public Branch? Branch { get; set; }
+        [Display(Name = "Created At")]
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        public Tenant? Tenant { get; set; }
 
         public ICollection<Shift>? Shifts { get; set; }
 

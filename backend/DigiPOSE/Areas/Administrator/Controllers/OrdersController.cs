@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DigiPOSE.Models;
@@ -10,7 +10,7 @@ using System.Linq.Dynamic.Core;
 namespace DigiPOSE.Areas.Administrator.Controllers
 {
     [Area("Administrator")]
-    [Authorize(Roles = "Super Admin, Administrator, Branch Manager, POS Operator, Warehouse, Catalog, Accountant")]
+    [Authorize(Roles = "Super Admin, Administrator, Tenant Manager, POS Operator, Warehouse, Catalog, Accountant")]
     public class OrdersController : Controller
     {
         private readonly DigiPoseDbContext _context;
@@ -136,6 +136,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 .Include(x => x.User)
                 .Include(x => x.Customer)
                 .Include(x => x.PaymentMethod)
+                .Include(x => x.OrderStatus)
                 .FirstOrDefaultAsync(m => m.OrderId == id);
             if (item == null) return NotFound();
             return PartialView("_DetailsPartial", item);
@@ -143,40 +144,76 @@ namespace DigiPOSE.Areas.Administrator.Controllers
 
         public IActionResult Create()
         {
-            LoadViewBags();
-            return PartialView("_CreateOrEditPartial", new Order());
+            try
+            {
+                LoadViewBags();
+                return PartialView("_CreateOrEditPartial", new Order { IdempotencyKey = Guid.NewGuid(), CreatedAt = DateTime.Now });
+            }
+            catch (Exception ex)
+            {
+                return Content($"<div class='alert alert-danger'>Error loading order creation form: {ex.Message}</div>", "text/html");
+            }
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Order model)
         {
-            model.CreatedAt = DateTime.Now;
-
-            if (ModelState.IsValid)
+            try
             {
-                using var transaction = await _context.Database.BeginTransactionAsync();
-                try {
-                _context.Add(model);
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync(); 
-                } catch { 
-                    await transaction.RollbackAsync(); 
-                    return Json(new { success = false, message="Transaction Failed" }); 
+                model.CreatedAt = DateTime.Now;
+                if (model.IdempotencyKey == Guid.Empty)
+                {
+                    model.IdempotencyKey = Guid.NewGuid();
                 }
-                return Json(new { success = true, message = "Created successfully." });
+
+                // Remove navigation property validation constraints from form post
+                ModelState.Remove(nameof(model.Shift));
+                ModelState.Remove(nameof(model.User));
+                ModelState.Remove(nameof(model.Customer));
+                ModelState.Remove(nameof(model.OrderStatus));
+                ModelState.Remove(nameof(model.PaymentMethod));
+                ModelState.Remove(nameof(model.OrderDetails));
+                ModelState.Remove(nameof(model.invoice));
+
+                if (ModelState.IsValid)
+                {
+                    using var transaction = await _context.Database.BeginTransactionAsync();
+                    try {
+                        _context.Add(model);
+                        await _context.SaveChangesAsync();
+                        await transaction.CommitAsync(); 
+                        return Json(new { success = true, message = "Order created successfully." });
+                    } catch (Exception dbEx) { 
+                        await transaction.RollbackAsync(); 
+                        var innerMsg = dbEx.InnerException != null ? dbEx.InnerException.Message : dbEx.Message;
+                        return Json(new { success = false, message = $"Database transaction failed: {innerMsg}" }); 
+                    }
+                }
+
+                LoadViewBags(model.TenantId, model.ShiftId, model.UserId, model.CustomerId, model.StatusId, model.PaymentMethodId);
+                return PartialView("_CreateOrEditPartial", model);
             }
-            LoadViewBags(model.BranchId, model.ShiftId, model.UserId, model.CustomerId, model.StatusId, model.PaymentMethodId);
-            return PartialView("_CreateOrEditPartial", model);
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Server error while creating order: {ex.Message}" });
+            }
         }
 
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null) return NotFound();
-            var item = await _context.Orders.FindAsync(id);
-            if (item == null) return NotFound();
-            LoadViewBags(item.BranchId, item.ShiftId, item.UserId, item.CustomerId, item.StatusId, item.PaymentMethodId);
-            return PartialView("_CreateOrEditPartial", item);
+            try
+            {
+                if (id == null) return NotFound();
+                var item = await _context.Orders.FindAsync(id);
+                if (item == null) return NotFound();
+                LoadViewBags(item.TenantId, item.ShiftId, item.UserId, item.CustomerId, item.StatusId, item.PaymentMethodId);
+                return PartialView("_CreateOrEditPartial", item);
+            }
+            catch (Exception ex)
+            {
+                return Content($"<div class='alert alert-danger'>Error loading order edit form: {ex.Message}</div>", "text/html");
+            }
         }
 
         [HttpPost]
@@ -185,9 +222,18 @@ namespace DigiPOSE.Areas.Administrator.Controllers
         {
             if (id != model.OrderId) return Json(new { success = false, message = "ID mismatch." });
 
-            if (ModelState.IsValid)
+            try
             {
-                try
+                // Remove navigation property validation constraints from form post
+                ModelState.Remove(nameof(model.Shift));
+                ModelState.Remove(nameof(model.User));
+                ModelState.Remove(nameof(model.Customer));
+                ModelState.Remove(nameof(model.OrderStatus));
+                ModelState.Remove(nameof(model.PaymentMethod));
+                ModelState.Remove(nameof(model.OrderDetails));
+                ModelState.Remove(nameof(model.invoice));
+
+                if (ModelState.IsValid)
                 {
                     // >>> [IMMUTABLE_FIELD_GUARD]: Fetch original record to preserve IdempotencyKey (unique index) and CreatedAt timestamp
                     var original = await _context.Orders.AsNoTracking()
@@ -200,22 +246,23 @@ namespace DigiPOSE.Areas.Administrator.Controllers
 
                     using var transaction = await _context.Database.BeginTransactionAsync();
                     try {
-                    _context.Update(model);
-                    await _context.SaveChangesAsync();
-                    await transaction.CommitAsync(); 
-                    } catch { 
+                        _context.Update(model);
+                        await _context.SaveChangesAsync();
+                        await transaction.CommitAsync(); 
+                        return Json(new { success = true, message = "Order updated successfully." });
+                    } catch (Exception dbEx) { 
                         await transaction.RollbackAsync(); 
-                        return Json(new { success = false, message="Transaction Failed" }); 
+                        var innerMsg = dbEx.InnerException != null ? dbEx.InnerException.Message : dbEx.Message;
+                        return Json(new { success = false, message = $"Database transaction failed: {innerMsg}" }); 
                     }
-                    return Json(new { success = true, message = "Updated successfully." });
                 }
-                catch (DbUpdateConcurrencyException)
-                {
-                    return Json(new { success = false, message = "Concurrency conflict. Please reload and try again." });
-                }
+                LoadViewBags(model.TenantId, model.ShiftId, model.UserId, model.CustomerId, model.StatusId, model.PaymentMethodId);
+                return PartialView("_CreateOrEditPartial", model);
             }
-            LoadViewBags(model.BranchId, model.ShiftId, model.UserId, model.CustomerId, model.StatusId, model.PaymentMethodId);
-            return PartialView("_CreateOrEditPartial", model);
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Server error while updating order: {ex.Message}" });
+            }
         }
 
         [HttpPost]
@@ -242,7 +289,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                                 if (int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out int uid)) userId = uid;
 
                                 await _ledgerService.RecordTransactionAsync(
-                                    item.BranchId,
+                                    item.TenantId,
                                     detail.ProductId,
                                     detail.Quantity, // Positive delta to put items back on shelves
                                     InventoryTxType.Return,
@@ -265,8 +312,8 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                     // >>> [REALTIME SIGNALR HUD BROADCAST]: Immediately notify POS terminals of restored physical inventory (<1ms)
                     if (restoredProducts.Any())
                     {
-                        var liveBalances = await _inventoryRam.GetBulkStockAsync(item.BranchId, restoredProducts);
-                        await _hubContext.Clients.Group($"Branch_{item.BranchId}").SendAsync("OnStockChanged", liveBalances);
+                        var liveBalances = await _inventoryRam.GetBulkStockAsync(item.TenantId, restoredProducts);
+                        await _hubContext.Clients.Group($"Tenant_{item.TenantId}").SendAsync("OnStockChanged", liveBalances);
                     }
 
                     return Json(new { success = true, message = "Order deleted and stock restored successfully." });
@@ -280,15 +327,37 @@ namespace DigiPOSE.Areas.Administrator.Controllers
             return Json(new { success = false, message = "Not found." });
         }
 
-        private void LoadViewBags(int? val_BranchId = null, int? val_ShiftId = null, int? val_UserId = null, int? val_CustomerId = null, int? val_StatusId = null, int? val_PaymentMethodId = null)
+        private void LoadViewBags(int? val_TenantId = null, int? val_ShiftId = null, int? val_UserId = null, int? val_CustomerId = null, int? val_StatusId = null, int? val_PaymentMethodId = null)
         {
-            ViewBag.BranchId = new SelectList(_context.Branches, "BranchId", "BranchName", val_BranchId);
-            ViewBag.ShiftId = new SelectList(_context.Shifts, "ShiftId", "ShiftId", val_ShiftId);
-            ViewBag.UserId = new SelectList(_context.Users, "UserId", "UserName", val_UserId);
-            ViewBag.CustomerId = new SelectList(_context.Customers, "CustomerId", "FullName", val_CustomerId);
-            ViewBag.StatusId = new SelectList(_context.OrderStatuses, "StatusId", "StatusName", val_StatusId);
-            ViewBag.PaymentMethodId = new SelectList(_context.PaymentMethods, "PaymentMethodId", "MethodName", val_PaymentMethodId);
+            try
+            {
+                if (!_context.OrderStatuses.Any())
+                {
+                    _context.OrderStatuses.AddRange(
+                        new OrderStatus { StatusId = 1, StatusName = "Draft", Description = "Order created but not yet submitted" },
+                        new OrderStatus { StatusId = 2, StatusName = "Pending", Description = "Order awaiting payment confirmation" },
+                        new OrderStatus { StatusId = 3, StatusName = "Confirmed", Description = "Order has been confirmed and is being processed" },
+                        new OrderStatus { StatusId = 4, StatusName = "Processing", Description = "Order is being picked, packed, or prepared for shipment" },
+                        new OrderStatus { StatusId = 5, StatusName = "Shipped", Description = "Order has been shipped or handed to the carrier" },
+                        new OrderStatus { StatusId = 6, StatusName = "In Transit", Description = "Order is in transit to the customer" },
+                        new OrderStatus { StatusId = 7, StatusName = "Delivered", Description = "Order has been delivered to the customer" },
+                        new OrderStatus { StatusId = 8, StatusName = "Completed", Description = "Order finalized — all payments and deliveries completed" },
+                        new OrderStatus { StatusId = 12, StatusName = "Cancelled", Description = "Order has been cancelled before fulfillment" }
+                    );
+                    _context.SaveChanges();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(">>> [ORDER_STATUS_SEED_ERR]: " + ex.Message);
+            }
 
+            ViewBag.TenantId = new SelectList(_context.Tenants.AsNoTracking(), "TenantId", "TenantName", val_TenantId);
+            ViewBag.ShiftId = new SelectList(_context.Shifts.AsNoTracking(), "ShiftId", "ShiftId", val_ShiftId);
+            ViewBag.UserId = new SelectList(_context.Users.AsNoTracking(), "UserId", "UserName", val_UserId);
+            ViewBag.CustomerId = new SelectList(_context.Customers.AsNoTracking(), "CustomerId", "FullName", val_CustomerId);
+            ViewBag.StatusId = new SelectList(_context.OrderStatuses.AsNoTracking(), "StatusId", "StatusName", val_StatusId);
+            ViewBag.PaymentMethodId = new SelectList(_context.PaymentMethods.AsNoTracking(), "PaymentMethodId", "MethodName", val_PaymentMethodId);
         }
     }
 }

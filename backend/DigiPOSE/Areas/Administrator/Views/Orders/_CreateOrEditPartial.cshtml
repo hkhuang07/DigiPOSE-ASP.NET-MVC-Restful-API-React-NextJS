@@ -1,4 +1,4 @@
-@model DigiPOSE.Models.Order
+﻿@model DigiPOSE.Models.Order
 
 <div class="modal-content">
     <div class="modal-header">
@@ -12,9 +12,9 @@
         <input type="hidden" asp-for="CreatedAt" />
         <div class="modal-body">
             <div class="mb-3">
-                <label asp-for="BranchId" class="form-cyber-label">@Html.DisplayNameFor(model => model.BranchId) <span style="color:#FF3333;">*</span></label>
-                <select asp-for="BranchId" asp-items="ViewBag.BranchId" class="form-control form-cyber-control"></select>
-                <span asp-validation-for="BranchId" class="text-danger"></span>
+                <label asp-for="TenantId" class="form-cyber-label">@Html.DisplayNameFor(model => model.TenantId) <span style="color:#FF3333;">*</span></label>
+                <select asp-for="TenantId" asp-items="ViewBag.TenantId" class="form-control form-cyber-control"></select>
+                <span asp-validation-for="TenantId" class="text-danger"></span>
             </div>
             <div class="mb-3">
                 <label asp-for="ShiftId" class="form-cyber-label">@Html.DisplayNameFor(model => model.ShiftId) <span style="color:#FF3333;">*</span></label>

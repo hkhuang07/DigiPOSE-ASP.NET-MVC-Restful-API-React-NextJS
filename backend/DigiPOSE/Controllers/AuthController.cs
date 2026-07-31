@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -44,7 +44,7 @@ namespace DigiPOSE.Controllers
                     .Include(u => u.Role)
                         .ThenInclude(r => r!.PermissionRoles!)
                             .ThenInclude(pr => pr.Permission)
-                    .Include(u => u.Branch)
+                    .Include(u => u.Tenant)
                     .SingleOrDefaultAsync(u => u.UserName == model.Username);
 
                 if (user == null || !BC.Verify(model.Password, user.PasswordHash))
@@ -65,8 +65,8 @@ namespace DigiPOSE.Controllers
                     new System.Security.Claims.Claim("UserId", user.UserId.ToString()),
                     new System.Security.Claims.Claim(ClaimTypes.Name, user.UserName),
                     new System.Security.Claims.Claim("FullName", user.FullName ?? user.UserName),
-                    new System.Security.Claims.Claim("BranchId", user.BranchId.ToString()),
-                    new System.Security.Claims.Claim("BranchName", user.Branch?.BranchName ?? "N/A"),
+                    new System.Security.Claims.Claim("TenantId", user.TenantId.ToString()),
+                    new System.Security.Claims.Claim("TenantName", user.Tenant?.TenantName ?? "N/A"),
                     new System.Security.Claims.Claim(ClaimTypes.Role, user.Role?.RoleName ?? "User"),
                     new System.Security.Claims.Claim("AvatarUrl", user.ImageUrl ?? "")
                 };
@@ -136,7 +136,7 @@ namespace DigiPOSE.Controllers
                     PasswordHash = BC.HashPassword(model.Password),
                     IsActive = false,
                     RoleId = 99,
-                    BranchId = 1 // Default HQ branch
+                    TenantId = 1 // Default HQ tenant
                 };
                 
                 _context.Users.Add(newUser);
