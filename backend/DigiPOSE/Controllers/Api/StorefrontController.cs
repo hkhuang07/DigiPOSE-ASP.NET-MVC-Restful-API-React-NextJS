@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DigiPOSE.Models;
@@ -521,21 +521,34 @@ namespace DigiPOSE.Controllers.Api
             var deductedProducts = new List<(int ProductId, int Quantity)>();
 
             // 1. O(1) HOT-PATH RAM INVENTORY DEDUCTION FOR PHYSICAL GOODS (TenantId = 1)
-            foreach (var item in cart.Items)
+            try
             {
-                if (item.Product?.ItemNatureId == 1) // Physical Retail Asset
+                foreach (var item in cart.Items)
                 {
-                    if (!await _inventoryRam.TryDeductStockAsync(1, item.ProductId, item.Quantity))
+                    if (item.Product?.ItemNatureId == 1) // Physical Retail Asset
                     {
-                        // Rollback in-memory deducted stock for items already processed in this checkout
-                        foreach (var deducted in deductedProducts)
+                        if (!await _inventoryRam.TryDeductStockAsync(1, item.ProductId, item.Quantity))
                         {
-                            _inventoryRam.RestoreStock(1, deducted.ProductId, deducted.Quantity);
+                            // Rollback in-memory deducted stock for items already processed in this checkout
+                            foreach (var deducted in deductedProducts)
+                            {
+                                _inventoryRam.RestoreStock(1, deducted.ProductId, deducted.Quantity);
+                            }
+                            Console.WriteLine($">>> [CHECKOUT_FAULT]: Out of stock in RAM cache for Product {item.ProductId} ({item.Product?.ProductName}).");
+                            return BadRequest(new { Error = "OUT_OF_STOCK", ProductId = item.ProductId, ProductName = item.Product?.ProductName, Details = $"Asset [{item.Product?.ProductName ?? "Item"}] is out of stock in tenant inventory cache!" });
                         }
-                        return BadRequest(new { Error = "OUT_OF_STOCK", ProductId = item.ProductId, ProductName = item.Product.ProductName });
+                        deductedProducts.Add((item.ProductId, item.Quantity));
                     }
-                    deductedProducts.Add((item.ProductId, item.Quantity));
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($">>> [CHECKOUT_RAM_DEDUCTION_FAULT]: Exception during TryDeductStockAsync: {ex}");
+                foreach (var deducted in deductedProducts)
+                {
+                    _inventoryRam.RestoreStock(1, deducted.ProductId, deducted.Quantity);
+                }
+                return StatusCode(500, new { Error = "RAM Inventory deduction exception occurred.", Details = ex.Message });
             }
 
             // 2. READCOMMITTED ACID TRANSACTION & APPEND-ONLY LEDGER (NO DEADLOCKS)
@@ -744,12 +757,13 @@ namespace DigiPOSE.Controllers.Api
             }
             catch (Exception ex)
             {
+                Console.WriteLine($">>> [CHECKOUT_DB_TRANSACTION_FAULT]: Transaction failed with exception: {ex}");
                 await transaction.RollbackAsync();
                 foreach (var deducted in deductedProducts)
                 {
                     _inventoryRam.RestoreStock(1, deducted.ProductId, deducted.Quantity);
                 }
-                return StatusCode(500, new { Error = "Checkout transaction aborted due to database exception or concurrency race.", Details = ex.Message });
+                return StatusCode(500, new { Error = "Checkout transaction aborted due to database exception or concurrency race.", Details = ex.ToString(), Message = ex.InnerException?.Message ?? ex.Message });
             }
         }
 

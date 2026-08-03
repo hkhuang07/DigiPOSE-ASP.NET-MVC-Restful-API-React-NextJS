@@ -51,7 +51,7 @@
                     { data: null, name: null, sortable: false, render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
                     { data: 'orderId', name: 'OrderId', render: d => `<span style="color:#FFF; font-family:'VT323'; font-size:1.2rem;">#${d}</span>` },
                     { data: 'customerName', name: 'CustomerName', render: d => `<span style="color:#A0C0CE;">${d}</span>` },
-                    { data: 'statusName', name: 'StatusName', render: d => `<span class="badge bg-info">${d}</span>` },
+                    { data: 'statusName', name: 'StatusName', render: (d, t, r) => `<span class="badge" style="background-color:${r.badgeColor || '#6c757d'}; color:#FFF;">${d || 'N/A'}</span>` },
                     { 
                         data: 'totalAmount', 
                         name: 'TotalAmount', 

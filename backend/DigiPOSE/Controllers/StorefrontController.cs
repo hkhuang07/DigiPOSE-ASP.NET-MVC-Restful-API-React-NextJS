@@ -117,6 +117,66 @@ namespace DigiPOSE.Controllers
 
             return View(order);
         }
+
+        [HttpGet("Details/{id?}")]
+        [HttpGet("~/Home/Storefront/Details/{id?}")]
+        [HttpGet("ProductDetails/{id?}")]
+        [HttpGet("~/Home/Storefront/ProductDetails/{id?}")]
+        public async Task<IActionResult> Details(int? id, [FromQuery] int? productId)
+        {
+            int targetId = id ?? productId ?? 0;
+            if (targetId <= 0)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Manufacturer)
+                .Include(p => p.ProductType)
+                .Include(p => p.ItemNature)
+                .Include(p => p.Unit)
+                .Include(p => p.TaxType)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.ProductId == targetId);
+
+            if (product == null || !product.IsActive)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Calculate real-time aggregate inventory across active depots (0% mock data)
+            var totalStock = await _context.ProductInventories
+                .AsNoTracking()
+                .Where(i => i.ProductId == targetId)
+                .SumAsync(i => (int?)i.StockQuantity) ?? 0;
+
+            // Fetch Related Products filtered by Categories, Manufacturers, ItemNature, or ProductType
+            var relatedProducts = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Manufacturer)
+                .Include(p => p.ProductType)
+                .Include(p => p.ItemNature)
+                .Include(p => p.Unit)
+                .Where(p => p.IsActive && p.ProductId != targetId && (
+                    p.CategoryId == product.CategoryId ||
+                    p.ManufacturerId == product.ManufacturerId ||
+                    p.ItemNatureId == product.ItemNatureId ||
+                    p.ProductTypeId == product.ProductTypeId
+                ))
+                .AsNoTracking()
+                .Take(16)
+                .ToListAsync();
+
+            var viewModel = new StorefrontProductDetailsViewModel
+            {
+                Product = product,
+                TotalStockQuantity = totalStock,
+                RelatedProducts = relatedProducts
+            };
+
+            return View(viewModel);
+        }
     }
 
     // ====================================================================
@@ -136,5 +196,12 @@ namespace DigiPOSE.Controllers
     {
         public StorefrontCart Cart { get; set; } = null!;
         public List<PaymentMethod> PaymentMethods { get; set; } = new();
+    }
+
+    public class StorefrontProductDetailsViewModel
+    {
+        public Product Product { get; set; } = null!;
+        public int TotalStockQuantity { get; set; }
+        public List<Product> RelatedProducts { get; set; } = new();
     }
 }

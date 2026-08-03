@@ -1,4 +1,4 @@
-﻿@model DigiPOSE.Models.ProductInventory
+@model DigiPOSE.Models.ProductInventory
 <div class="modal-content">
     <div class="modal-header">
         <h5 class="modal-title"><i class="fa-solid fa-warehouse text-cyan me-2"></i> @(Model.InventoryId == 0 ? "ADD INVENTORY RECORD" : "EDIT INVENTORY")</h5>
@@ -36,7 +36,7 @@
             {
                 <div class="p-3 my-2" style="border: 1px dashed #FF3333; background: rgba(255, 51, 51, 0.05); border-radius: 4px;">
                     <div class="d-flex align-items-center mb-2" style="color: #FF3333; font-family: 'Orbitron', 'Rajdhani', sans-serif; font-weight: 700; font-size: 0.9rem;">
-                        <i class="fa-solid fa-triangle-exclamation me-2"></i> >>> [BẤT KHẢ KHÁNG // FORCE MAJEURE OVERRIDE]
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i> >>> [FORCE MAJEURE OVERRIDE PROTOCOL]
                     </div>
                     <p class="mb-2" style="color: #FFB000; font-family: 'Roboto Mono', monospace; font-size: 0.8rem;">
                         Directly altering balance bypasses standard vouchers. Require Super Admin / Chief Accountant role & mandatory justification log.

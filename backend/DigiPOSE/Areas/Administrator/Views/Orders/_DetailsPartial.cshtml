@@ -5,17 +5,44 @@
         <button type="button" class="btn-close-cyber" data-bs-dismiss="modal"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="modal-body">
-        <table class="table-cyber" style="font-family:'Roboto Mono'; font-size:0.9rem;">
-            <tr><td style="color:#00E5FF; width:40%;">ORDER ID</td><td style="font-family:'VT323'; font-size:1.2rem;">#@Model.OrderId</td></tr>
-            <tr><td style="color:#00E5FF;">CUSTOMER</td><td>@(Model.SnapshotCustomerName ?? Model.Customer?.FullName ?? "Walk-in")</td></tr>
-            <tr><td style="color:#00E5FF;">STATUS</td><td><span class="badge bg-info">@Model.OrderStatus?.StatusName</span></td></tr>
-            <tr><td style="color:#00E5FF;">PAYMENT</td><td>@(Model.PaymentMethod?.MethodName ?? "---")</td></tr>
-            <tr><td style="color:#00E5FF;">GROSS AMOUNT</td><td style="color:#A0C0CE; font-family:'VT323'; font-size:1.1rem;">@string.Format("{0:N0}", Model.GrossAmount)</td></tr>
-            <tr><td style="color:#00E5FF;">DISCOUNT</td><td style="color:#FFB000; font-family:'VT323'; font-size:1.1rem;">@string.Format("{0:N0}", Model.DiscountAmount)</td></tr>
-            <tr><td style="color:#00E5FF;">TAX</td><td style="color:#FFB000; font-family:'VT323'; font-size:1.1rem;">@string.Format("{0:N0}", Model.TaxAmount)</td></tr>
-            <tr><td style="color:#00E5FF;">TOTAL</td><td style="color:#00FF66; font-family:'VT323'; font-size:1.3rem; font-weight:bold;">@string.Format("{0:N0}", Model.TotalAmount) VNĐ</td></tr>
-            <tr><td style="color:#00E5FF;">@Html.DisplayNameFor(model => model.CreatedAt)</td><td>@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td></tr>
-        </table>
+        <div style="background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(0, 229, 255, 0.3); padding: 1.25rem;">
+            <div class="row mb-3 align-items-center">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">Order ID:</div>
+                <div class="col-8" style="font-family:'VT323'; font-size:1.4rem; color:#FFF;">#@Model.OrderId.ToString("D4")</div>
+            </div>
+            <div class="row mb-3 align-items-start">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">Customer:</div>
+                <div class="col-8" style="font-family:'Rajdhani'; font-size:1.1rem; font-weight:bold; color:#FFF; word-break:break-word;">@(Model.SnapshotCustomerName ?? Model.Customer?.FullName ?? "Walk-in")</div>
+            </div>
+            <div class="row mb-3 align-items-center">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">Status:</div>
+                <div class="col-8"><span class="badge" style="background-color:@(Model.OrderStatus?.BadgeColor ?? "#6c757d"); color:#FFF;">@(Model.OrderStatus?.StatusName ?? "N/A")</span></div>
+            </div>
+            <div class="row mb-3 align-items-center">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">Payment Method:</div>
+                <div class="col-8" style="font-family:'Roboto Mono'; font-size:0.95rem; color:#FFF;">@(Model.PaymentMethod?.MethodName ?? "---")</div>
+            </div>
+            <div class="row mb-2 align-items-center">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">Gross Amount:</div>
+                <div class="col-8" style="color:#A0C0CE; font-family:'VT323'; font-size:1.25rem;">@string.Format("{0:N0}", Model.GrossAmount) VNĐ</div>
+            </div>
+            <div class="row mb-2 align-items-center">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">Discount Amount:</div>
+                <div class="col-8" style="color:#FFB000; font-family:'VT323'; font-size:1.25rem;">@string.Format("{0:N0}", Model.DiscountAmount) VNĐ</div>
+            </div>
+            <div class="row mb-3 align-items-center">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">Tax Amount:</div>
+                <div class="col-8" style="color:#FFB000; font-family:'VT323'; font-size:1.25rem;">@string.Format("{0:N0}", Model.TaxAmount) VNĐ</div>
+            </div>
+            <div class="row mb-3 pt-2 align-items-center" style="border-top: 1px dashed rgba(0, 229, 255, 0.3);">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.85rem; font-weight:bold; text-transform:uppercase;">Total Amount:</div>
+                <div class="col-8" style="color:#00FF66; font-family:'VT323'; font-size:1.5rem; font-weight:bold;">@string.Format("{0:N0}", Model.TotalAmount) VNĐ</div>
+            </div>
+            <div class="row align-items-center">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">@Html.DisplayNameFor(model => model.CreatedAt):</div>
+                <div class="col-8" style="font-family:'Roboto Mono'; font-size:0.9rem; color:#A0C0CE;">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+            </div>
+        </div>
     </div>
     <div class="modal-footer">
         <button type="button" class="btn-cyber-cancel" data-bs-dismiss="modal" style="border-top: 1px solid aliceblue !important; border-bottom: 1px solid aliceblue !important; border-left: none !important; border-right: none !important; color: aliceblue !important; background: #222222 !important;"><i class="fa-solid fa-xmark me-1"></i> CLOSE</button>

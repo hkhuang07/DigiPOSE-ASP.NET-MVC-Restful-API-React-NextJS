@@ -14,9 +14,9 @@
                 <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">VOUCHER:</div>
                 <div class="col-8" style="font-family:'Roboto Mono'; font-size:0.9rem; color:#FFF;">#@Model.VoucherId (@(Model.StockVoucher != null ? Model.StockVoucher.VoucherType : "N/A"))</div>
             </div>
-            <div class="row mb-3 align-items-center">
+            <div class="row mb-3 align-items-start">
                 <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">PRODUCT:</div>
-                <div class="col-8" style="font-family:'Rajdhani'; font-size:1.1rem; font-weight:bold; color:#FFF;">@(Model.Product != null ? Model.Product.ProductName : "N/A")</div>
+                <div class="col-8" style="font-family:'Rajdhani'; font-size:1.1rem; font-weight:bold; color:#FFF; word-break:break-word;">@(Model.Product != null ? Model.Product.ProductName : "N/A")</div>
             </div>
             <div class="row mb-3 align-items-center">
                 <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">QUANTITY:</div>
@@ -29,9 +29,7 @@
         </div>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn-cyber-cancel" data-bs-dismiss="modal">
-            <i class="fa-solid fa-xmark me-1"></i> CLOSE
-        </button>
+        <button type="button" class="btn-cyber-cancel" data-bs-dismiss="modal" style="border-top: 1px solid aliceblue !important; border-bottom: 1px solid aliceblue !important; border-left: none !important; border-right: none !important; color: aliceblue !important; background: #222222 !important;"><i class="fa-solid fa-xmark me-1"></i> CLOSE</button>
     </div>
 </div>
 

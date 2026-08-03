@@ -52,10 +52,10 @@
 
         <!-- Right: Action Utility Controls -> Language - Dark/light - [Login][Sign up] -->
         <div class="nav-right-actions d-flex align-items-center">
-            <!-- Language Selection (Icon ONLY / Flag representation) -->
+            <!-- Language Selection (Icon + Shortcode) -->
             <div class="dropdown">
-                <button class="cyber-utility-btn dropdown-toggle px-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Switch Interface Language (VI/EN)">
-                    <i class="fa-solid fa-globe" style="font-size:1.0rem; color: var(--cyber-cyan);"></i> <span id="langShortCode" class="ms-1" style="font-family:'VT323'; font-size:1.0rem; font-weight:bold;">VI</span>
+                <button class="cyber-utility-btn dropdown-toggle px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Switch Interface Language (VI/EN)">
+                    <i class="fa-solid fa-globe me-1" style="font-size:1.0rem; color: var(--cyber-cyan);"></i><span id="langShortCode" style="font-family:'VT323'; font-size:1.05rem; font-weight:bold;">VI</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end cyber-dropdown-menu">
                     <li><h6 class="dropdown-header text-cyan" style="font-family:'Orbitron';">LOCALIZATION CODES</h6></li>
@@ -64,21 +64,21 @@
                 </ul>
             </div>
 
-            <!-- Dark / Light Mode Switcher (ICON ONLY, NO TEXT) -->
-            <button class="cyber-utility-btn px-2" type="button" onclick="toggleStorefrontTheme()" title="Toggle Dark Void / Light Holo Theme">
+            <!-- Dark / Light Mode Switcher (ICON ONLY) -->
+            <button class="cyber-utility-btn px-3" type="button" onclick="toggleStorefrontTheme()" title="Toggle Dark Void / Light Holo Theme">
                 <i class="fa-solid fa-sun" id="themeIcon" style="font-size:1.0rem; color: var(--cyber-amber);"></i>
             </button>
 
-            <!-- Notification Icon Dropdown -->
-            <div class="dropdown hud-notif-wrapper">
-                <button class="cyber-utility-btn px-2 position-relative" type="button" id="storeNotifDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Ecosystem Notifications">
-                    <i class="fa-solid fa-bell" style="font-size: 1.0rem; color: var(--cyber-text);"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:var(--cyber-danger); color:#FFF; font-family:'VT323'; font-size:0.75rem; font-weight:bold;">2</span>
+            <!-- Notification Icon Dropdown (Unclipped Badge) -->
+            <div class="dropdown hud-notif-wrapper position-relative me-3" style="z-index: 10;">
+                <button class="cyber-utility-btn px-3" type="button" id="storeNotifDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Ecosystem Notifications">
+                    <i class="fa-solid fa-bell" style="font-size: 1.0rem; color: #FFFFFF;"></i>
                 </button>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:var(--cyber-danger); color:#FFF; font-family:'VT323'; font-size:0.75rem; font-weight:bold; z-index: 15; pointer-events: none;">2</span>
                 <ul class="dropdown-menu dropdown-menu-end cyber-dropdown-menu" aria-labelledby="storeNotifDropdown">
-                    <li><h6 class="dropdown-header text-cyan" style="color:var(--cyber-cyan); font-family:'Orbitron';">TELEMETRY & DEALS</h6></li>
-                    <li><a class="dropdown-item" href="#"><i class="fa-solid fa-circle-check text-success me-2"></i> Real-time DB Sync online</a></li>
-                    <li><a class="dropdown-item" href="#"><i class="fa-solid fa-truck-fast text-warning me-2"></i> Freeship applied for > 500k VND</a></li>
+                    <li><h6 class="dropdown-header text-cyan" style="color:var(--cyber-cyan); font-family:'Orbitron';">NOTIFICATIONS & DEALS</h6></li>
+                    <li><a class="dropdown-item" href="#"><i class="fa-solid fa-circle-check text-success me-2"></i> System online and operational</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="fa-solid fa-truck-fast text-warning me-2"></i> Free shipping applied for orders > 500k VND</a></li>
                 </ul>
             </div>
 
@@ -96,7 +96,7 @@
                 string? userAvatar = User.FindFirst("AvatarUrl")?.Value;
                 var currentPath = Context.Request.Path.Value?.ToLower() ?? "";
                 <div class="dropdown">
-                    <div class="hud-profile-trigger dropdown-toggle" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="hud-profile-trigger" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="cursor:pointer;">
                         <div class="hud-avatar-box">
                             @if (!string.IsNullOrEmpty(userAvatar))
                             {
@@ -111,7 +111,7 @@
                             <span class="hud-user-name">@(User.FindFirst("FullName")?.Value ?? User.Identity.Name)</span>
                             <span class="hud-user-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "VERIFIED MEMBER")</span>
                         </div>
-                        <i class="fa-solid fa-caret-down text-cyan ms-2 caret-indicator" style="font-size: 0.75rem;"></i>
+                        <i class="fa-solid fa-caret-down text-cyan ms-2 caret-indicator" id="hudProfileCaret" style="font-size: 0.75rem; transition: transform 0.2s ease;"></i>
                     </div>
                     <ul class="dropdown-menu dropdown-menu-end cyber-dropdown-menu" aria-labelledby="profileDropdown">
                         <li><a class="dropdown-item" href="/Home/DashboardRouter"><i class="fa-solid fa-user-shield me-2" style="color: #FFB000;"></i> Role Portal Home</a></li>
@@ -123,10 +123,14 @@
                         {
                             <li><a class="dropdown-item" href="/POS/Index"><i class="fa-solid fa-cash-register me-2" style="color: #00FF66;"></i> Access POS Cluster</a></li>
                         }
+                        @if (!currentPath.StartsWith("/home/storefront") && !currentPath.StartsWith("/storefront"))
+                        {
+                            <li><a class="dropdown-item" href="/Home/Storefront/Index"><i class="fa-solid fa-store me-2" style="color: #0088FF;"></i> Corporate Storefront</a></li>
+                        }
                         <li><hr class="dropdown-divider" style="border-color: var(--cyber-border);"></li>
                         <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Index"><i class="fa-solid fa-id-card me-2" style="color: var(--cyber-cyan);"></i> View Profile</a></li>
-                        <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Index" asp-fragment="orders-tab"><i class="fa-solid fa-boxes-stacked me-2" style="color: var(--cyber-emerald);"></i> My Orders</a></li>
-                        <li><a class="dropdown-item" asp-area="" asp-controller="Auth" asp-action="ChangePassword"><i class="fa-solid fa-key me-2" style="color: var(--cyber-amber);"></i> Change Password</a></li>
+                        <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Orders"><i class="fa-solid fa-boxes-stacked me-2" style="color: #00FF66;"></i> My Orders</a></li>
+                        <li><a class="dropdown-item" asp-area="" asp-controller="Auth" asp-action="ChangePassword"><i class="fa-solid fa-key me-2" style="color: #FFB000;"></i> Change Password</a></li>
                         <li><hr class="dropdown-divider" style="border-color: var(--cyber-border);"></li>
                         <li><a class="dropdown-item text-danger" asp-area="" asp-controller="Auth" asp-action="Logout"><i class="fa-solid fa-power-off me-2"></i> Log Out</a></li>
                     </ul>
@@ -134,8 +138,8 @@
             }
             else
             {
-                <a href="/Auth/Login" class="btn-action-login">[ Login ]</a>
-                <a href="/Auth/Register" class="btn-action-signup">[ Sign up ]</a>
+                <a href="/Auth/Login" class="btn-action-login" title="Access Authentication Terminal">[ LOGIN ]</a>
+                <a href="/Auth/Register" class="btn-action-signup" title="Register New Operator">[ SIGN UP ]</a>
             }
         </div>
     </nav>
@@ -154,36 +158,36 @@
                         <i class="fa-solid fa-microchip me-2"></i> DigiPOSE ECOSYSTEM
                     </div>
                     <p style="color:var(--cyber-muted); line-height:1.7;">
-                        Next-generation Enterprise Resource Planning & Point of Sale Telemetry infrastructure. Low-latency POS computing nodes equipped with asynchronous memory caching and strict zero-trust role isolation.
+                        Next-generation Enterprise Resource Planning & Point of Sale platform. Engineered for seamless B2B retail management and high-reliability operations.
                     </p>
                     <div style="color:var(--cyber-emerald); font-family:'VT323'; font-size:1.2rem; margin-top:20px;">
-                        > STATUS: OPERATIONAL_CLUSTER_ONLINE [ 99.999% SLA ] _
+                        > SYSTEM STATUS: ONLINE [ OPERATIONAL ] _
                     </div>
                 </div>
 
                 <div class="col-lg-2 col-md-3">
                     <h5 class="footer-title">Navigation</h5>
                     <ul class="list-unstyled">
-                        <li class="mb-2"><a href="/Home/Introduce" class="footer-link">> Introduce Architecture</a></li>
-                        <li class="mb-2"><a href="/Home/Product" class="footer-link">> DIGITAL POS Packages</a></li>
-                        <li class="mb-2"><a href="/Storefront/Index" class="footer-link">> Retail Marketplace</a></li>
-                        <li class="mb-2"><a href="/Home/Contact" class="footer-link">> Enterprise NOC 24/7</a></li>
-                        <li class="mb-2"><a href="/Home/Careers" class="footer-link">> Tuyển dụng Engineering</a></li>
+                        <li class="mb-2"><a href="/Home/Introduce" class="footer-link">> About Us</a></li>
+                        <li class="mb-2"><a href="/Home/Product" class="footer-link">> POS Software Packages</a></li>
+                        <li class="mb-2"><a href="/Storefront/Index" class="footer-link">> Retail Storefront</a></li>
+                        <li class="mb-2"><a href="/Home/Contact" class="footer-link">> Contact Support</a></li>
+                        <li class="mb-2"><a href="/Home/Careers" class="footer-link">> Careers & Opportunities</a></li>
                     </ul>
                 </div>
 
                 <div class="col-lg-3 col-md-3">
-                    <h5 class="footer-title">Telemetry Modules</h5>
+                    <h5 class="footer-title">Key Features</h5>
                     <ul class="list-unstyled">
-                        <li class="mb-2"><span class="text-white"><i class="fa-solid fa-check text-success me-2"></i> Smart POS Terminal v16.3</span></li>
-                        <li class="mb-2"><span class="text-white"><i class="fa-solid fa-check text-success me-2"></i> RAM Cache Scanner (O(1))</span></li>
-                        <li class="mb-2"><span class="text-white"><i class="fa-solid fa-check text-success me-2"></i> Optimistic Concurrency Engine</span></li>
-                        <li class="mb-2"><span class="text-white"><i class="fa-solid fa-check text-success me-2"></i> Self-Service Profile IAM</span></li>
+                        <li class="mb-2"><span class="text-white"><i class="fa-solid fa-check text-success me-2"></i> Smart POS Terminal</span></li>
+                        <li class="mb-2"><span class="text-white"><i class="fa-solid fa-check text-success me-2"></i> Real-time Inventory Sync</span></li>
+                        <li class="mb-2"><span class="text-white"><i class="fa-solid fa-check text-success me-2"></i> High-Speed Checkout</span></li>
+                        <li class="mb-2"><span class="text-white"><i class="fa-solid fa-check text-success me-2"></i> Customer & Order Management</span></li>
                     </ul>
                 </div>
 
                 <div class="col-lg-3 col-md-12">
-                    <h5 class="footer-title">NOC Command HQ</h5>
+                    <h5 class="footer-title">Contact Headquarters</h5>
                     <div style="font-family:'Roboto Mono'; font-size:0.95rem; color:var(--cyber-text);">
                         <div class="mb-2"><i class="fa-solid fa-location-dot text-cyan me-2"></i> Floor 24, Cyber-Tech Tower, Silicon Quad</div>
                         <div class="mb-2"><i class="fa-solid fa-phone-volume text-success me-2"></i> +84 (24) 8888-9999 [ Emergency Switch ]</div>
@@ -200,14 +204,14 @@
     <!-- Off-canvas Shopping Cart (Real Database Cart Synchronization) -->
     <div class="offcanvas offcanvas-end offcanvas-cyber" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartOffcanvasLabel" style="width: 450px;">
         <div class="offcanvas-header d-flex justify-content-between align-items-center">
-            <h5 class="offcanvas-title" id="cartOffcanvasLabel"><i class="fa-solid fa-cart-shopping text-cyan me-2"></i> ACTIVE STAGING CART</h5>
+            <h5 class="offcanvas-title" id="cartOffcanvasLabel"><i class="fa-solid fa-cart-shopping text-cyan me-2"></i> YOUR SHOPPING CART</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body d-flex flex-column justify-content-between p-4">
             <div id="cartItemsContainer" class="flex-grow-1 overflow-auto pe-2">
                 <div class="text-center py-5 text-muted">
                     <i class="fa-solid fa-box-open mb-3" style="font-size:3rem; opacity:0.5;"></i>
-                    <p style="font-family:'VT323'; font-size:1.4rem;">> NO ASSETS IN STAGING CART // _</p>
+                    <p style="font-family:'VT323'; font-size:1.4rem;">> YOUR CART IS EMPTY // _</p>
                 </div>
             </div>
 
@@ -332,7 +336,7 @@
             document.getElementById('cartItemsContainer').innerHTML = `
                 <div class="text-center py-5 text-muted">
                     <i class="fa-solid fa-box-open mb-3" style="font-size:3rem; opacity:0.5;"></i>
-                    <p style="font-family:'VT323'; font-size:1.4rem;">> NO ASSETS IN STAGING CART // _</p>
+                    <p style="font-family:'VT323'; font-size:1.4rem;">> YOUR CART IS EMPTY // _</p>
                 </div>`;
         }
 
@@ -373,11 +377,11 @@
             const isAuth = @(User.Identity?.IsAuthenticated == true ? "true" : "false");
             if (!isAuth) {
                 if (typeof showCyberConfirm === 'function') {
-                    showCyberConfirm("AUTHENTICATION REQUIRED", "Corporate policies strictly mandate authenticated accounts before initializing staging carts and persisting sessions to the enterprise database ledger.", "warning", () => {
+                    showCyberConfirm("AUTHENTICATION REQUIRED", "Please log in to your account before adding items to your cart.", "warning", () => {
                         window.location.href = '/Auth/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
                     }, "LOG IN NOW", "CANCEL");
                 } else {
-                    alert("Please log in to add assets to your cart.");
+                    alert("Please log in to add items to your cart.");
                     window.location.href = '/Auth/Login';
                 }
                 return;
@@ -413,15 +417,15 @@
                     if (data && (data.Error || data.error)) {
                         let msg = data.Error || data.error;
                         if (data.Error === 'OUT_OF_STOCK') {
-                            msg = `Asset [${data.ProductName || productId}] currently exceeds available RAM warehouse inventory. (Available stock: ${data.AvailableStock || 0})`;
+                            msg = `Item [${data.ProductName || productId}] exceeds available stock. (Available stock: ${data.AvailableStock || 0})`;
                         }
                         if (typeof showCyberNotify === 'function') {
-                            showCyberNotify("STAGING AREA RESTRICTED", msg, "warning");
+                            showCyberNotify("INSUFFICIENT STOCK", msg, "warning");
                         } else {
                             alert("> " + msg);
                         }
                     } else {
-                        if (typeof showCyberNotify === 'function') showCyberNotify("ADD TO CART FAULT", "Could not commit asset to staging cart ledger.", "error");
+                        if (typeof showCyberNotify === 'function') showCyberNotify("ADD TO CART ERROR", "Could not add item to cart. Please try again.", "error");
                     }
                     throw new Error(data ? (data.Error || data.error) : 'Failed to add item to cart');
                 }
@@ -491,9 +495,9 @@
             const cartId = getActiveCartId();
             if (cartId === 0 || document.getElementById('navCartBadgeCount').innerText === '0') {
                 if (typeof showCyberNotify === 'function') {
-                    showCyberNotify("STAGING CART EMPTY", "Cannot checkout an empty staging cart. Please add hardware assets or digital packages before proceeding.", "warning");
+                    showCyberNotify("CART IS EMPTY", "Your shopping cart is currently empty. Please add products before checking out.", "warning");
                 } else {
-                    alert("> CANNOT CHECKOUT EMPTY CART. PLEASE ADD PRODUCTS TO STAGING AREA.");
+                    alert("> YOUR CART IS EMPTY. PLEASE ADD PRODUCTS BEFORE CHECKING OUT.");
                 }
                 return;
             }
@@ -512,6 +516,22 @@
             const savedLang = localStorage.getItem('digipose_global_lang') || localStorage.getItem('digipose_lang') || localStorage.getItem('digipose_store_lang') || 'VI';
             switchLanguage(savedLang);
             loadStorefrontCart();
+
+            const profileDropdownEl = document.getElementById("profileDropdown");
+            const profileCaret = document.getElementById("hudProfileCaret");
+            if (profileDropdownEl && profileCaret) {
+                const parentDropdown = profileDropdownEl.closest('.dropdown');
+                if (parentDropdown) {
+                    parentDropdown.addEventListener('show.bs.dropdown', function () {
+                        profileCaret.style.transform = "rotate(180deg)";
+                        profileCaret.style.color = "#00FF66";
+                    });
+                    parentDropdown.addEventListener('hide.bs.dropdown', function () {
+                        profileCaret.style.transform = "rotate(0deg)";
+                        profileCaret.style.color = "#00E5FF";
+                    });
+                }
+            }
         });
     </script>
     @await Html.PartialAsync("_CyberNotificationModal")

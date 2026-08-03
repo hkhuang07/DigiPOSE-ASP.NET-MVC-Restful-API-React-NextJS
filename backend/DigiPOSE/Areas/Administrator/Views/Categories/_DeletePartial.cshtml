@@ -14,20 +14,20 @@
             </p>
         </div>
     </div>
-    <div class="modal-footer" style="gap:8px;">
-        <button type="button" class="btn-cyber-cancel" data-bs-dismiss="modal" style="border-top: 1px solid aliceblue !important; border-bottom: 1px solid aliceblue !important; border-left: none !important; border-right: none !important; color: aliceblue !important; background: #222222 !important;"><i class="fa-solid fa-xmark me-1"></i> CANCEL</button>
+    <div class="modal-footer d-flex justify-content-end align-items-center flex-nowrap" style="gap:6px; white-space:nowrap;">
+        <button type="button" class="btn-cyber-cancel px-2" data-bs-dismiss="modal" style="border-top: 1px solid aliceblue !important; border-bottom: 1px solid aliceblue !important; border-left: none !important; border-right: none !important; color: aliceblue !important; background: #222222 !important;"><i class="fa-solid fa-xmark me-1"></i> CANCEL</button>
         @if (Model.IsActive)
         {
-            <form class="ajax-modal-form d-inline" action="/Administrator/Categories/ToggleActive/@Model.CategoryId" method="post">
+            <form class="ajax-modal-form d-inline-block m-0 p-0" action="/Administrator/Categories/ToggleActive/@Model.CategoryId" method="post">
                 @Html.AntiForgeryToken()
-                <button type="submit" class="btn-cyber-primary" style="border-color:#FFB000; color:#FFB000;">
-                    <i class="fa-solid fa-power-off me-1"></i> SOFT DEACTIVATE
+                <button type="submit" class="btn-cyber-primary px-2" style="border-color:#FFB000 !important; color:#FFB000 !important; background: rgba(255, 176, 0, 0.1) !important;">
+                    <i class="fa-solid fa-power-off me-1"></i> DEACTIVE
                 </button>
             </form>
         }
-        <form class="ajax-modal-form d-inline" asp-action="Delete" asp-controller="Categories" asp-route-id="@Model.CategoryId" method="post">
+        <form class="ajax-modal-form d-inline-block m-0 p-0" asp-action="Delete" asp-controller="Categories" asp-route-id="@Model.CategoryId" method="post">
             @Html.AntiForgeryToken()
-            <button type="submit" class="btn-cyber-danger">
+            <button type="submit" class="btn-cyber-danger px-2">
                 <i class="fa-solid fa-trash me-1"></i> HARD DELETE
             </button>
         </form>

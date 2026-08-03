@@ -967,8 +967,8 @@
     ==================================================== -->
     <div id="setupGate">
         <div class="setup-card" style="position: relative;">
-            <button type="button" onclick="closeSetupGate(); if(!POS_STATE || !POS_STATE.counterId) window.location.href='/';" title="Close Terminal Setup" style="position: absolute; top: 12px; right: 12px; background: rgba(255, 51, 102, 0.15); border: 1px solid #FF3366; color: #FF3366; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 99999; transition: all 0.2s;">
-                <i class="fa-solid fa-xmark" style="font-size: 1.1rem;"></i>
+            <button type="button" onclick="goBackFromSetup()" title="Return to Previous Screen" style="position: absolute; top: 12px; left: 12px; background: rgba(240, 248, 255, 0.15); border: 1px solid aliceblue; color: aliceblue; width: 36px; height: 36px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; z-index: 99999; transition: all 0.2s;">
+                <i class="fa-solid fa-arrow-left"></i>
             </button>
             <div class="setup-logo" style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:4px;">
                 <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1018,16 +1018,10 @@
                     <div class="form-row mb-3">
                         <label class="form-label text-cyan"><i class="fa-solid fa-sitemap me-1"></i> Super Admin Tenant Switching</label>
                         <select id="adminTenantSelect" class="pos-select" style="border-color: var(--holo-cyan);" onchange="onAdminTenantSwitch(this)">
+                            <option value="0" selected>-- Select Target Tenant / Branch --</option>
                             @foreach (var br in (IEnumerable<DigiPOSE.Models.Tenant>)ViewBag.AllTenants)
                             {
-                                if (br.TenantId == (int)ViewBag.AuthorizedTenantId)
-                                {
-                                    <option value="@br.TenantId" selected>@br.TenantName (ID: @br.TenantId)</option>
-                                }
-                                else
-                                {
-                                    <option value="@br.TenantId">@br.TenantName (ID: @br.TenantId)</option>
-                                }
+                                <option value="@br.TenantId">@br.TenantName (ID: @br.TenantId)</option>
                             }
                         </select>
                         <small style="font-size: 0.65rem; color: #777;">Super Admin privileges grant omni-channel terminal control across all physical tenants.</small>
@@ -1036,7 +1030,7 @@
                 else
                 {
                     <div style="border:1px solid #1A1A1A; padding:8px 12px; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
-                        <i class="fa-solid fa-code-tenant" style="color:var(--holo-cyan);"></i>
+                        <i class="fa-solid fa-layer-group" style="color:var(--holo-cyan);"></i>
                         <div>
                             <div style="font-size:0.65rem; color:#555; text-transform:uppercase; letter-spacing:1px;">Assigned Tenant (Verified)</div>
                             <div style="font-family:var(--font-hdr); font-size:0.9rem; color:var(--holo-cyan);">@ViewBag.AuthorizedTenantName</div>
@@ -1045,18 +1039,24 @@
                     </div>
                 }
 
-                <!-- Step 1: Counter selection -->
+                <!-- Step 1: Terminal & Warehouse selection (Cascading Architecture) -->
                 <div id="setupStep1">
-                    <div class="form-row">
-                        <label class="form-label">Select Counter / Terminal</label>
-                        <select id="setupCounterSel" class="pos-select">
-                            <option value="">-- Loading counters... --</option>
+                    <div class="form-row mb-3">
+                        <label class="form-label"><i class="fa-solid fa-desktop me-1 text-cyan"></i> Select Counter / Terminal</label>
+                        <select id="setupCounterSel" class="pos-select" disabled>
+                            <option value="">-- @(ViewBag.IsSuperAdmin == true ? "Select Target Tenant First" : "Loading terminals...") --</option>
                         </select>
                     </div>
-                    <div class="form-row">
-                        <label class="form-label">Tenant Inventory Status</label>
+                    <div class="form-row mb-3">
+                        <label class="form-label"><i class="fa-solid fa-warehouse me-1 text-cyan"></i> Select Warehouse (ProductInventory)</label>
+                        <select id="setupWarehouseSel" class="pos-select" disabled>
+                            <option value="">-- @(ViewBag.IsSuperAdmin == true ? "Select Target Tenant First" : "Loading warehouse matrix...") --</option>
+                        </select>
+                    </div>
+                    <div class="form-row mb-3">
+                        <label class="form-label"><i class="fa-solid fa-boxes-stacked me-1"></i> Tenant Inventory Status</label>
                         <div class="inventory-chips" id="inventoryChips">
-                            <span style="color:#444; font-size:0.72rem;">Loading...</span>
+                            <span style="color:#444; font-size:0.72rem;">Waiting for tenant selection...</span>
                         </div>
                     </div>
                     <button class="btn-pos-primary" style="width:100%; margin-top:4px;" id="btnStep1Next" onclick="confirmSetup()" disabled>
@@ -1104,24 +1104,24 @@
         <!-- Right Navbar Actions -->
         <div class="hud-navbar-right">
             <!-- Language Selector (Icon + Text) -->
-            <button type="button" class="hud-lang-btn" id="langToggleBtn" title="Switch Language (English / Tiếng Việt)">
-                <i class="fa-solid fa-globe"></i>
+            <button type="button" class="hud-lang-btn cyber-parallelogram-btn" id="langToggleBtn" title="Switch Language (English / Tiếng Việt)">
+                <i class="fa-solid fa-globe me-1" style="color: #00E5FF;"></i>
                 <span id="langText">English</span>
             </button>
 
             <!-- Dark / Light Mode Switcher (Icon Only) -->
-            <button type="button" class="hud-nav-icon-btn" id="themeToggleBtn" title="Toggle Dark (Void) / Light (Holo) Mode">
-                <i class="fa-solid fa-sun" id="themeIcon"></i>
+            <button type="button" class="hud-nav-icon-btn cyber-parallelogram-btn" id="themeToggleBtn" title="Toggle Dark (Void) / Light (Holo) Mode">
+                <i class="fa-solid fa-sun" id="themeIcon" style="color: #FFB000;"></i>
             </button>
 
             <!-- Notification Dropdown (Icon Only + Red Badge Outside) -->
             <div class="dropdown hud-notif-wrapper">
-                <button class="hud-notif-btn" type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                <button class="hud-notif-btn cyber-parallelogram-btn" type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
                     <i class="fa-solid fa-bell" style="font-size: 1.1rem; color: #FFFFFF;"></i>
                     <span class="hud-notif-badge" id="hudNotifBadge">3</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end hud-dropdown-menu" aria-labelledby="notifDropdown" id="hudNotifMenu">
-                    <li><h6 class="dropdown-header text-cyan" style="color:#00E5FF; font-family:'Orbitron';">TELEMETRY ALERTS</h6></li>
+                    <li><h6 class="dropdown-header text-cyan" style="color:#00E5FF; font-family:'Orbitron';">SYSTEM ALERTS</h6></li>
                     <li><a class="dropdown-item" href="#"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i> SKU-109 inventory below minimum threshold</a></li>
                     <li><a class="dropdown-item" href="#"><i class="fa-solid fa-circle-check text-success me-2"></i> POS terminal engine synchronized</a></li>
                 </ul>
@@ -1132,7 +1132,7 @@
                 string? userAvatar = User.FindFirst("AvatarUrl")?.Value;
             }
             <div class="dropdown">
-                <div class="hud-profile-trigger dropdown-toggle" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="hud-profile-trigger dropdown-toggle" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
                     <div class="hud-avatar-box" style="overflow: hidden; padding: 0;">
                         @if (!string.IsNullOrEmpty(userAvatar))
                         {
@@ -1147,7 +1147,7 @@
                         <span class="hud-user-name">@(User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "COMMANDER")</span>
                         <span class="hud-user-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "POS OPERATOR")</span>
                     </div>
-                    <i class="fa-solid fa-caret-down text-cyan ms-2" id="hudProfileCaret" style="font-size: 0.75rem; transition: transform 0.2s ease;"></i>
+                    <i class="fa-solid fa-caret-down text-cyan ms-2 caret-indicator" id="hudProfileCaret" style="font-size: 0.75rem; transition: transform 0.2s ease;"></i>
                 </div>
                 <ul class="dropdown-menu dropdown-menu-end hud-dropdown-menu" aria-labelledby="profileDropdown">
                     <li><a class="dropdown-item" href="/Home/DashboardRouter"><i class="fa-solid fa-user-shield me-2" style="color: #FFB000;"></i> Role Portal Home</a></li>
@@ -1155,7 +1155,7 @@
                     <li><a class="dropdown-item" href="/Home/Storefront/Index"><i class="fa-solid fa-store me-2" style="color: #0088FF;"></i> Corporate Storefront</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Index"><i class="fa-solid fa-id-card me-2" style="color: #00E5FF;"></i> View Profile</a></li>
-                    <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Index" asp-fragment="orders-tab"><i class="fa-solid fa-boxes-stacked me-2" style="color: #00FF66;"></i> My Orders</a></li>
+                    <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Orders"><i class="fa-solid fa-boxes-stacked me-2" style="color: #00FF66;"></i> My Orders</a></li>
                     <li><a class="dropdown-item" asp-area="" asp-controller="Auth" asp-action="ChangePassword"><i class="fa-solid fa-key me-2" style="color: #FFB000;"></i> Change Password</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item text-danger" asp-area="" asp-controller="Auth" asp-action="Logout"><i class="fa-solid fa-power-off me-2"></i> Log Out</a></li>
@@ -1172,7 +1172,7 @@
         <!-- LEFTMOST: OPERATOR MENU (toggle with hamburger) -->
         <aside class="pos-operator-menu" id="posOperatorMenu">
             <div class="op-menu-header">
-                <i class="fa-solid fa-terminal"></i>
+                <i class="fa-solid fa-terminal" style="color: #00E5FF;"></i>
                 OPERATOR MENU
             </div>
 
@@ -1184,7 +1184,7 @@
             <div class="op-menu-divider"></div>
 
             <!-- POS Operations -->
-            <div class="op-menu-section">POS Operations</div>
+            <div class="op-menu-section" style="color: var(--holo-cyan); text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-cash-register me-1"></i> POS Operations</div>
             <div class="op-menu-item" onclick="openDashboard()">
                 <i class="fa-solid fa-chart-line" style="color:var(--holo-cyan);"></i> Dashboard
             </div>
@@ -1198,7 +1198,7 @@
                 <i class="fa-solid fa-id-badge" style="color:var(--bio-emerald);"></i> VIP Customer
             </div>
             <div class="op-menu-item" onclick="openOrdersToday()">
-                <i class="fa-solid fa-receipt" style="color:#CCC;"></i> Orders Today
+                <i class="fa-solid fa-receipt" style="color:#0088FF;"></i> Orders Today
             </div>
             <div class="op-menu-item" onclick="switchCounter()">
                 <i class="fa-solid fa-desktop" style="color:var(--holo-cyan);"></i> Switch Counter
@@ -1206,7 +1206,7 @@
 
             <div class="op-menu-divider"></div>
             <!-- Catalog Filters -->
-            <div class="op-menu-section">Catalog</div>
+            <div class="op-menu-section" style="color: var(--holo-cyan); text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-boxes-stacked me-1"></i> Catalog Filters</div>
             <div class="op-menu-item" onclick="setPrimaryFilter('all', null)">
                 <i class="fa-solid fa-border-all" style="color: #00E5FF;"></i> All Products
             </div>
@@ -1221,7 +1221,7 @@
             @if (User.IsInRole("Super Admin") || User.IsInRole("Tenant Manager") || User.IsInRole("Admin") || User.IsInRole("Administrator"))
             {
                 <div class="op-menu-divider"></div>
-                <div class="op-menu-section">Admin: Sales</div>
+                <div class="op-menu-section" style="color: var(--holo-cyan); text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-user-shield me-1"></i> Admin: Sales</div>
                 <a class="op-menu-item" href="/Administrator/Orders/Index">
                     <i class="fa-solid fa-receipt" style="color: #FFB000;"></i> Sales Orders
                 </a>
@@ -1233,12 +1233,14 @@
                 </a>
             }
             <div class="op-menu-divider"></div>
-            <div class="op-menu-section">Links & Terminals</div>
-            <a class="op-menu-item" href="/Home/Storefront/Index" style="border: 1px solid #0088FF; box-shadow: 0 0 10px rgba(0, 136, 255, 0.15); background: rgba(0, 136, 255, 0.03); margin-bottom: 4px; color: #0088FF;">
-                <i class="fa-solid fa-store" style="color: #0088FF;"></i> Online Storefront
+            <div class="op-menu-section text-success" style="color: #00FF66 !important; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;"><i class="fa-solid fa-link me-1"></i> Links & Terminals</div>
+            <a class="op-menu-item border" href="/Home/Storefront/Index" style="border: 1px solid #00E5FF !important; box-shadow: 0 0 10px rgba(0, 229, 255, 0.15); background: rgba(0, 229, 255, 0.03); margin-bottom: 6px; color: #00E5FF; font-weight: bold; letter-spacing: 1px; display: flex; align-items: center; justify-content: space-between; text-decoration: none;">
+                <div><i class="fa-solid fa-cart-shopping me-2" style="color: #00E5FF;"></i> Online Storefront</div>
+                <span style="background-color: #00E5FF; color: #000; padding: 1px 6px; font-size: 0.65rem; font-family: 'Roboto Mono', monospace; font-weight: bold;">WEB</span>
             </a>
-            <a class="op-menu-item" href="/Home/Index" style="border: 1px solid #00E5FF; box-shadow: 0 0 10px rgba(0, 229, 255, 0.15); background: rgba(0, 229, 255, 0.03); color: #00E5FF;">
-                <i class="fa-solid fa-house-user" style="color: #00E5FF;"></i> Home
+            <a class="op-menu-item border" href="/Home/Index" style="border: 1px solid #00FF66 !important; box-shadow: 0 0 10px rgba(0, 255, 102, 0.15); background: rgba(0, 255, 102, 0.03); color: #00FF66; font-weight: bold; letter-spacing: 1px; display: flex; align-items: center; justify-content: space-between; text-decoration: none;">
+                <div><i class="fa-solid fa-house-user me-2" style="color: #00FF66;"></i> Portal Home</div>
+                <span style="background-color: #00FF66; color: #000; padding: 1px 6px; font-size: 0.65rem; font-family: 'Roboto Mono', monospace; font-weight: bold;">HOME</span>
             </a>
         </aside>
 
@@ -1635,11 +1637,11 @@
     <div class="pos-modal-bg" id="modalOrderDetails">
         <div class="pos-modal" style="max-width:750px; max-height:90vh; overflow-y:auto; z-index:9998;">
             <div class="modal-hdr" style="border-bottom:1px solid var(--holo-cyan);">
-                <span class="modal-title" style="color:var(--holo-cyan);"><i class="fa-solid fa-file-invoice-dollar me-2"></i>Transaction Breakdown & Settlement Telemetry</span>
+                <span class="modal-title" style="color:var(--holo-cyan);"><i class="fa-solid fa-file-invoice-dollar me-2"></i>Transaction Breakdown & Settlement Details</span>
                 <button class="btn-close-modal" onclick="closeModal('modalOrderDetails')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body" id="orderDetailsContent" style="padding:16px; font-family:var(--font-mono); font-size:0.82rem; color:#CCC;">
-                <div style="text-align:center; color:#666; padding:20px;"><i class="fa-solid fa-spinner fa-spin me-2"></i>Retrieving transaction telemetry...</div>
+                <div style="text-align:center; color:#666; padding:20px;"><i class="fa-solid fa-spinner fa-spin me-2"></i>Retrieving transaction details...</div>
             </div>
             <div class="modal-footer">
                 <button class="btn-pos-secondary" onclick="closeModal('modalOrderDetails')"><i class="fa-solid fa-arrow-left me-1"></i>Back to Orders</button>
@@ -1861,7 +1863,7 @@
                 { orderId: null, items: [], customerId: null, customerName: 'Shipping Order', orderType: 'retail' },
                 { orderId: null, items: [], customerId: null, customerName: 'Held Draft', orderType: 'retail' }
             ]
-        };
+};
 
         let catalogMeta = { categories: [], manufacturers: [], productTypes: [], units: [], customers: [] };
         let selectedPaymentMethodId = null;
@@ -1869,94 +1871,170 @@
         let lastCheckoutData = null;
 
         // ===================================================
-        // SETUP GATE — Tenant from auth claim, only counter selection required
+        // SETUP GATE — Cascading Architecture: Super Admin 3-Select / Operator 2-Select
         // ===================================================
         async function initSetupGate() {
-            const bId = POS_STATE.tenantId || (document.getElementById('adminTenantSelect') ? parseInt(document.getElementById('adminTenantSelect').value) : 0);
+            const adminSel = document.getElementById('adminTenantSelect');
+            if (adminSel) {
+                const bId = parseInt(adminSel.value) || 0;
+                if (bId <= 0) {
+                    const cSel = document.getElementById('setupCounterSel');
+                    const wSel = document.getElementById('setupWarehouseSel');
+                    if (cSel) { cSel.innerHTML = '<option value="">-- Select Target Tenant First --</option>'; cSel.disabled = true; }
+                    if (wSel) { wSel.innerHTML = '<option value="">-- Select Target Tenant First --</option>'; wSel.disabled = true; }
+                    return;
+                }
+                POS_STATE.tenantId = bId;
+            }
+            const bId = POS_STATE.tenantId;
             if (!bId || bId <= 0) {
-                console.warn(">>> [QUARANTINE_ACTIVE]: Tenant ID evaluates to zero or null. Counter fetching blocked under Zero-Trust protocol.");
+                console.warn(">>> [QUARANTINE_ACTIVE]: Tenant ID evaluates to zero or null. Telemetry fetching blocked under Zero-Trust protocol.");
                 return;
             }
-            POS_STATE.tenantId = bId;
-            await loadCountersForTenant();
+            await loadCountersAndWarehousesForTenant();
         }
 
-        async function loadCountersForTenant() {
+        async function loadCountersAndWarehousesForTenant() {
             const bId = POS_STATE.tenantId;
-            if (!bId || bId <= 0) return;
-            try {
-                const cRes = await fetch(`/api/v1/POS/setup/tenants/${bId}/counters`);
-                if (cRes.ok) {
-                    const counters = await cRes.json();
-                    const cSel = document.getElementById('setupCounterSel');
-                    if (cSel) {
-                        cSel.innerHTML = counters.length
-                            ? '<option value="">-- Select Counter --</option>'
-                            : '<option value="">No counters available</option>';
-                        counters.forEach(c => cSel.innerHTML += `<option value="${c.counterId}" data-name="${c.counterName}">${c.counterName}</option>`);
-                        cSel.onchange = () => {
-                            const btn = document.getElementById('btnStep1Next');
-                            if (btn) btn.disabled = !cSel.value;
-                        };
-                    }
-                } else {
-                    const cSel = document.getElementById('setupCounterSel');
-                    if (cSel) cSel.innerHTML = '<option value="">-- Error Loading Counters --</option>';
-                }
-            } catch(e) {
-                console.error("[COUNTER_SYNC_FAULT]:", e);
-                const cSel = document.getElementById('setupCounterSel');
-                if (cSel) cSel.innerHTML = '<option value="">-- Network Error --</option>';
+            const cSel = document.getElementById('setupCounterSel');
+            const wSel = document.getElementById('setupWarehouseSel');
+            const btnNext = document.getElementById('btnStep1Next');
+            if (btnNext) btnNext.disabled = true;
+
+            if (!bId || bId <= 0 || isNaN(bId)) {
+                if (cSel) { cSel.innerHTML = '<option value="">-- Select Target Tenant First --</option>'; cSel.disabled = true; }
+                if (wSel) { wSel.innerHTML = '<option value="">-- Select Target Tenant First --</option>'; wSel.disabled = true; }
+                return;
             }
 
+            if (cSel) { cSel.innerHTML = '<option value="">-- Loading active terminals... --</option>'; cSel.disabled = true; }
+            if (wSel) { wSel.innerHTML = '<option value="">-- Loading warehouse matrix... --</option>'; wSel.disabled = true; }
+
+            const validateSelections = () => {
+                const isValid = cSel && cSel.value && wSel && wSel.value;
+                if (btnNext) btnNext.disabled = !isValid;
+            };
+
+            if (cSel) cSel.onchange = validateSelections;
+            if (wSel) wSel.onchange = validateSelections;
+
+            // 1. Synchronize Counter Terminals independently
+            try {
+                const cRes = await fetch(`/api/v1/POS/setup/tenants/${bId}/counters`);
+                if (cSel) {
+                    if (cRes.ok) {
+                        const counters = await cRes.json();
+                        cSel.innerHTML = counters.length ? '<option value="">-- Select Operating Counter --</option>' : '<option value="">No active terminals found</option>';
+                        counters.forEach(c => {
+                            const cid = c.counterId || c.CounterId;
+                            const cname = c.counterName || c.CounterName || `Counter #${cid}`;
+                            const opt = document.createElement('option');
+                            opt.value = cid;
+                            opt.setAttribute('data-name', cname);
+                            opt.textContent = `${cname} [Terminal #${cid}]`;
+                            cSel.appendChild(opt);
+                        });
+                        cSel.disabled = counters.length === 0;
+                    } else {
+                        cSel.innerHTML = '<option value="">-- Terminal synchronization failure --</option>';
+                        cSel.disabled = true;
+                    }
+                }
+            } catch (err) {
+                console.error(">>> [COUNTER_SYNC_FAULT]:", err);
+                if (cSel) { cSel.innerHTML = '<option value="">-- Terminal synchronization failure --</option>'; cSel.disabled = true; }
+            }
+
+            // 2. Synchronize Warehouse (ProductInventory Depot Matrix) independently
+            try {
+                const wRes = await fetch(`/api/v1/POS/setup/tenants/${bId}/warehouses`);
+                if (wSel) {
+                    if (wRes.ok) {
+                        const warehouses = await wRes.json();
+                        wSel.innerHTML = warehouses.length ? '<option value="">-- Select Warehouse (ProductInventory) --</option>' : '<option value="">No stock depots mapped</option>';
+                        warehouses.forEach(w => {
+                            const wid = w.warehouseId || w.WarehouseId || bId;
+                            const wname = w.warehouseName || w.WarehouseName || `WH-0${bId} Main Stock Depot`;
+                            const opt = document.createElement('option');
+                            opt.value = wid;
+                            opt.setAttribute('data-name', wname);
+                            opt.textContent = wname;
+                            wSel.appendChild(opt);
+                        });
+                        wSel.disabled = warehouses.length === 0;
+                    } else {
+                        wSel.innerHTML = '<option value="">-- Warehouse synchronization failure --</option>';
+                        wSel.disabled = true;
+                    }
+                }
+            } catch (err) {
+                console.error(">>> [WAREHOUSE_SYNC_FAULT]:", err);
+                if (wSel) { wSel.innerHTML = '<option value="">-- Warehouse synchronization failure --</option>'; wSel.disabled = true; }
+            }
+
+            // 3. Synchronize Inventory Status Chips
             try {
                 const iRes = await fetch(`/api/v1/POS/setup/tenants/${bId}/inventory-summary`);
                 if (iRes.ok) {
                     const inv = await iRes.json();
+                    const total = inv.totalProducts !== undefined ? inv.totalProducts : (inv.TotalProducts || 0);
+                    const low = inv.lowStock !== undefined ? inv.lowStock : (inv.LowStock || 0);
+                    const out = inv.outOfStock !== undefined ? inv.outOfStock : (inv.OutOfStock || 0);
                     const invEl = document.getElementById('inventoryChips');
                     if (invEl) {
                         invEl.innerHTML = `
-                            <span class="inv-chip good"><i class="fa-solid fa-box me-1"></i>${inv.totalProducts} In Stock</span>
-                            <span class="inv-chip warn"><i class="fa-solid fa-triangle-exclamation me-1"></i>${inv.lowStock} Low</span>
-                            <span class="inv-chip bad"><i class="fa-solid fa-xmark me-1"></i>${inv.outOfStock} Out</span>`;
+                            <span class="inv-chip good"><i class="fa-solid fa-box me-1"></i>${total} SKUs In Stock</span>
+                            <span class="inv-chip warn"><i class="fa-solid fa-triangle-exclamation me-1"></i>${low} Low Level</span>
+                            <span class="inv-chip bad"><i class="fa-solid fa-xmark me-1"></i>${out} Stockout</span>`;
                     }
                 }
-            } catch(e) {
-                console.warn("[INVENTORY_SYNC_FAULT]:", e);
+            } catch (err) {
+                console.warn(">>> [INVENTORY_CHIPS_SYNC_FAULT]:", err);
             }
+            validateSelections();
         }
 
         async function onAdminTenantSwitch(selectEl) {
-            const newTenantId = parseInt(selectEl.value, 10);
+            const newTenantId = parseInt(selectEl.value, 10) || 0;
             const opt = selectEl.options[selectEl.selectedIndex];
-            const newTenantName = opt ? opt.text.split(' (ID:')[0] : 'Tenant #' + newTenantId;
+            const newTenantName = (opt && newTenantId > 0) ? opt.text.split(' (ID:')[0] : 'Tenant #' + newTenantId;
             POS_STATE.tenantId = newTenantId;
             POS_STATE.tenantName = newTenantName;
             const cSel = document.getElementById('setupCounterSel');
-            if (cSel) cSel.innerHTML = '<option value="">-- Loading counters... --</option>';
+            const wSel = document.getElementById('setupWarehouseSel');
+            if (cSel) { cSel.innerHTML = '<option value="">-- Loading active terminals... --</option>'; cSel.disabled = true; }
+            if (wSel) { wSel.innerHTML = '<option value="">-- Loading warehouse matrix... --</option>'; wSel.disabled = true; }
             const nBtn = document.getElementById('btnStep1Next');
             if (nBtn) nBtn.disabled = true;
-            await loadCountersForTenant();
+            await loadCountersAndWarehousesForTenant();
         }
 
         async function confirmSetup() {
             const cSel = document.getElementById('setupCounterSel');
-            if (!cSel.value) { 
-                if (typeof showCyberNotify === 'function') showCyberNotify("SELECTION REQUIRED", "Please select an active operating counter terminal before launching workflow.", "warning");
-                else alert('Please select a counter.'); 
+            const wSel = document.getElementById('setupWarehouseSel');
+            if (!cSel || !cSel.value || !wSel || !wSel.value) { 
+                if (typeof showCyberNotify === 'function') showCyberNotify("SELECTION REQUIRED", "Please select both an operating counter terminal and an active warehouse inventory depot before launching workflow.", "warning");
+                else alert('Please select both a counter and a warehouse.'); 
                 return; 
             }
             POS_STATE.counterId = parseInt(cSel.value);
             POS_STATE.counterName = cSel.options[cSel.selectedIndex].dataset.name;
+            POS_STATE.warehouseId = parseInt(wSel.value);
+            POS_STATE.warehouseName = wSel.options[wSel.selectedIndex].dataset.name;
 
             document.getElementById('setupStep1').style.display = 'none';
             document.getElementById('setupStep2').style.display = 'block';
             document.getElementById('step1dot').className = 'step-dot done';
             document.getElementById('step2dot').className = 'step-dot active';
 
-            // Persist counter to localStorage (tenant always from auth cookie)
+            // Persist terminal session to localStorage
             localStorage.setItem('posCounter', JSON.stringify({
-                counterId: POS_STATE.counterId, counterName: POS_STATE.counterName
+                tenantId: POS_STATE.tenantId,
+                tenantName: POS_STATE.tenantName,
+                counterId: POS_STATE.counterId, 
+                counterName: POS_STATE.counterName,
+                warehouseId: POS_STATE.warehouseId,
+                warehouseName: POS_STATE.warehouseName
             }));
 
             await enterPOS();
@@ -1989,7 +2067,7 @@
         function updateFooterContext() {
             document.getElementById('footerTenant').textContent = POS_STATE.tenantName || '--';
             document.getElementById('footerCounter').textContent = POS_STATE.counterName || '--';
-            document.getElementById('footerWarehouse').textContent = POS_STATE.tenantId ? `WH-0${POS_STATE.tenantId}` : '--';
+            document.getElementById('footerWarehouse').textContent = POS_STATE.warehouseName ? POS_STATE.warehouseName.split(' - ')[0] : (POS_STATE.tenantId ? `WH-0${POS_STATE.tenantId}` : '--');
             document.getElementById('footerShift').textContent = POS_STATE.shiftId ? `#${POS_STATE.shiftId}` : 'Not Started';
             document.getElementById('shiftTenantLabel').textContent = POS_STATE.tenantName;
             document.getElementById('shiftCounterLabel').textContent = POS_STATE.counterName;
@@ -2001,9 +2079,11 @@
             if (saved) {
                 try {
                     const s = JSON.parse(saved);
-                    if (s.counterId) {
+                    if (s.counterId && s.warehouseId && s.tenantId === POS_STATE.tenantId && !document.getElementById('adminTenantSelect')) {
                         POS_STATE.counterId = s.counterId;
                         POS_STATE.counterName = s.counterName || '';
+                        POS_STATE.warehouseId = s.warehouseId;
+                        POS_STATE.warehouseName = s.warehouseName || '';
                         document.getElementById('setupStep1').style.display = 'none';
                         document.getElementById('setupStep2').style.display = 'block';
                         document.getElementById('step1dot').className = 'step-dot done';
@@ -2149,6 +2229,26 @@
         function switchCounter() {
             localStorage.removeItem('posCounter');
             location.reload();
+        }
+
+        function goBackFromSetup() {
+            try {
+                if (typeof localStorage !== 'undefined') {
+                    localStorage.removeItem('posCounter');
+                }
+                if (window.history.length > 1) {
+                    window.history.back();
+                    return;
+                }
+                const ref = document.referrer;
+                if (ref && !ref.toLowerCase().includes('/pos') && ref !== window.location.href) {
+                    window.location.href = ref;
+                    return;
+                }
+            } catch (e) {
+                console.warn(">>> [BACK_NAV_FAULT]:", e);
+            }
+            window.location.href = '/Home/DashboardRouter';
         }
 
         function closeSetupGate() {
@@ -2807,7 +2907,7 @@ th, td { padding: 4px 2px; }
             try {
                 const res = await fetch(`/api/v1/POS/orders/${orderId}/details`);
                 if (!res.ok) {
-                    content.innerHTML = `<div style="color:var(--crimson-danger); text-align:center; padding:20px;">Failed to retrieve order telemetry.</div>`;
+                    content.innerHTML = `<div style="color:var(--crimson-danger); text-align:center; padding:20px;">Failed to retrieve order details.</div>`;
                     return;
                 }
                 const d = await res.json();
@@ -2938,11 +3038,14 @@ th, td { padding: 4px 2px; }
                 <td style="text-align:right; color:var(--bio-emerald); font-family:var(--font-data);">${fmt(p.totalRevenue || p.TotalRevenue)} ₫</td>
             </tr>`).join('') : `<tr><td colspan="4" style="text-align:center; color:#333; padding:16px;">No sales recorded in period</td></tr>`;
 
+            renderCharts(data);
+        }
+
         async function loadDashboardCustomRange() {
             const fDate = document.getElementById('dashFromDate')?.value;
             const tDate = document.getElementById('dashToDate')?.value;
             if (!fDate || !tDate) {
-                if (typeof showCyberNotify === 'function') showCyberNotify("ANALYTICS FILTER", "Please select both From Date and To Date to filter telemetry.", "warning");
+                if (typeof showCyberNotify === 'function') showCyberNotify("ANALYTICS FILTER", "Please select both From Date and To Date to view report data.", "warning");
                 else alert("Please select both From Date and To Date.");
                 return;
             }

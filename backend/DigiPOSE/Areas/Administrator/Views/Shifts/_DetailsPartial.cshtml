@@ -5,16 +5,40 @@
         <button type="button" class="btn-close-cyber" data-bs-dismiss="modal"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="modal-body">
-        <table class="table-cyber" style="font-family:'Roboto Mono'; font-size:0.9rem;">
-            <tr><td style="color:#00E5FF; width:35%;">@Html.DisplayNameFor(model => model.ShiftId)</td><td>@Model.ShiftId</td></tr>
-            <tr><td style="color:#00E5FF;">@Html.DisplayNameFor(model => model.User)</td><td style="font-weight:600;">@Model.User?.UserName</td></tr>
-            <tr><td style="color:#00E5FF;">@Html.DisplayNameFor(model => model.Counter)</td><td>@Model.Counter?.CounterName</td></tr>
-            <tr><td style="color:#00E5FF;">STATUS</td><td><span class="badge bg-info">@Model.Status?.StatusName</span></td></tr>
-            <tr><td style="color:#00E5FF;">@Html.DisplayNameFor(model => model.StartTime)</td><td>@Model.StartTime.ToString("dd/MM/yyyy HH:mm")</td></tr>
-            <tr><td style="color:#00E5FF;">END TIME</td><td>@(Model.EndTime.HasValue ? Model.EndTime.Value.ToString("dd/MM/yyyy HH:mm") : "Still Open")</td></tr>
-            <tr><td style="color:#00E5FF;">START CASH</td><td style="color:#00FF66; font-family:'VT323'; font-size:1.2rem;">@string.Format("{0:N0}", Model.StartCash)</td></tr>
-            <tr><td style="color:#00E5FF;">END CASH</td><td style="color:#00FF66; font-family:'VT323'; font-size:1.2rem;">@(Model.EndCash.HasValue ? string.Format("{0:N0}", Model.EndCash) : "---")</td></tr>
-        </table>
+        <div style="background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(0, 229, 255, 0.3); padding: 1.25rem;">
+            <div class="row mb-3 align-items-center">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">@Html.DisplayNameFor(model => model.ShiftId):</div>
+                <div class="col-8" style="font-family:'VT323'; font-size:1.4rem; color:#FFF;">#@Model.ShiftId</div>
+            </div>
+            <div class="row mb-3 align-items-start">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">@Html.DisplayNameFor(model => model.User):</div>
+                <div class="col-8" style="font-family:'Rajdhani'; font-size:1.1rem; font-weight:bold; color:#FFF; word-break:break-word;">@Model.User?.UserName</div>
+            </div>
+            <div class="row mb-3 align-items-start">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">@Html.DisplayNameFor(model => model.Counter):</div>
+                <div class="col-8" style="font-family:'Rajdhani'; font-size:1.05rem; color:#FFF; word-break:break-word;">@Model.Counter?.CounterName</div>
+            </div>
+            <div class="row mb-3 align-items-center">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">Status:</div>
+                <div class="col-8"><span class="badge bg-info">@Model.Status?.StatusName</span></div>
+            </div>
+            <div class="row mb-2 align-items-center">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">@Html.DisplayNameFor(model => model.StartTime):</div>
+                <div class="col-8" style="font-family:'Roboto Mono'; font-size:0.9rem; color:#A0C0CE;">@Model.StartTime.ToString("dd/MM/yyyy HH:mm")</div>
+            </div>
+            <div class="row mb-3 align-items-center">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">End Time:</div>
+                <div class="col-8" style="font-family:'Roboto Mono'; font-size:0.9rem; color:#A0C0CE;">@(Model.EndTime.HasValue ? Model.EndTime.Value.ToString("dd/MM/yyyy HH:mm") : "Still Open")</div>
+            </div>
+            <div class="row mb-2 pt-2 align-items-center" style="border-top: 1px dashed rgba(0, 229, 255, 0.3);">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.8rem; text-transform:uppercase;">Start Cash:</div>
+                <div class="col-8" style="color:#00FF66; font-family:'VT323'; font-size:1.4rem;">@string.Format("{0:N0}", Model.StartCash) VNĐ</div>
+            </div>
+            <div class="row align-items-center">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.8rem; text-transform:uppercase;">End Cash:</div>
+                <div class="col-8" style="color:#00FF66; font-family:'VT323'; font-size:1.4rem;">@(Model.EndCash.HasValue ? string.Format("{0:N0}", Model.EndCash) + " VNĐ" : "---")</div>
+            </div>
+        </div>
     </div>
     <div class="modal-footer">
         <button type="button" class="btn-cyber-cancel" data-bs-dismiss="modal" style="border-top: 1px solid aliceblue !important; border-bottom: 1px solid aliceblue !important; border-left: none !important; border-right: none !important; color: aliceblue !important; background: #222222 !important;"><i class="fa-solid fa-xmark me-1"></i> CLOSE</button>

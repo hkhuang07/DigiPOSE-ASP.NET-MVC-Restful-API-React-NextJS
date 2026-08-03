@@ -1,68 +1,65 @@
 @model DigiPOSE.Models.Order?
 @{
     Layout = "~/Views/Shared/_StorefrontLayout.cshtml";
-    ViewData["Title"] = "Transaction Confirmed // Order Deployed";
+    ViewData["Title"] = "Order Confirmation";
     string invoiceNumber = ViewData["InvoiceNumber"]?.ToString() ?? $"WEB-{(Model?.OrderId ?? 0)}";
     decimal totalCharged = ViewData["TotalCharged"] != null ? Convert.ToDecimal(ViewData["TotalCharged"]) : (Model?.TotalAmount ?? 0);
 }
 
-<div class="container my-5 py-4" style="max-width: 950px;">
-    <div class="p-5 text-center" style="background: var(--cyber-surface); border: 2px solid var(--cyber-emerald); box-shadow: 0 0 35px rgba(0, 255, 102, 0.25); border-radius: 0; position: relative;">
-        <!-- Top Tech Reticles -->
-        <div style="position:absolute; top:8px; left:12px; font-family:'VT323'; font-size:1.1rem; color:var(--cyber-emerald);">[ SYSTEM STATUS: ACID READ_COMMITTED // OK ]</div>
-        <div style="position:absolute; top:8px; right:12px; font-family:'VT323'; font-size:1.1rem; color:var(--cyber-cyan);">[ LEDGER SYNCED ]</div>
+<div class="container my-3 py-2" style="max-width: 850px;">
+    <div class="p-4 text-center" style="background: var(--cyber-surface); border: 2px solid var(--cyber-emerald); box-shadow: 0 0 25px rgba(0, 255, 102, 0.2); border-radius: 0; position: relative;">
+        <!-- Top Status Indicators -->
+        <div style="position:absolute; top:6px; left:10px; font-family:'VT323'; font-size:1.0rem; color:var(--cyber-emerald);">[ ORDER STATUS: CONFIRMED ]</div>
+        <div style="position:absolute; top:6px; right:10px; font-family:'VT323'; font-size:1.0rem; color:var(--cyber-cyan);">[ RECORDED ]</div>
 
-        <div class="my-4">
-            <div style="width: 100px; height: 100px; border: 2px solid var(--cyber-emerald); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(0, 255, 102, 0.1); box-shadow: 0 0 25px var(--cyber-emerald);">
-                <i class="fa-solid fa-check" style="font-size: 3.5rem; color: var(--cyber-emerald);"></i>
+        <div class="my-2 mt-3">
+            <div style="width: 64px; height: 64px; border: 2px solid var(--cyber-emerald); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(0, 255, 102, 0.1); box-shadow: 0 0 15px var(--cyber-emerald);">
+                <i class="fa-solid fa-check" style="font-size: 2.2rem; color: var(--cyber-emerald);"></i>
             </div>
         </div>
 
-        <h1 style="font-family:'Orbitron'; font-weight:900; color:#FFFFFF; font-size:2.5rem; text-shadow:0 0 15px rgba(0,255,102,0.5); margin-bottom:10px;">
-            TRANSACTION SUCCESSFULLY REGISTERED
+        <h1 style="font-family:'Orbitron'; font-weight:900; color:#FFFFFF; font-size:1.75rem; text-shadow:0 0 10px rgba(0,255,102,0.5); margin-bottom:6px;">
+            ORDER SUCCESSFULLY PLACED
         </h1>
-        <p style="font-family:'Roboto Mono'; font-size:1.05rem; color:var(--cyber-muted); max-width: 680px; margin: 0 auto 30px;">
-            Your hardware assets & software license keys have been reserved in O(1) RAM cache and officially registered into the immutable corporate inventory ledger.
+        <p style="font-family:'Roboto Mono'; font-size:0.95rem; color:var(--cyber-muted); max-width: 620px; margin: 0 auto 20px;">
+            Your order has been saved into our system. You can track your order progression and details in your profile dashboard.
         </p>
 
         <!-- Digital Receipt Summary Box -->
-        <div class="p-4 mb-5 text-start" style="background: #000; border: 1px dashed var(--cyber-cyan); max-width: 640px; margin: 0 auto;">
+        <div class="p-3 mb-4 text-start" style="background: #000; border: 1px dashed var(--cyber-cyan); max-width: 560px; margin: 0 auto;">
             <div class="d-flex justify-content-between mb-2 pb-2" style="border-bottom:1px solid rgba(0,229,255,0.2);">
-                <span style="font-family:'Orbitron'; font-weight:bold; color:var(--cyber-cyan); font-size:0.9rem;">INVOICE REFERENCE NUMBER:</span>
-                <span style="font-family:'VT323'; font-size:1.6rem; color:#FFF;">@invoiceNumber</span>
+                <span style="font-family:'Orbitron'; font-weight:bold; color:var(--cyber-cyan); font-size:0.85rem;">INVOICE REFERENCE NUMBER:</span>
+                <span style="font-family:'VT323'; font-size:1.4rem; color:#FFF;">@invoiceNumber</span>
             </div>
             @if(Model != null) {
-                <div class="d-flex justify-content-between mb-2">
-                    <span style="font-family:'Roboto Mono'; color:var(--cyber-muted); font-size:0.88rem;">SYSTEM ORDER ID:</span>
-                    <span style="font-family:'VT323'; font-size:1.4rem; color:var(--cyber-amber);">#@Model.OrderId</span>
+                <div class="d-flex justify-content-between mb-1">
+                    <span style="font-family:'Roboto Mono'; color:var(--cyber-muted); font-size:0.82rem;">SYSTEM ORDER ID:</span>
+                    <span style="font-family:'VT323'; font-size:1.25rem; color:var(--cyber-amber);">#@Model.OrderId</span>
                 </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span style="font-family:'Roboto Mono'; color:var(--cyber-muted); font-size:0.88rem;">SETTLEMENT METHOD:</span>
-                    <span style="font-family:'Orbitron'; font-weight:bold; color:var(--cyber-emerald); font-size:0.9rem;">@(Model.PaymentMethod?.MethodName ?? "Verified Digital Settlement")</span>
+                <div class="d-flex justify-content-between mb-1">
+                    <span style="font-family:'Roboto Mono'; color:var(--cyber-muted); font-size:0.82rem;">PAYMENT METHOD:</span>
+                    <span style="font-family:'Orbitron'; font-weight:bold; color:var(--cyber-emerald); font-size:0.85rem;">@(Model.PaymentMethod?.MethodName ?? "Standard Payment")</span>
                 </div>
             }
             <div class="d-flex justify-content-between pt-2 mt-2" style="border-top:1px dashed var(--cyber-border);">
-                <span style="font-family:'Orbitron'; font-weight:900; color:var(--cyber-emerald);">TOTAL CHARGED:</span>
-                <span style="font-family:'VT323'; font-size:2.2rem; font-weight:bold; color:var(--cyber-emerald);">@totalCharged.ToString("N0") VND</span>
+                <span style="font-family:'Orbitron'; font-weight:900; color:var(--cyber-emerald); font-size:0.9rem;">TOTAL CHARGED:</span>
+                <span style="font-family:'VT323'; font-size:1.8rem; font-weight:bold; color:var(--cyber-emerald);">@totalCharged.ToString("N0") VND</span>
             </div>
         </div>
 
-        <!-- Telemetry Audit Note -->
-        <div class="p-3 mb-4" style="background:rgba(0,229,255,0.04); border-left:4px solid var(--cyber-cyan); font-family:'Roboto Mono'; font-size:0.85rem; color:var(--cyber-text); text-align:left;">
-            <i class="fa-solid fa-satellite-dish text-cyan me-2"></i>
-            <strong>TELEMETRY RADAR ACTIVE:</strong> An official digital invoice PDF and asset calibration blueprint have been queued into the automated delivery worker. You may track real-time fulfillment via your Commander Dashboard.
+        <!-- Order Notification Note -->
+        <div class="p-2 mb-3" style="background:rgba(0,229,255,0.04); border-left:4px solid var(--cyber-cyan); font-family:'Roboto Mono'; font-size:0.8rem; color:var(--cyber-text); text-align:left; max-width: 560px; margin: 0 auto 20px;">
+            <i class="fa-solid fa-circle-info text-cyan me-2"></i>
+            <strong>ORDER STATUS:</strong> Your digital receipt has been generated. You can manage and check delivery details anytime in your order history.
         </div>
 
         <!-- Action Navigation Buttons -->
-        <div class="d-flex justify-content-center gap-4 mt-4 flex-wrap">
-            <a href="/Profile/Index#orders-tab" class="btn px-5 py-3" style="background:var(--cyber-cyan); color:#000; font-family:'Orbitron'; font-weight:900; border-radius:0; text-transform:uppercase;">
-                <i class="fa-solid fa-boxes-stacked me-2"></i> [ VIEW MY ORDERS ]
+        <div class="d-flex justify-content-center gap-3 mt-2 flex-wrap">
+            <a href="/Profile/Orders" class="btn px-4 py-2" style="background:var(--cyber-cyan); color:#000; font-family:'Orbitron'; font-size:0.9rem; font-weight:900; border-radius:0; text-transform:uppercase;">
+                <i class="fa-solid fa-boxes-stacked me-2"></i> [ MY ORDERS ]
             </a>
-            <a href="/Storefront/Index" class="btn btn-outline-light px-5 py-3" style="font-family:'Orbitron'; font-weight:bold; border-radius:0;">
-                <i class="fa-solid fa-shop me-2"></i> [ CONTINUE ACQUISITION ]
-            </a>
-            <a href="/Home/DashboardRouter" class="btn btn-outline-success px-5 py-3" style="font-family:'Orbitron'; font-weight:bold; border-radius:0;">
-                <i class="fa-solid fa-gauge-high me-2"></i> [ ACCESS POS CLUSTER ]
+            <a href="/Storefront/Index" class="btn btn-outline-light px-4 py-2" style="font-family:'Orbitron'; font-size:0.9rem; font-weight:bold; border-radius:0;">
+                <i class="fa-solid fa-shop me-2"></i> [ CONTINUE SHOPPING ]
             </a>
         </div>
     </div>

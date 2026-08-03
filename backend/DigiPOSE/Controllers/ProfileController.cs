@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -35,28 +35,52 @@ namespace DigiPOSE.Controllers
             }
 
             var user = await _context.Users
-                .Include(u => u.Role)
+                .Include(u => u.Role!)
+                    .ThenInclude(r => r.PermissionRoles!)
+                        .ThenInclude(pr => pr.Permission)
                 .Include(u => u.Tenant)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.UserId == userId);
 
             if (user == null)
             {
-                TempData["ErrorMessage"] = "User identity entity not located within active cluster.";
+                TempData["ErrorMessage"] = "User identity not located in system records.";
                 return RedirectToAction("Login", "Auth");
             }
 
-            // Retrieve associated customer/employee order histories for Self-Service Portal (My Orders tab)
+            return View(user);
+        }
+
+        // GET: /Profile/Orders
+        // Displays dedicated transaction history for the active account.
+        public async Task<IActionResult> Orders()
+        {
+            var userIdStr = User.FindFirstValue("UserId");
+            if (!int.TryParse(userIdStr, out int userId))
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var user = await _context.Users
+                .Include(u => u.Tenant)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.UserId == userId);
+
+            if (user == null)
+            {
+                TempData["ErrorMessage"] = "User identity not located in system records.";
+                return RedirectToAction("Login", "Auth");
+            }
+
             var userOrders = await _context.Orders
                 .Include(o => o.OrderStatus)
                 .AsNoTracking()
                 .Where(o => o.UserId == userId || (!string.IsNullOrEmpty(user.PhoneNumber) && o.SnapshotCustomerPhone == user.PhoneNumber))
                 .OrderByDescending(o => o.CreatedAt)
-                .Take(20)
+                .Take(50)
                 .ToListAsync();
 
             ViewBag.UserOrders = userOrders;
-
             return View(user);
         }
 

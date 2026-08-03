@@ -1,4 +1,4 @@
-﻿@model DigiPOSE.Models.Retail
+@model DigiPOSE.Models.Retail
 <div class="modal-content">
     <div class="modal-header">
         <h5 class="modal-title"><i class="fa-solid fa-file-invoice text-cyan me-2"></i> RETAIL DOCUMENT // @Model.DocNo</h5>
@@ -23,7 +23,7 @@
             <div class="col-md-6">
                 <div style="background:#060606; border:1px solid #1A1A1A; padding:14px;">
                     <div style="font-family:'Orbitron'; font-size:0.7rem; color:#00E5FF; text-transform:uppercase; margin-bottom:10px; border-bottom:1px solid #1A1A1A; padding-bottom:6px;"><i class="fa-solid fa-building me-1"></i> Transaction Info</div>
-                    <table class="table-cyber" style="font-size:0.85rem;">
+                    <table class="table-cyber" style="font-size:0.85rem; word-break: break-word;">
                         <tr><td style="color:#555; width:45%;">Tenant</td><td>@(Model.Tenant?.TenantName ?? "--")</td></tr>
                         <tr><td style="color:#555;">Counter</td><td>@(Model.Counter?.CounterName ?? "--")</td></tr>
                         <tr><td style="color:#555;">Cashier</td><td>@(Model.User?.UserName ?? "--")</td></tr>
@@ -52,6 +52,6 @@
         </div>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn-cyber-cancel" data-bs-dismiss="modal"><i class="fa-solid fa-xmark me-1"></i> CLOSE</button>
+        <button type="button" class="btn-cyber-cancel" data-bs-dismiss="modal" style="border-top: 1px solid aliceblue !important; border-bottom: 1px solid aliceblue !important; border-left: none !important; border-right: none !important; color: aliceblue !important; background: #222222 !important;"><i class="fa-solid fa-xmark me-1"></i> CLOSE</button>
     </div>
 </div>

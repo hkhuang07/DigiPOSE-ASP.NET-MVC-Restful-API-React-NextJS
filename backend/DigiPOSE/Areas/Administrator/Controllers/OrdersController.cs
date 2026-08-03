@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DigiPOSE.Models;
@@ -82,6 +82,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                     OrderId = m.OrderId,
                     CustomerName = m.SnapshotCustomerName != null ? m.SnapshotCustomerName : (m.Customer != null ? m.Customer.FullName : "Walk-in"),
                     StatusName = m.OrderStatus != null ? m.OrderStatus.StatusName : "",
+                    BadgeColor = m.OrderStatus != null ? (m.OrderStatus.BadgeColor ?? "#6c757d") : "#6c757d",
                     TotalAmount = m.TotalAmount,
                     CreatedAt = m.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")
                 }).ToList();

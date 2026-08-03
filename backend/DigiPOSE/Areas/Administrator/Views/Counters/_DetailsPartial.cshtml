@@ -1,16 +1,28 @@
-﻿@model DigiPOSE.Models.Counter
+@model DigiPOSE.Models.Counter
 <div class="modal-content">
     <div class="modal-header">
         <h5 class="modal-title"><i class="fa-solid fa-desktop text-cyan me-2"></i> COUNTER DETAILS</h5>
         <button type="button" class="btn-close-cyber" data-bs-dismiss="modal"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="modal-body">
-        <table class="table-cyber" style="font-family:'Roboto Mono'; font-size:0.9rem;">
-            <tr><td style="color:#00E5FF; width:35%;">@Html.DisplayNameFor(model => model.CounterId)</td><td>@Model.CounterId</td></tr>
-            <tr><td style="color:#00E5FF;">@Html.DisplayNameFor(model => model.Tenant)</td><td>@Model.Tenant?.TenantName</td></tr>
-            <tr><td style="color:#00E5FF;">@Html.DisplayNameFor(model => model.CounterName)</td><td style="font-weight:600;">@Model.CounterName</td></tr>
-            <tr><td style="color:#00E5FF;">STATUS</td><td><span class="badge @(Model.IsActive ? "bg-success" : "bg-secondary")">@(Model.IsActive ? "ACTIVE" : "INACTIVE")</span></td></tr>
-        </table>
+        <div style="background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(0, 229, 255, 0.3); padding: 1.25rem;">
+            <div class="row mb-3 align-items-center">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">@Html.DisplayNameFor(model => model.CounterId):</div>
+                <div class="col-8" style="font-family:'VT323'; font-size:1.4rem; color:#FFF;">#@Model.CounterId</div>
+            </div>
+            <div class="row mb-3 align-items-start">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">@Html.DisplayNameFor(model => model.Tenant):</div>
+                <div class="col-8" style="font-family:'Rajdhani'; font-size:1.1rem; font-weight:bold; color:#FFF; word-break:break-word;">@Model.Tenant?.TenantName</div>
+            </div>
+            <div class="row mb-3 align-items-start">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">@Html.DisplayNameFor(model => model.CounterName):</div>
+                <div class="col-8" style="font-family:'Rajdhani'; font-size:1.1rem; font-weight:bold; color:#00E5FF; word-break:break-word;">@Model.CounterName</div>
+            </div>
+            <div class="row align-items-center">
+                <div class="col-4" style="color:#00E5FF; font-family:'Orbitron'; font-size:0.75rem; text-transform:uppercase;">Status:</div>
+                <div class="col-8"><span class="badge @(Model.IsActive ? "bg-success" : "bg-secondary")">@(Model.IsActive ? "ACTIVE" : "INACTIVE")</span></div>
+            </div>
+        </div>
     </div>
     <div class="modal-footer">
         <button type="button" class="btn-cyber-cancel" data-bs-dismiss="modal" style="border-top: 1px solid aliceblue !important; border-bottom: 1px solid aliceblue !important; border-left: none !important; border-right: none !important; color: aliceblue !important; background: #222222 !important;"><i class="fa-solid fa-xmark me-1"></i> CLOSE</button>

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DigiPOSE.Models;
@@ -57,24 +57,34 @@ namespace DigiPOSE.Controllers
             }
             else
             {
-                // Verify tenant ownership strictly in UserTenants table
-                // Khóa cứng (Quarantine Lockdown) đối với tài khoản không có quyền sở hữu trạm cụ thể tại bảng UserTenants thay vì fallback
-                var userTenant = await _context.UserTenants
-                    .Include(ub => ub.Tenant)
-                    .Where(ub => ub.UserId == userId && ub.IsActive)
-                    .FirstOrDefaultAsync();
+                // Verify tenant ownership from direct User entity relationship (1-1 / 1-to-many from Tenant) or fallback to UserTenants ledger
+                var userRecord = await _context.Users
+                    .Include(u => u.Tenant)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.UserId == userId);
 
-                if (userTenant == null || userTenant.Tenant == null)
+                Tenant? verifiedTenant = userRecord?.Tenant;
+                if (verifiedTenant == null)
                 {
-                    // Zero-Trust Quarantine Lockdown: Do NOT fallback to Tenant 1
+                    var userTenant = await _context.UserTenants
+                        .Include(ub => ub.Tenant)
+                        .Where(ub => ub.UserId == userId && ub.IsActive)
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync();
+                    verifiedTenant = userTenant?.Tenant;
+                }
+
+                if (verifiedTenant == null)
+                {
+                    // Zero-Trust Quarantine Lockdown: Do NOT fallback to Tenant 1 if user is unassigned
                     ViewBag.IsQuarantined = true;
                     ViewBag.AuthorizedTenantId = 0;
                     ViewBag.AuthorizedTenantName = "QUARANTINED / NO TENANT ROUTING";
                 }
                 else
                 {
-                    ViewBag.AuthorizedTenantId = userTenant.TenantId;
-                    ViewBag.AuthorizedTenantName = userTenant.Tenant.TenantName;
+                    ViewBag.AuthorizedTenantId = verifiedTenant.TenantId;
+                    ViewBag.AuthorizedTenantName = verifiedTenant.TenantName;
                 }
             }
 

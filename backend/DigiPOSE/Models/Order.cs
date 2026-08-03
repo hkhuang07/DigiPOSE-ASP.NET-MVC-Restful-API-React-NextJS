@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DigiPOSE.Models
@@ -100,6 +100,7 @@ namespace DigiPOSE.Models
         public Shift? Shift { get; set; }
         public User? User { get; set; }
         public Customer? Customer { get; set; }
+        [ForeignKey("StatusId")]
         public OrderStatus? OrderStatus { get; set; }
         public PaymentMethod? PaymentMethod { get; set; }
         public ICollection<OrderDetail>? OrderDetails { get; set; }

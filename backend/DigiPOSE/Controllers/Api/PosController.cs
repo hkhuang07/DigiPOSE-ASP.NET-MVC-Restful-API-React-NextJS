@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DigiPOSE.Models;
@@ -172,30 +172,98 @@ namespace DigiPOSE.Controllers.Api
         [HttpGet("setup/tenants/{tenantId}/counters")]
         public async Task<IActionResult> GetCounters(int tenantId)
         {
-            var counters = await _context.Counters.AsNoTracking()
-                .Where(c => c.TenantId == tenantId && c.IsActive)
-                .Select(c => new { c.CounterId, c.CounterName, c.TenantId })
-                .ToListAsync();
-
-            if (!counters.Any() && tenantId > 0)
+            try
             {
-                var tenantExists = await _context.Tenants.AnyAsync(b => b.TenantId == tenantId);
-                if (tenantExists || tenantId == 1)
-                {
-                    var defaultCounter = new Counter
-                    {
-                        TenantId = tenantId,
-                        CounterName = $"Terminal #1 - Tenant {tenantId}",
-                        IsActive = true,
-                        CreatedAt = DateTime.Now
-                    };
-                    _context.Counters.Add(defaultCounter);
-                    await _context.SaveChangesAsync();
-                    return Ok(new[] { new { defaultCounter.CounterId, defaultCounter.CounterName, defaultCounter.TenantId } });
-                }
-            }
+                var counters = await _context.Counters.AsNoTracking()
+                    .Where(c => c.TenantId == tenantId && c.IsActive)
+                    .Select(c => new { c.CounterId, c.CounterName, c.TenantId })
+                    .ToListAsync();
 
-            return Ok(counters);
+                if (!counters.Any() && tenantId > 0)
+                {
+                    var tenantExists = await _context.Tenants.AnyAsync(b => b.TenantId == tenantId);
+                    if (!tenantExists && tenantId == 1)
+                    {
+                        var defaultTenant = new Tenant
+                        {
+                            TenantName = "HQ Main Store",
+                            Slug = "hq-main-store",
+                            Address = "Central Headquarters",
+                            ContactPhone = "0987654321",
+                            IsActive = true
+                        };
+                        _context.Tenants.Add(defaultTenant);
+                        await _context.SaveChangesAsync();
+                        tenantExists = true;
+                    }
+
+                    if (tenantExists)
+                    {
+                        var defaultCounter = new Counter
+                        {
+                            TenantId = tenantId,
+                            CounterName = $"Terminal #1 - Tenant {tenantId}",
+                            IsActive = true,
+                            CreatedAt = DateTime.Now
+                        };
+                        _context.Counters.Add(defaultCounter);
+                        await _context.SaveChangesAsync();
+                        return Ok(new[] { new { defaultCounter.CounterId, defaultCounter.CounterName, defaultCounter.TenantId } });
+                    }
+                }
+
+                return Ok(counters);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($">>> [POS_GET_COUNTERS_FAULT]: Exception loading counters for tenant {tenantId}: {ex}");
+                return StatusCode(500, new { Error = "Failed to load terminal counters.", Details = ex.Message });
+            }
+        }
+
+        // >>> [SETUP CONTEXT]: Return physical warehouse depots (ProductInventory metrics) for selected tenant
+        [HttpGet("setup/tenants/{tenantId}/warehouses")]
+        public async Task<IActionResult> GetWarehouses(int tenantId)
+        {
+            try
+            {
+                var tenant = await _context.Tenants.AsNoTracking().FirstOrDefaultAsync(t => t.TenantId == tenantId);
+                if (tenant == null && tenantId != 1)
+                    return NotFound(new { Error = "TENANT_NOT_FOUND", Message = "Specified tenant does not exist in operational ledger." });
+
+                // Calculate real-time stock matrix from ProductInventory table
+                var inventoryStats = await _context.ProductInventories.AsNoTracking()
+                    .Where(i => i.TenantId == tenantId)
+                    .GroupBy(i => i.TenantId)
+                    .Select(g => new {
+                        TotalSkus = g.Count(),
+                        TotalStock = g.Sum(i => i.StockQuantity)
+                    })
+                    .FirstOrDefaultAsync();
+
+                int skus = inventoryStats?.TotalSkus ?? 0;
+                int units = inventoryStats?.TotalStock ?? 0;
+
+                var warehouseList = new[]
+                {
+                    new
+                    {
+                        WarehouseId = tenantId,
+                        WarehouseName = $"WH-0{tenantId} [{(tenant?.TenantName ?? "Main Depot")}] - {skus} SKUs ({units} units in stock)",
+                        TenantId = tenantId,
+                        TotalSkus = skus,
+                        TotalStock = units,
+                        Status = "ONLINE // ZERO-TRUST VERIFIED"
+                    }
+                };
+
+                return Ok(warehouseList);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($">>> [POS_GET_WAREHOUSES_FAULT]: Exception loading warehouse matrix for tenant {tenantId}: {ex}");
+                return StatusCode(500, new { Error = "Failed to load warehouse inventory matrix.", Details = ex.Message });
+            }
         }
 
         // >>> [SETUP CONTEXT]: Return product inventory summary for selected tenant

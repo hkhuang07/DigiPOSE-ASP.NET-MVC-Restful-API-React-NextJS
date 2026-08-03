@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using DigiPOSE.Models;
 using System.Text.RegularExpressions;
@@ -312,7 +312,7 @@ namespace DigiPOSE.Services
                 $"EMRG-{inv.InventoryId}-{DateTime.Now:yyyyMMddHHmm}",
                 operatorUserId,
                 0,
-                $">>> [FORCE_MAJEURE_AUDIT // BẤT KHẢ KHÁNG]: {mandatoryReason.Trim()}");
+                $">>> [FORCE_MAJEURE_OVERRIDE_PROTOCOL // SYSTEM EXCEPTION]: {mandatoryReason.Trim()}");
 
             if (!res.Success)
             {

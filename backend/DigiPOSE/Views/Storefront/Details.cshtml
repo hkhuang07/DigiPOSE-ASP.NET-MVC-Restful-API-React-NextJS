@@ -1,0 +1,332 @@
+@model DigiPOSE.Controllers.StorefrontProductDetailsViewModel
+@{
+    Layout = "~/Views/Shared/_StorefrontLayout.cshtml";
+    ViewData["Title"] = $"{Model.Product.ProductName} // Technical Asset Specification";
+    var p = Model.Product;
+    var pImg = !string.IsNullOrEmpty(p.ImageUrl) ? p.ImageUrl : "/demo/products/default_cyber_product.png";
+}
+
+<div class="container-fluid px-4 px-xl-5 my-4" style="max-width: 1600px;">
+    <!-- Cyber HUD Breadcrumbs -->
+    <nav aria-label="breadcrumb" class="mb-4 p-3" style="background: rgba(0, 229, 255, 0.04); border-left: 3px solid var(--cyber-cyan); border-bottom: 1px dashed var(--cyber-border);">
+        <ol class="breadcrumb mb-0" style="font-family:'VT323'; font-size: 1.25rem; letter-spacing: 1px;">
+            <li class="breadcrumb-item"><a href="/Home/DashboardRouter" style="color: var(--cyber-muted); text-decoration: none;">[ MAIN ROUTE ]</a></li>
+            <li class="breadcrumb-item"><a href="/Home/Storefront/Index" style="color: var(--cyber-cyan); text-decoration: none;">[ STOREFRONT CATALOG ]</a></li>
+            @if (p.Category != null)
+            {
+                <li class="breadcrumb-item" style="color: var(--cyber-amber);">@p.Category.CategoryName.ToUpper()</li>
+            }
+            <li class="breadcrumb-item active" aria-current="page" style="color: #FFF; font-weight: bold;">@p.ProductName.ToUpper()</li>
+        </ol>
+    </nav>
+
+    <!-- Top Split Asset Display Matrix -->
+    <div class="row g-5 mb-5">
+        <!-- Left Column: Holographic Asset Imagery -->
+        <div class="col-lg-6">
+            <div class="card p-4 h-100" style="background: var(--cyber-surface); border: 1px solid var(--cyber-cyan); box-shadow: 0 0 30px rgba(0,229,255,0.15); position: relative;">
+                <div class="d-flex justify-content-between align-items-center mb-3" style="border-bottom: 1px dashed var(--cyber-border); padding-bottom: 10px;">
+                    <span style="font-family: 'VT323'; color: var(--cyber-emerald); font-size: 1.2rem;">> PRODUCT IMAGE VIEW</span>
+                    <span class="badge" style="background: var(--cyber-emerald); color: #000; font-family: 'VT323'; font-size: 1.1rem; border-radius: 0;">
+                        @(p.ItemNature?.NatureName?.ToUpper() ?? "VERIFIED ITEM")
+                    </span>
+                </div>
+                <div class="text-center py-5 my-auto d-flex align-items-center justify-content-center" style="min-height: 420px; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.05);">
+                    @if (pImg.StartsWith("/") || pImg.StartsWith("http"))
+                    {
+                        <img src="@pImg" alt="@p.ProductName" class="img-fluid" style="max-height: 420px; object-fit: contain; filter: drop-shadow(0 0 15px rgba(0,229,255,0.3));" />
+                    }
+                    else
+                    {
+                        <i class="fa-solid fa-microchip" style="font-size: 8rem; color: var(--cyber-cyan); opacity: 0.8; filter: drop-shadow(0 0 20px rgba(0,229,255,0.6));"></i>
+                    }
+                </div>
+                <div class="row mt-3 g-2 text-center" style="font-family: 'Roboto Mono'; font-size: 0.75rem; color: var(--cyber-muted);">
+                    <div class="col-4"><div class="p-2" style="border: 1px dashed var(--cyber-border); background: #000;">[ MFR: @(p.Manufacturer?.ManufacturerName ?? "GENERIC") ]</div></div>
+                    <div class="col-4"><div class="p-2" style="border: 1px dashed var(--cyber-border); background: #000;">[ TYPE: @(p.ProductType?.TypeName ?? "STANDARD") ]</div></div>
+                    <div class="col-4"><div class="p-2" style="border: 1px dashed var(--cyber-border); background: #000;">[ UNIT: @(p.Unit?.UnitName ?? "UNIT") ]</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Technical Specifications & Acquisition Console -->
+        <div class="col-lg-6 d-flex flex-column justify-content-between">
+            <div>
+                <div style="font-family:'VT323'; color:var(--cyber-amber); font-size:1.4rem; letter-spacing: 2px;">
+                    [ ASSET SKU: @p.SKU ] @(string.IsNullOrEmpty(p.Barcode) ? "" : $" // BARCODE: {p.Barcode}")
+                </div>
+                <h1 style="font-family:'Orbitron'; font-weight:900; font-size:2.4rem; color:#FFFFFF; margin: 10px 0 15px 0; text-shadow:0 0 15px rgba(0,229,255,0.5);">
+                    @p.ProductName
+                </h1>
+
+                <div class="d-flex flex-wrap align-items-center gap-4 mb-4 p-3" style="background: rgba(0,0,0,0.6); border-left: 4px solid var(--cyber-cyan);">
+                    <div>
+                        <div style="font-family: 'Roboto Mono'; font-size: 0.75rem; color: var(--cyber-muted);">UNIT PRICE (VND):</div>
+                        <span style="font-family:'VT323'; font-size: 3rem; color: var(--cyber-cyan); font-weight: bold; text-shadow: 0 0 12px rgba(0,229,255,0.6);">
+                            @p.BasePrice.ToString("N0") <small style="font-size: 1.5rem;">VND</small>
+                        </span>
+                    </div>
+                    <div class="ms-auto text-end">
+                        @if (Model.TotalStockQuantity > 0)
+                        {
+                            <span class="badge p-2 px-3" style="background: var(--cyber-emerald); color: #000; font-family: 'VT323'; font-size: 1.3rem; border-radius: 0; box-shadow: 0 0 12px rgba(0,255,102,0.4);">
+                                <i class="fa-solid fa-check-double me-1"></i> IN STOCK // @Model.TotalStockQuantity UNITS AVAILABLE
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge p-2 px-3" style="background: #FF0055; color: #FFF; font-family: 'VT323'; font-size: 1.3rem; border-radius: 0; box-shadow: 0 0 12px rgba(255,0,85,0.6);">
+                                <i class="fa-solid fa-triangle-exclamation me-1"></i> OUT OF STOCK // CONTACT US
+                            </span>
+                        }
+                    </div>
+                </div>
+
+                <p style="color: var(--cyber-muted); font-size: 1rem; line-height: 1.7; margin-bottom: 25px;">
+                    @(string.IsNullOrWhiteSpace(p.Description) ? "No detailed product description provided." : p.Description)
+                </p>
+
+                <!-- Technical Specification Matrix -->
+                <div class="p-3 mb-4" style="background: rgba(0, 229, 255, 0.02); border: 1px dashed var(--cyber-border);">
+                    <h5 style="font-family:'Orbitron'; color:var(--cyber-cyan); font-size:1.1rem; font-weight:700; margin-bottom: 15px;">
+                        <i class="fa-solid fa-list-check me-2"></i> TECHNICAL SPECIFICATIONS:
+                    </h5>
+                    <div class="row g-3" style="font-family:'Roboto Mono'; font-size: 0.85rem;">
+                        <div class="col-sm-6 d-flex justify-content-between"><span class="text-muted">CATEGORY:</span> <span class="text-white fw-bold">@(p.Category?.CategoryName ?? "N/A")</span></div>
+                        <div class="col-sm-6 d-flex justify-content-between"><span class="text-muted">MANUFACTURER:</span> <span class="text-white fw-bold">@(p.Manufacturer?.ManufacturerName ?? "Generic")</span></div>
+                        <div class="col-sm-6 d-flex justify-content-between"><span class="text-muted">PRODUCT TYPE:</span> <span class="text-white fw-bold">@(p.ProductType?.TypeName ?? "Standard")</span></div>
+                        <div class="col-sm-6 d-flex justify-content-between"><span class="text-muted">ITEM NATURE:</span> <span class="text-white fw-bold">@(p.ItemNature?.NatureName ?? "Standard Item")</span></div>
+                        <div class="col-sm-6 d-flex justify-content-between"><span class="text-muted">UNIT:</span> <span class="text-white fw-bold">@(p.Unit?.UnitName ?? "Unit")</span></div>
+                        <div class="col-sm-6 d-flex justify-content-between"><span class="text-muted">TAX RATE:</span> <span class="text-white fw-bold">@(p.TaxType?.TaxName ?? "Standard VAT") (@(p.TaxType?.TaxPercentage.ToString("0") ?? "10")%)</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acquisition Controls -->
+            <div class="p-4" style="background: #000; border: 1px solid var(--cyber-cyan); box-shadow: 0 0 20px rgba(0,229,255,0.2);">
+                <div class="row align-items-center g-3">
+                    <div class="col-sm-4">
+                        <label for="assetQuantity" class="form-label mb-1" style="font-family:'Roboto Mono'; font-size:0.75rem; color:var(--cyber-muted);">QUANTITY:</label>
+                        <div class="input-group">
+                            <button class="btn btn-outline-info" type="button" onclick="adjustQty(-1)" style="border-radius:0; font-family:'VT323'; font-size:1.4rem; padding: 0 15px;">-</button>
+                            <input type="number" id="assetQuantity" class="form-control text-center" value="1" min="1" max="@(Model.TotalStockQuantity > 0 ? Model.TotalStockQuantity : 999)" style="background:#0F172A; color:#FFF; border-color:var(--cyber-cyan); font-family:'VT323'; font-size:1.5rem; font-weight:bold; border-radius:0;" />
+                            <button class="btn btn-outline-info" type="button" onclick="adjustQty(1)" style="border-radius:0; font-family:'VT323'; font-size:1.4rem; padding: 0 15px;">+</button>
+                        </div>
+                    </div>
+                    <div class="col-sm-8 d-flex gap-2 mt-sm-auto pt-4">
+                        <button type="button" class="btn btn-lg flex-grow-1 py-3" style="background:var(--cyber-cyan); color:#000; font-family:'Orbitron'; font-weight:900; border-radius:0; font-size:0.95rem; text-transform:uppercase;" onclick="acquireAssetDetail(@p.ProductId, @(p.BasePrice.ToString(System.Globalization.CultureInfo.InvariantCulture)), '@(p.Unit?.UnitName ?? "Unit")', false)">
+                            <i class="fa-solid fa-cart-plus me-2"></i> [ ADD TO CART ]
+                        </button>
+                        <button type="button" class="btn btn-lg py-3 px-4" style="background:var(--cyber-emerald); color:#000; font-family:'Orbitron'; font-weight:900; border-radius:0; font-size:0.95rem; text-transform:uppercase;" onclick="acquireAssetDetail(@p.ProductId, @(p.BasePrice.ToString(System.Globalization.CultureInfo.InvariantCulture)), '@(p.Unit?.UnitName ?? "Unit")', true)" title="Buy Now">
+                            <i class="fa-solid fa-bolt me-1"></i> [ BUY NOW ]
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full Architectural Description Documentation -->
+    <div class="mb-5 p-4" style="background: var(--cyber-surface); border: 1px solid var(--cyber-cyan); border-left: 5px solid var(--cyber-cyan);">
+        <h3 style="font-family:'Orbitron'; font-weight:900; color:#FFF; margin-bottom: 20px; border-bottom: 1px dashed var(--cyber-border); padding-bottom: 10px;">
+            <i class="fa-solid fa-file-lines text-cyan me-2"></i> PRODUCT DESCRIPTION & SPECIFICATIONS
+        </h3>
+        <div style="color: #DDD; line-height: 1.8; font-size: 1.05rem; white-space: pre-wrap;">
+@(string.IsNullOrWhiteSpace(p.Description) ? $"No extended description available for Product SKU: {p.SKU}." : p.Description)
+        </div>
+    </div>
+
+    <!-- RELATED PRODUCTS MATRIX (SẢN PHẨM TƯƠNG TỰ WITH INTERACTIVE TABS) -->
+    <div class="my-5 pt-4" style="border-top: 2px solid var(--cyber-cyan);">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+            <div>
+                <span style="font-family:'VT323'; color:var(--cyber-emerald); font-size:1.3rem;">> RELATED PRODUCTS // FILTER BY CATEGORY & TYPE _</span>
+                <h2 style="font-family:'Orbitron'; font-weight:900; font-size:2.2rem; color:#FFFFFF; margin:0; text-shadow:0 0 12px rgba(0,229,255,0.4);">
+                    <i class="fa-solid fa-network-wired text-cyan me-3"></i> RELATED PRODUCTS
+                </h2>
+            </div>
+            <!-- Interactive Filter Command Tabs -->
+            <div class="d-flex flex-wrap gap-2 mt-3 mt-lg-0" id="relatedFilterTabs">
+                <button type="button" class="btn btn-sm px-3 py-2 active-filter-tab" style="font-family:'Orbitron'; font-weight:bold; border-radius:0; border:1px solid var(--cyber-cyan); background:var(--cyber-cyan); color:#000;" onclick="filterRelated('all', this)">
+                    [ ALL PRODUCTS ]
+                </button>
+                @if (p.CategoryId > 0)
+                {
+                    <button type="button" class="btn btn-sm px-3 py-2" style="font-family:'Orbitron'; font-weight:bold; border-radius:0; border:1px solid var(--cyber-cyan); background:var(--cyber-surface); color:var(--cyber-cyan);" onclick="filterRelated('cat-@p.CategoryId', this)">
+                        <i class="fa-solid fa-folder-tree me-1"></i> CATEGORY: @(p.Category?.CategoryName?.ToUpper() ?? "SAME")
+                    </button>
+                }
+                @if (p.ManufacturerId.HasValue)
+                {
+                    <button type="button" class="btn btn-sm px-3 py-2" style="font-family:'Orbitron'; font-weight:bold; border-radius:0; border:1px solid var(--cyber-cyan); background:var(--cyber-surface); color:var(--cyber-cyan);" onclick="filterRelated('mfr-@p.ManufacturerId', this)">
+                        <i class="fa-solid fa-industry me-1"></i> MFR: @(p.Manufacturer?.ManufacturerName?.ToUpper() ?? "SAME")
+                    </button>
+                }
+                @if (p.ProductTypeId > 0)
+                {
+                    <button type="button" class="btn btn-sm px-3 py-2" style="font-family:'Orbitron'; font-weight:bold; border-radius:0; border:1px solid var(--cyber-cyan); background:var(--cyber-surface); color:var(--cyber-cyan);" onclick="filterRelated('type-@p.ProductTypeId', this)">
+                        <i class="fa-solid fa-bars-staggered me-1"></i> TYPE: @(p.ProductType?.TypeName?.ToUpper() ?? "SAME")
+                    </button>
+                }
+                @if (p.ItemNatureId > 0)
+                {
+                    <button type="button" class="btn btn-sm px-3 py-2" style="font-family:'Orbitron'; font-weight:bold; border-radius:0; border:1px solid var(--cyber-cyan); background:var(--cyber-surface); color:var(--cyber-cyan);" onclick="filterRelated('nature-@p.ItemNatureId', this)">
+                        <i class="fa-solid fa-compact-disc me-1"></i> NATURE: @(p.ItemNature?.NatureName?.ToUpper() ?? "SAME")
+                    </button>
+                }
+            </div>
+        </div>
+
+        @if (Model.RelatedProducts != null && Model.RelatedProducts.Any())
+        {
+            <div class="row row-cols-2 row-cols-md-4 g-4" id="relatedProductsGrid">
+                @foreach (var rel in Model.RelatedProducts)
+                {
+                    var rImg = !string.IsNullOrEmpty(rel.ImageUrl) ? rel.ImageUrl : "/demo/products/default_cyber_product.png";
+                    <div class="col related-item-card" data-cat="cat-@rel.CategoryId" data-mfr="mfr-@(rel.ManufacturerId ?? 0)" data-type="type-@rel.ProductTypeId" data-nature="nature-@rel.ItemNatureId">
+                        <div class="card cyber-card h-100 d-flex flex-column justify-content-between" style="cursor: pointer;" onclick="if (!event.target.closest('button')) { window.location.href = '/Home/Storefront/Details/@rel.ProductId'; }">
+                            <div>
+                                <div class="cyber-card-img-box">
+                                    @if (rImg.StartsWith("/") || rImg.StartsWith("http"))
+                                    {
+                                        <img src="@rImg" alt="@rel.ProductName" style="max-height: 170px; max-width: 90%; object-fit: contain;" />
+                                    }
+                                    else
+                                    {
+                                        <i class="fa-solid fa-desktop" style="font-size:4.5rem; color:var(--cyber-cyan); opacity:0.8;"></i>
+                                    }
+                                    <span class="badge" style="position:absolute; top:10px; left:10px; background:var(--cyber-emerald); color:#000; font-family:'VT323'; font-size:1rem; font-weight:bold; border-radius:0;">
+                                        @(rel.ItemNature?.NatureName ?? "IN STOCK")
+                                    </span>
+                                </div>
+                                <div class="card-body p-3">
+                                    <div style="font-family:'VT323'; color:var(--cyber-amber); font-size:0.95rem; letter-spacing:1px;">
+                                        SKU: @rel.SKU // @(rel.Manufacturer?.ManufacturerName ?? "GENERIC")
+                                    </div>
+                                    <h5 style="font-family:'Orbitron'; color:#FFF; font-size:1rem; font-weight:700; margin:6px 0;">
+                                        @rel.ProductName
+                                    </h5>
+                                    <p style="color:var(--cyber-muted); font-size:0.8rem; line-height:1.5; margin-bottom:10px; height:44px; overflow:hidden; text-overflow:ellipsis;">
+                                        @(string.IsNullOrWhiteSpace(rel.Description) ? $"Product type: {rel.ProductType?.TypeName}." : rel.Description)
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="p-3 pt-0 mt-auto">
+                                <div class="pt-2" style="border-top:1px dashed var(--cyber-border);">
+                                    <div class="d-flex justify-content-between align-items-end mb-2">
+                                        <span style="font-family:'Roboto Mono'; font-size:0.68rem; color:var(--cyber-muted);">PRICE:</span>
+                                        <span style="font-family:'VT323'; font-size:1.6rem; color:var(--cyber-cyan); font-weight:bold; line-height:1;">@rel.BasePrice.ToString("N0") VND</span>
+                                    </div>
+                                    <button type="button" class="btn w-100 py-2" style="background:var(--cyber-cyan); color:#000; font-family:'Orbitron'; font-weight:900; border-radius:0; font-size:0.82rem; text-transform:uppercase;" onclick="addToStorefrontCart(@rel.ProductId, @(rel.BasePrice.ToString(System.Globalization.CultureInfo.InvariantCulture)), '@(rel.Unit?.UnitName ?? "Unit")')">
+                                        <i class="fa-solid fa-cart-plus me-2"></i> [ ADD TO CART ]
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div id="noRelatedResults" class="text-center py-5 my-3" style="display: none; border: 1px dashed var(--cyber-border); background: var(--cyber-surface);">
+                <i class="fa-solid fa-network-wired text-muted mb-3" style="font-size: 3rem;"></i>
+                <h5 style="font-family:'Orbitron'; color: #FFF;">NO PRODUCTS IN THIS CATEGORY</h5>
+                <p style="color: var(--cyber-muted); font-family: 'Roboto Mono';">Try switching to another tab or viewing all products.</p>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5 my-3" style="border: 1px dashed var(--cyber-border); background: var(--cyber-surface);">
+                <i class="fa-solid fa-box-open text-muted mb-3" style="font-size: 3rem;"></i>
+                <h5 style="font-family:'Orbitron'; color: #FFF;">NO RELATED PRODUCTS FOUND</h5>
+                <p style="color: var(--cyber-muted); font-family: 'Roboto Mono';">There are currently no related products available for this item.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // ====================================================================
+        // QUANTITY ADJUSTER
+        // ====================================================================
+        function adjustQty(delta) {
+            const input = document.getElementById('assetQuantity');
+            if (!input) return;
+            let currentVal = parseInt(input.value) || 1;
+            let newVal = currentVal + delta;
+            if (newVal < 1) newVal = 1;
+            let maxVal = parseInt(input.max) || 999;
+            if (newVal > maxVal) newVal = maxVal;
+            input.value = newVal;
+        }
+
+        // ====================================================================
+        // ASSET ACQUISITION HANDLER
+        // ====================================================================
+        function acquireAssetDetail(productId, price, unitName, isInstantCheckout) {
+            const qtyInput = document.getElementById('assetQuantity');
+            const quantity = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
+            
+            // Loop or pass quantity to cart function
+            if (typeof addToStorefrontCart === 'function') {
+                for(let i = 0; i < quantity; i++) {
+                    addToStorefrontCart(productId, price, unitName);
+                }
+                if (typeof showCyberNotify === 'function') {
+                    showCyberNotify("ADDED TO CART", `Successfully added ${quantity} item(s) to your cart.`, "success");
+                } else {
+                    alert(`Added ${quantity} item(s) to cart.`);
+                }
+            }
+
+            if (isInstantCheckout) {
+                setTimeout(() => {
+                    window.location.href = "/Home/Storefront/Checkout?cartId=1";
+                }, 400);
+            }
+        }
+
+        // ====================================================================
+        // RELATED PRODUCTS INTERACTIVE MULTI-DIMENSIONAL FILTER
+        // ====================================================================
+        function filterRelated(filterKey, btnEl) {
+            // Update button UI states
+            const tabs = document.querySelectorAll('#relatedFilterTabs button');
+            tabs.forEach(btn => {
+                btn.style.background = 'var(--cyber-surface)';
+                btn.style.color = 'var(--cyber-cyan)';
+            });
+            if (btnEl) {
+                btnEl.style.background = 'var(--cyber-cyan)';
+                btnEl.style.color = '#000';
+            }
+
+            const items = document.querySelectorAll('.related-item-card');
+            let visibleCount = 0;
+            items.forEach(card => {
+                if (filterKey === 'all') {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else if (filterKey.startsWith('cat-') && card.dataset.cat === filterKey) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else if (filterKey.startsWith('mfr-') && card.dataset.mfr === filterKey) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else if (filterKey.startsWith('type-') && card.dataset.type === filterKey) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else if (filterKey.startsWith('nature-') && card.dataset.nature === filterKey) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            const noRes = document.getElementById('noRelatedResults');
+            if (noRes) {
+                noRes.style.display = (visibleCount === 0) ? 'block' : 'none';
+            }
+        }
+    </script>
+}
