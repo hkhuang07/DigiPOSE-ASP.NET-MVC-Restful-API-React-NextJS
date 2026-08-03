@@ -51,6 +51,102 @@ namespace DigiPOSE.Controllers
             return View(user);
         }
 
+        // GET: /Profile/OrderDetail/{id}
+        // Displays comprehensive invoice detail page for a single order — Shopee/TikTok-style.
+        public async Task<IActionResult> OrderDetail(int id)
+        {
+            var userIdStr = User.FindFirstValue("UserId");
+            if (!int.TryParse(userIdStr, out int userId))
+                return RedirectToAction("Login", "Auth");
+
+            var user = await _context.Users
+                .Include(u => u.Tenant)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.UserId == userId);
+
+            if (user == null)
+                return RedirectToAction("Login", "Auth");
+
+            // Load order with all related data
+            var order = await _context.Orders
+                .Include(o => o.OrderStatus)
+                .Include(o => o.PaymentMethod)
+                .Include(o => o.OrderDetails!)
+                    .ThenInclude(d => d.Product)
+                .Include(o => o.Customer)
+                .Include(o => o.Shift)
+                    .ThenInclude(s => s!.Counter)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.OrderId == id);
+
+            if (order == null)
+                return NotFound();
+
+            // Security guard: only the owner can view their own order
+            bool isOwner = order.UserId == userId
+                || (!string.IsNullOrEmpty(user.PhoneNumber) && order.SnapshotCustomerPhone == user.PhoneNumber);
+
+            if (!isOwner)
+            {
+                TempData["ErrorMessage"] = "Access denied: This order does not belong to your account.";
+                return RedirectToAction(nameof(Orders));
+            }
+
+            // Load retail doc for additional invoice data
+            var retailDoc = await _context.Retails
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.OrderId == id);
+
+            ViewBag.Order = order;
+            ViewBag.RetailDoc = retailDoc;
+            ViewBag.CurrentUser = user;
+            return View();
+        }
+
+        // POST: /Profile/CancelOrder/{id}
+        // Allows user to cancel a PENDING order.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelOrder(int id)
+        {
+            var userIdStr = User.FindFirstValue("UserId");
+            if (!int.TryParse(userIdStr, out int userId))
+                return Unauthorized();
+
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == userId);
+            if (user == null) return Unauthorized();
+
+            var order = await _context.Orders
+                .Include(o => o.OrderStatus)
+                .FirstOrDefaultAsync(o => o.OrderId == id);
+
+            if (order == null) return NotFound();
+
+            // Security guard
+            bool isOwner = order.UserId == userId
+                || (!string.IsNullOrEmpty(user.PhoneNumber) && order.SnapshotCustomerPhone == user.PhoneNumber);
+            if (!isOwner) return Forbid();
+
+            // Only PENDING (StatusId=5 or identified as pending) can be cancelled
+            // Completed (1), Processing (2), Shipped (3), Draft (4) cannot be cancelled by user
+            bool isCancellable = order.StatusId == 5 || order.StatusId == 6; // Pending statuses
+            if (!isCancellable)
+            {
+                TempData["ErrorMessage"] = "This order cannot be cancelled. Only pending orders are eligible for cancellation.";
+                return RedirectToAction(nameof(OrderDetail), new { id });
+            }
+
+            order.StatusId = 4; // Cancelled by customer — map to appropriate status
+            // Try to find a "Cancelled" status
+            var cancelledStatus = await _context.Set<OrderStatus>().FirstOrDefaultAsync(s => s.StatusName.Contains("Cancel"));
+            if (cancelledStatus != null)
+                order.StatusId = cancelledStatus.StatusId;
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Order has been successfully cancelled.";
+            return RedirectToAction(nameof(OrderDetail), new { id });
+        }
+
         // GET: /Profile/Orders
         // Displays dedicated transaction history for the active account.
         public async Task<IActionResult> Orders()

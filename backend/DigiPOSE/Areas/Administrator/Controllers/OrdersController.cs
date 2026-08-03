@@ -42,6 +42,10 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][name]"].FirstOrDefault();
                 var sortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault();
                 var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                // >>> [DRAFT FILTER]: Frontend toggle — showDraft=true shows all, false hides drafts (StatusId=4)
+                var showDraftStr = Request.Form["showDraft"].FirstOrDefault() ?? "true";
+                bool showDraft = showDraftStr.ToLower() != "false";
+
                 int pageSize = length != null ? Convert.ToInt32(length) : 0;
                 int skip = start != null ? Convert.ToInt32(start) : 0;
 
@@ -52,6 +56,13 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                     .Include(x => x.PaymentMethod)
                     .Include(x => x.OrderStatus)
                     .AsQueryable();
+
+                // Apply draft visibility filter
+                if (!showDraft)
+                    query = query.Where(m => m.StatusId != 4);
+
+                // Count drafts for frontend chip badge (always from full set)
+                int draftCount = await _context.Orders.CountAsync(o => o.StatusId == 4);
 
                 int totalRecords = query.Count();
 
@@ -74,7 +85,8 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 }
                 else
                 {
-                    query = query.OrderByDescending(v => v.CreatedAt);
+                    // >>> [SORT PRIORITY]: Show drafts last (they are less important), completed orders first
+                    query = query.OrderBy(m => m.StatusId == 4 ? 1 : 0).ThenByDescending(v => v.CreatedAt);
                 }
 
                 // Paging & Mapping
@@ -84,10 +96,12 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                     StatusName = m.OrderStatus != null ? m.OrderStatus.StatusName : "",
                     BadgeColor = m.OrderStatus != null ? (m.OrderStatus.BadgeColor ?? "#6c757d") : "#6c757d",
                     TotalAmount = m.TotalAmount,
-                    CreatedAt = m.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")
+                    CreatedAt = m.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+                    // >>> [DRAFT FLAG]: Frontend uses this to apply visual dimming + special badge
+                    IsDraft = m.StatusId == 4
                 }).ToList();
 
-                return Json(new { draw = draw, recordsFiltered = filterRecords, recordsTotal = totalRecords, data = dataList });
+                return Json(new { draw = draw, recordsFiltered = filterRecords, recordsTotal = totalRecords, draftCount = draftCount, data = dataList });
             }
             catch (Exception ex)
             {

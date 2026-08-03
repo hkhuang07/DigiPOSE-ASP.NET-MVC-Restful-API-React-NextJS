@@ -1,0 +1,473 @@
+@{
+    ViewData["Title"] = "Order Details";
+    var order = ViewBag.Order as DigiPOSE.Models.Order;
+    var retailDoc = ViewBag.RetailDoc as DigiPOSE.Models.Retail;
+    var currentUser = ViewBag.CurrentUser as DigiPOSE.Models.User;
+
+    if (order == null) { <p>Order not found.</p> return; }
+
+    string invoiceNo = order.InvoiceNumber ?? $"ORD-{order.OrderId:D6}";
+    string docNo = retailDoc?.DocNo ?? "N/A";
+    string statusName = order.OrderStatus?.StatusName?.ToUpper() ?? "UNKNOWN";
+    string badgeColor = order.OrderStatus?.BadgeColor ?? "#FFB000";
+
+    // Timeline step logic: 1=Completed/Delivered, 2=Processing/Confirmed, 3=Shipped, 5/6=Pending
+    int step = order.StatusId switch {
+        1 => 4,
+        3 => 3,
+        2 => 2,
+        5 or 6 => 1,
+        _ => 1
+    };
+    bool isCancelled = order.OrderStatus?.StatusName?.ToLower().Contains("cancel") == true;
+    bool isCancellable = order.StatusId == 5 || order.StatusId == 6;
+    if (isCancelled) step = -1;
+}
+<style>
+.od-wrap { max-width: 920px; margin: 0 auto; padding: 28px 16px; }
+
+.od-header {
+    background: linear-gradient(135deg, #0A0A0A 0%, #050E14 100%);
+    border: 1px solid #00E5FF;
+    border-left: 4px solid #00E5FF;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+}
+.od-header::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 120px;
+    background: linear-gradient(90deg, transparent, rgba(0,229,255,0.04));
+    pointer-events: none;
+}
+.od-inv { font-family: 'VT323', monospace; font-size: 2rem; color: #00E5FF; letter-spacing: 2px; line-height: 1; }
+.od-doc { font-family: 'Roboto Mono', monospace; font-size: 0.72rem; color: #555; margin-top: 3px; }
+.od-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px; border: 1px solid; font-family: 'Orbitron', sans-serif;
+    font-size: 0.73rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+}
+
+/* === TIMELINE === */
+.od-tl-wrap {
+    background: #080808; border: 1px solid #1A1A1A;
+    padding: 22px 24px; margin-bottom: 20px;
+}
+.od-tl-h { font-family: 'Orbitron', sans-serif; font-size: 0.73rem; color: #00E5FF; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 22px; }
+.od-tl-track {
+    display: flex; align-items: flex-start; justify-content: space-between; position: relative;
+}
+.od-tl-track::before {
+    content: ''; position: absolute; top: 17px; left: 10%; right: 10%;
+    height: 2px; background: #1A1A1A; z-index: 0;
+}
+.od-tl-step { display: flex; flex-direction: column; align-items: center; gap: 7px; flex: 1; position: relative; z-index: 1; }
+.od-tl-ico {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 2px solid #1A1A1A; background: #080808;
+    display: flex; align-items: center; justify-content: center; font-size: 0.85rem; color: #2A2A2A;
+    transition: all 0.3s;
+}
+.od-tl-ico.active { border-color: #00E5FF; background: rgba(0,229,255,0.08); color: #00E5FF; box-shadow: 0 0 12px rgba(0,229,255,0.35); }
+.od-tl-ico.done   { border-color: #00FF66; background: rgba(0,255,102,0.08); color: #00FF66; box-shadow: 0 0 8px rgba(0,255,102,0.25); }
+.od-tl-ico.cancel { border-color: #FF3333; background: rgba(255,51,51,0.08); color: #FF3333; }
+.od-tl-lbl { font-family: 'Rajdhani', sans-serif; font-size: 0.76rem; font-weight: 700; color: #444; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; }
+.od-tl-lbl.active { color: #00E5FF; }
+.od-tl-lbl.done   { color: #00FF66; }
+.od-tl-lbl.cancel { color: #FF3333; }
+.od-tl-time { font-size: 0.63rem; color: #3A3A3A; font-family: 'Roboto Mono', monospace; }
+
+/* === CARDS === */
+.od-card { background: #080808; border: 1px solid #1A1A1A; padding: 20px; margin-bottom: 16px; }
+.od-card-h {
+    font-family: 'Orbitron', sans-serif; font-size: 0.73rem; color: #00E5FF; text-transform: uppercase;
+    letter-spacing: 2px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #111;
+    display: flex; align-items: center; gap: 8px;
+}
+
+/* === PRODUCT TABLE === */
+.od-prod-tbl { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.od-prod-tbl thead th { background: #060606; color: #555; font-family: 'Rajdhani', sans-serif; font-size: 0.7rem; text-transform: uppercase; padding: 8px 12px; border-bottom: 1px solid #1A1A1A; white-space: nowrap; }
+.od-prod-tbl tbody td { padding: 10px 12px; border-bottom: 1px solid #0D0D0D; vertical-align: middle; }
+.od-prod-tbl tbody tr:hover td { background: rgba(0,229,255,0.02); }
+.od-pimg { width: 46px; height: 46px; object-fit: cover; border: 1px solid #1A1A1A; }
+.od-pimg-ph { width: 46px; height: 46px; background: #0D0D0D; border: 1px solid #1A1A1A; display: flex; align-items: center; justify-content: center; }
+
+/* === TOTALS === */
+.od-tot-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; font-size: 0.83rem; }
+.od-tot-row .lbl { color: #666; font-family: 'Roboto Mono', monospace; font-size: 0.76rem; }
+.od-tot-row .val { color: #CCC; font-weight: bold; }
+.od-tot-final { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 0 6px; border-top: 1px solid #1A1A1A; margin-top: 8px; }
+.od-tot-final .lbl { font-family: 'Orbitron', sans-serif; font-size: 0.75rem; color: #AAA; text-transform: uppercase; }
+.od-tot-final .val { font-family: 'VT323', monospace; font-size: 2rem; color: #00FF66; }
+
+/* === INFO GRID === */
+.od-info-g { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.od-info-item label { font-size: 0.66rem; color: #555; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px; }
+.od-info-item span { font-family: 'Roboto Mono', monospace; font-size: 0.81rem; color: #CCC; }
+
+/* === ACTIONS === */
+.od-acts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+.od-btn { padding: 10px 20px; font-family: 'Orbitron', sans-serif; font-size: 0.73rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border: 1px solid; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; background: transparent; }
+.od-btn-back   { border-color: #333; color: #888; }
+.od-btn-back:hover   { border-color: #888; color: #CCC; text-decoration: none; }
+.od-btn-reorder { border-color: #00E5FF; color: #00E5FF; }
+.od-btn-reorder:hover { background: rgba(0,229,255,0.1); color: #00E5FF; text-decoration: none; }
+.od-btn-cancel { border-color: #FF3333; color: #FF3333; }
+.od-btn-cancel:hover { background: rgba(255,51,51,0.1); }
+.od-btn-print  { border-color: #FFB000; color: #FFB000; }
+.od-btn-print:hover  { background: rgba(255,176,0,0.1); color: #FFB000; text-decoration: none; }
+
+@@media (max-width: 768px) {
+    .od-info-g { grid-template-columns: 1fr; }
+    .od-tl-lbl { font-size: 0.62rem; }
+    .od-inv { font-size: 1.4rem; }
+    .od-side-grid { grid-template-columns: 1fr !important; }
+}
+@@media print {
+    .od-acts, .hud-navbar, .hud-footer, .hud-content-wrapper > nav { display: none !important; }
+    body { background: #fff !important; color: #000 !important; }
+    .od-header, .od-tl-wrap, .od-card { border-color: #ccc !important; background: #fff !important; }
+}
+</style>
+
+<div class="od-wrap">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div style="background:rgba(0,255,102,0.08); border:1px solid #00FF66; color:#00FF66; padding:12px 16px; margin-bottom:16px; font-family:'Roboto Mono',monospace; font-size:0.85rem;">
+            <i class="fa-solid fa-circle-check me-2"></i>@TempData["SuccessMessage"]
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div style="background:rgba(255,51,51,0.08); border:1px solid #FF3333; color:#FF3333; padding:12px 16px; margin-bottom:16px; font-family:'Roboto Mono',monospace; font-size:0.85rem;">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>@TempData["ErrorMessage"]
+        </div>
+    }
+
+    <!-- ===== HEADER ===== -->
+    <div class="od-header">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+                <div style="font-family:'Roboto Mono',monospace; font-size:0.66rem; color:#555; text-transform:uppercase; letter-spacing:2px; margin-bottom:4px;">
+                    <i class="fa-solid fa-receipt me-1" style="color:#00E5FF;"></i>PURCHASE RECORD
+                </div>
+                <div class="od-inv">@invoiceNo</div>
+                @if (docNo != "N/A") { <div class="od-doc">Doc: @docNo</div> }
+                <div style="font-family:'Roboto Mono',monospace; font-size:0.73rem; color:#555; margin-top:6px;">
+                    <i class="fa-regular fa-calendar me-1"></i>
+                    @order.CreatedAt.ToString("dd MMMM yyyy, HH:mm:ss")
+                </div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+                <div class="od-badge" style="border-color:@badgeColor; color:@badgeColor; background:rgba(0,0,0,0.5);">
+                    @if (isCancelled) { <i class="fa-solid fa-ban"></i> }
+                    else if (order.StatusId == 1) { <i class="fa-solid fa-circle-check"></i> }
+                    else if (order.StatusId == 3) { <i class="fa-solid fa-truck"></i> }
+                    else { <i class="fa-solid fa-clock"></i> }
+                    @statusName
+                </div>
+                <div style="font-family:'Roboto Mono',monospace; font-size:0.66rem; color:#444;">Order #@order.OrderId</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TIMELINE ===== -->
+    <div class="od-tl-wrap">
+        <div class="od-tl-h"><i class="fa-solid fa-route me-2"></i>Delivery Status Timeline</div>
+        @if (isCancelled)
+        {
+            <div class="od-tl-track">
+                <div class="od-tl-step">
+                    <div class="od-tl-ico done"><i class="fa-solid fa-check"></i></div>
+                    <div class="od-tl-lbl done">Ordered</div>
+                    <div class="od-tl-time">@order.CreatedAt.ToString("dd/MM HH:mm")</div>
+                </div>
+                <div class="od-tl-step">
+                    <div class="od-tl-ico cancel"><i class="fa-solid fa-ban"></i></div>
+                    <div class="od-tl-lbl cancel">Cancelled</div>
+                    <div class="od-tl-time">---</div>
+                </div>
+                <div class="od-tl-step">
+                    <div class="od-tl-ico"><i class="fa-solid fa-truck"></i></div>
+                    <div class="od-tl-lbl">Shipping</div>
+                    <div class="od-tl-time">---</div>
+                </div>
+                <div class="od-tl-step">
+                    <div class="od-tl-ico"><i class="fa-solid fa-box-open"></i></div>
+                    <div class="od-tl-lbl">Delivered</div>
+                    <div class="od-tl-time">---</div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="od-tl-track">
+                @{ string s1 = step > 1 ? "done" : step == 1 ? "active" : ""; }
+                @{ string s2 = step > 2 ? "done" : step == 2 ? "active" : ""; }
+                @{ string s3 = step > 3 ? "done" : step == 3 ? "active" : ""; }
+                @{ string s4 = step >= 4 ? "done" : ""; }
+                <div class="od-tl-step">
+                    <div class="od-tl-ico @s1"><i class="fa-solid @(step > 1 ? "fa-check" : "fa-cart-shopping")"></i></div>
+                    <div class="od-tl-lbl @s1">Ordered</div>
+                    <div class="od-tl-time">@order.CreatedAt.ToString("dd/MM HH:mm")</div>
+                </div>
+                <div class="od-tl-step">
+                    <div class="od-tl-ico @s2"><i class="fa-solid @(step > 2 ? "fa-check" : "fa-clipboard-check")"></i></div>
+                    <div class="od-tl-lbl @s2">Confirmed</div>
+                    <div class="od-tl-time">@(step >= 2 ? "Confirmed" : "---")</div>
+                </div>
+                <div class="od-tl-step">
+                    <div class="od-tl-ico @s3"><i class="fa-solid @(step > 3 ? "fa-check" : "fa-truck")"></i></div>
+                    <div class="od-tl-lbl @s3">In Transit</div>
+                    <div class="od-tl-time">@(step >= 3 ? "Shipping" : "---")</div>
+                </div>
+                <div class="od-tl-step">
+                    <div class="od-tl-ico @s4"><i class="fa-solid @(step >= 4 ? "fa-check" : "fa-box-open")"></i></div>
+                    <div class="od-tl-lbl @s4">Delivered</div>
+                    <div class="od-tl-time">@(step >= 4 ? "✓ Received" : "---")</div>
+                </div>
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(order.ShippingAddress))
+        {
+            <div style="margin-top:14px; padding-top:12px; border-top:1px solid #111; font-size:0.77rem; color:#888; font-family:'Roboto Mono',monospace;">
+                <i class="fa-solid fa-location-dot me-1" style="color:#00E5FF;"></i>
+                Shipping: <span style="color:#CCC;">@order.ShippingAddress</span>
+            </div>
+        }
+    </div>
+
+    <!-- ===== PRODUCTS TABLE ===== -->
+    <div class="od-card">
+        <div class="od-card-h">
+            <i class="fa-solid fa-boxes-stacked"></i>
+            Order Items <span style="color:#555; font-size:0.7rem; margin-left:4px;">(@(order.OrderDetails?.Count ?? 0) products)</span>
+        </div>
+        @if (order.OrderDetails != null && order.OrderDetails.Any())
+        {
+            <div class="table-responsive">
+                <table class="od-prod-tbl">
+                    <thead>
+                        <tr>
+                            <th style="width:54px;"></th>
+                            <th>Product</th>
+                            <th style="text-align:center; width:70px;">Qty</th>
+                            <th style="text-align:right;">Unit Price</th>
+                            <th style="text-align:right;">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in order.OrderDetails)
+                        {
+                            <tr>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.Product?.ImageUrl))
+                                    {
+                                        <img src="~/uploads/products/@item.Product.ImageUrl" class="od-pimg" alt="@item.ProductName" onerror="this.parentElement.innerHTML='<div class=od-pimg-ph><i class=fa-solid fa-box style=color:#333;font-size:1.1rem></i></div>'" />
+                                    }
+                                    else
+                                    {
+                                        <div class="od-pimg-ph"><i class="fa-solid fa-box" style="color:#333; font-size:1.1rem;"></i></div>
+                                    }
+                                </td>
+                                <td>
+                                    <div style="font-weight:700; color:#EEE; font-family:'Rajdhani',sans-serif; font-size:0.9rem;">@item.ProductName</div>
+                                    @if (item.Product?.SKU != null)
+                                    {
+                                        <div style="font-size:0.66rem; color:#555; font-family:'Roboto Mono',monospace; margin-top:2px;">SKU: @item.Product.SKU</div>
+                                    }
+                                    <div style="font-size:0.68rem; color:#555; margin-top:2px;">Unit: @item.UnitName</div>
+                                    @if (item.DiscountAmount > 0)
+                                    {
+                                        <div style="font-size:0.68rem; color:#FFB000; margin-top:2px;"><i class="fa-solid fa-tag me-1"></i>Discount: -@item.DiscountAmount.ToString("N0") ₫</div>
+                                    }
+                                    @if (item.TaxAmount > 0)
+                                    {
+                                        <div style="font-size:0.68rem; color:#00E5FF; margin-top:2px;">VAT (@item.TaxRate.ToString("N0")%): +@item.TaxAmount.ToString("N0") ₫</div>
+                                    }
+                                </td>
+                                <td style="text-align:center;">
+                                    <span style="font-family:'VT323',monospace; font-size:1.5rem; color:#FFF;">x@item.Quantity</span>
+                                </td>
+                                <td style="text-align:right;">
+                                    <span style="font-family:'Roboto Mono',monospace; font-size:0.83rem; color:#A0C0CE;">@item.UnitPrice.ToString("N0") ₫</span>
+                                </td>
+                                <td style="text-align:right;">
+                                    <span style="font-family:'VT323',monospace; font-size:1.3rem; color:#00FF66; font-weight:bold;">@item.TotalAmount.ToString("N0") ₫</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div style="text-align:center; padding:28px; color:#444; font-family:'Roboto Mono',monospace; font-size:0.83rem;">
+                <i class="fa-solid fa-box-open fa-2x" style="color:#222; display:block; margin-bottom:8px;"></i>
+                No product details recorded for this order.
+            </div>
+        }
+    </div>
+
+    <!-- ===== PAYMENT + SUMMARY SIDE BY SIDE ===== -->
+    <div class="od-side-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+
+        <!-- Payment Info -->
+        <div class="od-card" style="margin-bottom:0;">
+            <div class="od-card-h"><i class="fa-solid fa-credit-card"></i>Payment Information</div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.83rem;">
+                    <span style="color:#666; font-family:'Roboto Mono',monospace; font-size:0.73rem;">Method</span>
+                    <span style="color:#00E5FF; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:0.9rem;">
+                        <i class="fa-solid @(order.PaymentMethod?.MethodName?.ToLower().Contains("cash") == true ? "fa-money-bill" : order.PaymentMethod?.MethodName?.ToLower().Contains("card") == true ? "fa-credit-card" : "fa-qrcode") me-1"></i>
+                        @(order.PaymentMethod?.MethodName ?? "Cash")
+                    </span>
+                </div>
+                @if (order.TenderedAmount > 0)
+                {
+                    <div style="display:flex; justify-content:space-between; font-size:0.82rem;">
+                        <span style="color:#666; font-family:'Roboto Mono',monospace; font-size:0.73rem;">Tendered</span>
+                        <span style="color:#CCC; font-family:'Roboto Mono',monospace;">@order.TenderedAmount.ToString("N0") ₫</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.82rem;">
+                        <span style="color:#666; font-family:'Roboto Mono',monospace; font-size:0.73rem;">Change Returned</span>
+                        <span style="color:#00E5FF; font-family:'Roboto Mono',monospace;">@order.ChangeAmount.ToString("N0") ₫</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(order.OrderNotes))
+                {
+                    <div style="padding:8px; background:#060606; border:1px solid #111; margin-top:4px;">
+                        <div style="font-size:0.66rem; color:#555; text-transform:uppercase; letter-spacing:1px; margin-bottom:3px;">Notes</div>
+                        <div style="font-size:0.78rem; color:#888; font-family:'Roboto Mono',monospace;">@order.OrderNotes</div>
+                    </div>
+                }
+                @if (retailDoc?.DocType != null && retailDoc.DocType != "POS_RETAIL")
+                {
+                    <div style="padding:6px 10px; background:rgba(0,136,255,0.05); border:1px solid rgba(0,136,255,0.25); margin-top:4px;">
+                        <div style="font-size:0.68rem; color:#0088FF; font-family:'Roboto Mono',monospace;">
+                            <i class="fa-solid fa-file-invoice me-1"></i>@retailDoc.DocType
+                            @if (!string.IsNullOrEmpty(retailDoc.BuyerTaxCode)) { <text> | Tax Code: @retailDoc.BuyerTaxCode</text> }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Order Summary Totals -->
+        <div class="od-card" style="margin-bottom:0;">
+            <div class="od-card-h"><i class="fa-solid fa-calculator"></i>Order Summary</div>
+            <div class="od-tot-row">
+                <span class="lbl">Subtotal</span>
+                <span class="val">@order.GrossAmount.ToString("N0") ₫</span>
+            </div>
+            @if (order.DiscountAmount > 0)
+            {
+                <div class="od-tot-row">
+                    <span class="lbl"><i class="fa-solid fa-tag me-1" style="color:#FFB000;"></i>Discount</span>
+                    <span class="val" style="color:#FFB000;">-@order.DiscountAmount.ToString("N0") ₫</span>
+                </div>
+            }
+            @if (order.TaxAmount > 0)
+            {
+                <div class="od-tot-row">
+                    <span class="lbl"><i class="fa-solid fa-percent me-1" style="color:#00E5FF;"></i>VAT</span>
+                    <span class="val" style="color:#00E5FF;">+@order.TaxAmount.ToString("N0") ₫</span>
+                </div>
+            }
+            @if (order.ShippingFee > 0)
+            {
+                <div class="od-tot-row">
+                    <span class="lbl"><i class="fa-solid fa-truck me-1"></i>Shipping</span>
+                    <span class="val">+@order.ShippingFee.ToString("N0") ₫</span>
+                </div>
+            }
+            <div class="od-tot-final">
+                <span class="lbl">TOTAL AMOUNT</span>
+                <span class="val">@order.TotalAmount.ToString("N0") ₫</span>
+            </div>
+            <div style="text-align:right; font-size:0.66rem; color:#444; font-family:'Roboto Mono',monospace; margin-top:2px;">VND</div>
+        </div>
+    </div>
+
+    <!-- ===== ORDER INFO ===== -->
+    <div class="od-card">
+        <div class="od-card-h"><i class="fa-solid fa-circle-info"></i>Order & Contact Information</div>
+        <div class="od-info-g">
+            <div class="od-info-item">
+                <label>Order Date</label>
+                <span>@order.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")</span>
+            </div>
+            <div class="od-info-item">
+                <label>Order ID</label>
+                <span style="color:#00E5FF;">#@order.OrderId</span>
+            </div>
+            <div class="od-info-item">
+                <label>Customer</label>
+                <span>@(order.SnapshotCustomerName ?? currentUser?.FullName ?? currentUser?.UserName ?? "N/A")</span>
+            </div>
+            <div class="od-info-item">
+                <label>Contact Phone</label>
+                <span>@(order.SnapshotCustomerPhone ?? currentUser?.PhoneNumber ?? "--")</span>
+            </div>
+            @if (!string.IsNullOrEmpty(order.ShippingAddress))
+            {
+                <div class="od-info-item" style="grid-column:1/-1;">
+                    <label>Shipping Address</label>
+                    <span>@order.ShippingAddress</span>
+                </div>
+            }
+            @if (order.Shift?.Counter != null)
+            {
+                <div class="od-info-item">
+                    <label>Service Counter</label>
+                    <span>@order.Shift.Counter.CounterName</span>
+                </div>
+            }
+            @if (retailDoc != null)
+            {
+                <div class="od-info-item">
+                    <label>Document No.</label>
+                    <span style="color:#00E5FF;">@retailDoc.DocNo</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- ===== ACTIONS ===== -->
+    <div class="od-acts">
+        <a href="/Profile/Orders" class="od-btn od-btn-back">
+            <i class="fa-solid fa-arrow-left"></i>Back to Orders
+        </a>
+        <a href="/Storefront/Index" class="od-btn od-btn-reorder" id="btnReorder">
+            <i class="fa-solid fa-rotate-right"></i>Re-order
+        </a>
+        <button onclick="window.print()" class="od-btn od-btn-print">
+            <i class="fa-solid fa-print"></i>Print Invoice
+        </button>
+        @if (isCancellable)
+        {
+            <form asp-action="CancelOrder" asp-route-id="@order.OrderId" method="post"
+                  onsubmit="return confirm('Cancel this order? This action cannot be undone.');" style="display:inline;">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="od-btn od-btn-cancel">
+                    <i class="fa-solid fa-ban"></i>Cancel Order
+                </button>
+            </form>
+        }
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Re-order: redirect to storefront with pre-fill note (actual cart API may differ per setup)
+    document.getElementById('btnReorder')?.addEventListener('click', function(e) {
+        // Simply navigate to storefront; full cart pre-fill requires storefront cart API
+        window.location.href = '/Storefront/Index';
+    });
+</script>
+}

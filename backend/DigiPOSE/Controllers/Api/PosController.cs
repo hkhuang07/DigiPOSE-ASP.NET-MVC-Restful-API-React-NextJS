@@ -674,11 +674,13 @@ namespace DigiPOSE.Controllers.Api
             });
         }
 
-        // >>> [DATABASE_OPTIMIZATION_WORKER]: Purge abandoned POS draft bills (> 24h) to keep database indexes O(1) clean
+        // >>> [DATABASE_OPTIMIZATION_WORKER]: Purge abandoned POS draft bills (> 2h) to keep database indexes O(1) clean
+        // Triggered manually from Admin Orders panel or automatically on shift close.
         [HttpDelete("retail-draft/cleanup-stale")]
         public async Task<IActionResult> CleanupStaleDrafts()
         {
-            var cutoff = DateTime.Now.AddHours(-24);
+            // >>> [THRESHOLD]: 2 hours of inactivity — active POS sessions never exceed this window under normal ops
+            var cutoff = DateTime.Now.AddHours(-2);
             var staleOrders = await _context.Orders
                 .Include(o => o.OrderDetails)
                 .Where(o => o.StatusId == 4 && o.CreatedAt < cutoff)
@@ -693,7 +695,27 @@ namespace DigiPOSE.Controllers.Api
                 _context.Orders.RemoveRange(staleOrders);
                 await _context.SaveChangesAsync();
             }
-            return Ok(new { Message = "Stale draft cleanup completed", PurgedCount = staleOrders.Count });
+            return Ok(new { Message = "Stale draft cleanup completed", purgedCount = staleOrders.Count });
+        }
+
+        // >>> [ADMIN PURGE]: Delete a single draft order by ID — admin-only safety action
+        [HttpDelete("retail-draft/{orderId}/purge")]
+        public async Task<IActionResult> PurgeSingleDraft(int orderId)
+        {
+            var order = await _context.Orders
+                .Include(o => o.OrderDetails)
+                .FirstOrDefaultAsync(o => o.OrderId == orderId && o.StatusId == 4);
+
+            if (order == null)
+                return NotFound(new { Error = "DRAFT_NOT_FOUND", Message = $"Order #{orderId} is not a draft or does not exist." });
+
+            if (order.OrderDetails != null && order.OrderDetails.Any())
+                _context.OrderDetails.RemoveRange(order.OrderDetails);
+
+            _context.Orders.Remove(order);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = $"Draft #{orderId} purged successfully.", purgedCount = 1 });
         }
 
         [HttpPost("retail-draft/add-item")]
