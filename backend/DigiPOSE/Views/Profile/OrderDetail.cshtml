@@ -11,17 +11,20 @@
     string statusName = order.OrderStatus?.StatusName?.ToUpper() ?? "UNKNOWN";
     string badgeColor = order.OrderStatus?.BadgeColor ?? "#FFB000";
 
-    // Timeline step logic: 1=Completed/Delivered, 2=Processing/Confirmed, 3=Shipped, 5/6=Pending
-    int step = order.StatusId switch {
-        1 => 4,
-        3 => 3,
-        2 => 2,
-        5 or 6 => 1,
+    // >>> [ENTERPRISE ORDER LIFECYCLE MAPPING]: Aligned strictly with DB OrderStatus seed (1=Draft, 2=Pending, 3=Confirmed, 4=Processing, 5=Shipped, 6=InTransit, 7=Delivered, 8=Completed, 12=Cancelled)
+    int currentStatusId = order.StatusId;
+    bool isCancelled = currentStatusId == 12 || order.OrderStatus?.StatusName?.ToLower().Contains("cancel") == true;
+    bool isCancellable = currentStatusId == 1 || currentStatusId == 2;
+    
+    int stage = currentStatusId switch {
+        1 or 2 => 1,
+        3 or 4 => 2,
+        5 or 6 => 3,
+        7 or 8 => 4,
         _ => 1
     };
-    bool isCancelled = order.OrderStatus?.StatusName?.ToLower().Contains("cancel") == true;
-    bool isCancellable = order.StatusId == 5 || order.StatusId == 6;
-    if (isCancelled) step = -1;
+    if (isCancelled) stage = -1;
+    string statusBadgeColor = order.OrderStatus?.BadgeColor ?? (currentStatusId == 8 ? "#00FF66" : currentStatusId == 12 ? "#FF3333" : currentStatusId == 1 ? "#6c757d" : "#00E5FF");
 }
 <style>
 .od-wrap { max-width: 920px; margin: 0 auto; padding: 28px 16px; }
@@ -163,11 +166,12 @@
                 </div>
             </div>
             <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
-                <div class="od-badge" style="border-color:@badgeColor; color:@badgeColor; background:rgba(0,0,0,0.5);">
+                <div class="od-badge" style="border-color:@statusBadgeColor; color:@statusBadgeColor; background:rgba(0,0,0,0.5);">
                     @if (isCancelled) { <i class="fa-solid fa-ban"></i> }
-                    else if (order.StatusId == 1) { <i class="fa-solid fa-circle-check"></i> }
-                    else if (order.StatusId == 3) { <i class="fa-solid fa-truck"></i> }
-                    else { <i class="fa-solid fa-clock"></i> }
+                    else if (order.StatusId == 8 || order.StatusId == 7) { <i class="fa-solid fa-circle-check"></i> }
+                    else if (order.StatusId == 5 || order.StatusId == 6) { <i class="fa-solid fa-truck-fast"></i> }
+                    else if (order.StatusId == 3 || order.StatusId == 4) { <i class="fa-solid fa-boxes-packing"></i> }
+                    else { <i class="fa-solid fa-file-invoice"></i> }
                     @statusName
                 </div>
                 <div style="font-family:'Roboto Mono',monospace; font-size:0.66rem; color:#444;">Order #@order.OrderId</div>
@@ -177,28 +181,28 @@
 
     <!-- ===== TIMELINE ===== -->
     <div class="od-tl-wrap">
-        <div class="od-tl-h"><i class="fa-solid fa-route me-2"></i>Delivery Status Timeline</div>
+        <div class="od-tl-h"><i class="fa-solid fa-route me-2"></i>Delivery & Fiscal Lifecycle Timeline</div>
         @if (isCancelled)
         {
             <div class="od-tl-track">
                 <div class="od-tl-step">
                     <div class="od-tl-ico done"><i class="fa-solid fa-check"></i></div>
-                    <div class="od-tl-lbl done">Ordered</div>
-                    <div class="od-tl-time">@order.CreatedAt.ToString("dd/MM HH:mm")</div>
+                    <div class="od-tl-lbl done">Created</div>
+                    <div class="od-tl-time">@order.CreatedAt.ToString("dd/MM/yy HH:mm:ss")</div>
                 </div>
                 <div class="od-tl-step">
                     <div class="od-tl-ico cancel"><i class="fa-solid fa-ban"></i></div>
-                    <div class="od-tl-lbl cancel">Cancelled</div>
-                    <div class="od-tl-time">---</div>
+                    <div class="od-tl-lbl cancel">Cancelled / Voided</div>
+                    <div class="od-tl-time" style="color:#FF3333; font-weight:700;">[TERMINAL STATE]</div>
                 </div>
                 <div class="od-tl-step">
                     <div class="od-tl-ico"><i class="fa-solid fa-truck"></i></div>
-                    <div class="od-tl-lbl">Shipping</div>
+                    <div class="od-tl-lbl">Fulfillment</div>
                     <div class="od-tl-time">---</div>
                 </div>
                 <div class="od-tl-step">
-                    <div class="od-tl-ico"><i class="fa-solid fa-box-open"></i></div>
-                    <div class="od-tl-lbl">Delivered</div>
+                    <div class="od-tl-ico"><i class="fa-solid fa-flag-checkered"></i></div>
+                    <div class="od-tl-lbl">Settled</div>
                     <div class="od-tl-time">---</div>
                 </div>
             </div>
@@ -206,29 +210,29 @@
         else
         {
             <div class="od-tl-track">
-                @{ string s1 = step > 1 ? "done" : step == 1 ? "active" : ""; }
-                @{ string s2 = step > 2 ? "done" : step == 2 ? "active" : ""; }
-                @{ string s3 = step > 3 ? "done" : step == 3 ? "active" : ""; }
-                @{ string s4 = step >= 4 ? "done" : ""; }
+                @{ string s1 = stage > 1 ? "done" : stage == 1 ? "active" : ""; }
+                @{ string s2 = stage > 2 ? "done" : stage == 2 ? "active" : ""; }
+                @{ string s3 = stage > 3 ? "done" : stage == 3 ? "active" : ""; }
+                @{ string s4 = stage >= 4 ? "done" : ""; }
                 <div class="od-tl-step">
-                    <div class="od-tl-ico @s1"><i class="fa-solid @(step > 1 ? "fa-check" : "fa-cart-shopping")"></i></div>
-                    <div class="od-tl-lbl @s1">Ordered</div>
-                    <div class="od-tl-time">@order.CreatedAt.ToString("dd/MM HH:mm")</div>
+                    <div class="od-tl-ico @s1"><i class="fa-solid @(stage > 1 ? "fa-check" : "fa-file-invoice")"></i></div>
+                    <div class="od-tl-lbl @s1">1. Created / Draft</div>
+                    <div class="od-tl-time" style="color:#00E5FF;">@order.CreatedAt.ToString("dd/MM/yy HH:mm:ss")</div>
                 </div>
                 <div class="od-tl-step">
-                    <div class="od-tl-ico @s2"><i class="fa-solid @(step > 2 ? "fa-check" : "fa-clipboard-check")"></i></div>
-                    <div class="od-tl-lbl @s2">Confirmed</div>
-                    <div class="od-tl-time">@(step >= 2 ? "Confirmed" : "---")</div>
+                    <div class="od-tl-ico @s2"><i class="fa-solid @(stage > 2 ? "fa-check" : "fa-boxes-packing")"></i></div>
+                    <div class="od-tl-lbl @s2">2. Confirmed / Processing</div>
+                    <div class="od-tl-time">@(stage >= 2 ? (retailDoc?.Date.ToString("dd/MM/yy HH:mm:ss") ?? order.CreatedAt.ToString("dd/MM/yy HH:mm:ss")) : "PENDING")</div>
                 </div>
                 <div class="od-tl-step">
-                    <div class="od-tl-ico @s3"><i class="fa-solid @(step > 3 ? "fa-check" : "fa-truck")"></i></div>
-                    <div class="od-tl-lbl @s3">In Transit</div>
-                    <div class="od-tl-time">@(step >= 3 ? "Shipping" : "---")</div>
+                    <div class="od-tl-ico @s3"><i class="fa-solid @(stage > 3 ? "fa-check" : "fa-truck-fast")"></i></div>
+                    <div class="od-tl-lbl @s3">3. Dispatch / In Transit</div>
+                    <div class="od-tl-time">@(stage >= 3 ? (retailDoc?.EndDate.ToString("dd/MM/yy HH:mm:ss") ?? "IN PROGRESS") : "---")</div>
                 </div>
                 <div class="od-tl-step">
-                    <div class="od-tl-ico @s4"><i class="fa-solid @(step >= 4 ? "fa-check" : "fa-box-open")"></i></div>
-                    <div class="od-tl-lbl @s4">Delivered</div>
-                    <div class="od-tl-time">@(step >= 4 ? "✓ Received" : "---")</div>
+                    <div class="od-tl-ico @s4"><i class="fa-solid @(stage >= 4 ? "fa-check" : "fa-flag-checkered")"></i></div>
+                    <div class="od-tl-lbl @s4">4. Delivered / Settled</div>
+                    <div class="od-tl-time" style="color: @(stage >= 4 ? "#00FF66" : "#666"); font-weight:700;">@(stage >= 4 ? $"[FINAL: {order.OrderStatus?.StatusName ?? "Completed"}]" : "AWAITING SETTLEMENT")</div>
                 </div>
             </div>
         }

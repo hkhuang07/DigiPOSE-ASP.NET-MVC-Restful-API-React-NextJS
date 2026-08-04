@@ -1,4 +1,4 @@
-﻿global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.AspNetCore.Authorization;
 using DigiPOSE.Models;
 using DigiPOSE.Helpers;
@@ -34,6 +34,11 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSignalR();
 // >>> [RESILIENT_GIS_BFF_LAYER]: Register Polly v8 Standard Resilience Pipeline for offline-first GIS caching
 builder.Services.AddHttpClient<IGisResilienceService, GisResilienceService>()
+    .AddStandardResilienceHandler();
+
+// >>> [ZERO_TRUST_BOT_DEFENSE]: Register Cloudflare Turnstile Settings and Resilient Exponential Backoff HttpClient
+builder.Services.Configure<TurnstileSettings>(builder.Configuration.GetSection(TurnstileSettings.SectionName));
+builder.Services.AddHttpClient<ICloudflareTurnstileService, CloudflareTurnstileService>()
     .AddStandardResilienceHandler();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
@@ -80,6 +85,46 @@ builder.Services.AddTransient<IMailLogic, MailLogic>();
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 
 var app = builder.Build();
+
+// >>> [SELF-HEALING ARCHITECTURAL RECONCILIATION]: Automatically rectify historical orders where StatusId = 1 (Draft in schema) was assigned to paid checkouts.
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<DigiPoseDbContext>();
+    try
+    {
+        var retailOrderIds = dbContext.Retails.Select(r => r.OrderId).Distinct().ToList();
+        var historicalPaidOrders = dbContext.Orders
+            .Where(o => (o.StatusId == 1 && (o.TenderedAmount > 0 || retailOrderIds.Contains(o.OrderId))) || (o.StatusId == 4 && retailOrderIds.Contains(o.OrderId)))
+            .ToList();
+        if (historicalPaidOrders.Any())
+        {
+            foreach (var ord in historicalPaidOrders)
+            {
+                ord.StatusId = 8; // 8: Completed
+            }
+            dbContext.SaveChanges();
+            Console.WriteLine($">>> [SELF-HEALING_MIGRATION_SUCCESS]: Reconciled {historicalPaidOrders.Count} historical POS orders from Draft(1)/Processing(4) to Completed(8).");
+        }
+
+        // Reconcile true draft orders with StatusId == 4 (mislabeled as Draft previously) to StatusId = 1 (Draft)
+        var historicalDrafts = dbContext.Orders
+            .Where(o => o.StatusId == 4 && !retailOrderIds.Contains(o.OrderId) && o.TenderedAmount == 0)
+            .ToList();
+        if (historicalDrafts.Any())
+        {
+            foreach (var drf in historicalDrafts)
+            {
+                drf.StatusId = 1; // 1: Draft
+            }
+            dbContext.SaveChanges();
+            Console.WriteLine($">>> [SELF-HEALING_MIGRATION_SUCCESS]: Reconciled {historicalDrafts.Count} draft POS orders from Processing(4) to Draft(1).");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(">>> [SELF-HEALING_MIGRATION_ERR]: " + ex.Message);
+    }
+}
 
 if (!app.Environment.IsDevelopment())
 {

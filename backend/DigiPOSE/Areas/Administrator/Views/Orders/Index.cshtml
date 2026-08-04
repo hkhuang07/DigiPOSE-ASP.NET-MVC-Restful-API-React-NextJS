@@ -4,11 +4,27 @@
     .draft-row td { opacity: 0.55; }
     .draft-row:hover td { opacity: 0.85; }
     .badge-draft { background: #2A2000 !important; color: #FFB000 !important; border: 1px solid #FFB000; font-size: 0.68rem; }
-    .btn-toggle-draft { padding: 4px 12px; font-size: 0.75rem; font-family: 'Roboto Mono', monospace; border: 1px solid #555; color: #888; background: transparent; cursor: pointer; transition: all 0.2s; }
-    .btn-toggle-draft.active { border-color: #FFB000; color: #FFB000; background: rgba(255,176,0,0.08); }
-    .btn-cleanup-draft { padding: 4px 12px; font-size: 0.75rem; font-family: 'Roboto Mono', monospace; border: 1px solid #FF5533; color: #FF5533; background: transparent; cursor: pointer; transition: all 0.2s; }
-    .btn-cleanup-draft:hover { background: rgba(255,85,51,0.1); }
-    #draftCountChip { font-family: 'VT323', monospace; font-size: 1rem; }
+    .btn-toggle-draft { 
+        padding: 8px 20px; font-size: 0.8rem; font-family: 'Orbitron', 'Roboto Mono', sans-serif; font-weight: 700;
+        border: 1px solid #FFB000; color: #FFB000; background: #000000; cursor: pointer; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); text-transform: uppercase; letter-spacing: 1px;
+        box-shadow: inset 0 0 8px rgba(255, 176, 0, 0.2); text-shadow: 0 0 4px rgba(255, 176, 0, 0.5);
+    }
+    .btn-toggle-draft:hover, .btn-toggle-draft.active { 
+        border-color: #FFB000; color: #FFB000; background: rgba(255, 176, 0, 0.15); 
+        box-shadow: 0 0 12px rgba(255, 176, 0, 0.5), inset 0 0 10px rgba(255, 176, 0, 0.3); text-shadow: 0 0 6px #FFB000;
+    }
+    .btn-cleanup-draft { 
+        padding: 8px 20px; font-size: 0.8rem; font-family: 'Orbitron', 'Roboto Mono', sans-serif; font-weight: 700;
+        border: 1px solid #FF3333; color: #FF3333; background: #000000; cursor: pointer; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); text-transform: uppercase; letter-spacing: 1px;
+        box-shadow: inset 0 0 8px rgba(255, 51, 51, 0.2); text-shadow: 0 0 4px rgba(255, 51, 51, 0.5);
+    }
+    .btn-cleanup-draft:hover { 
+        background: rgba(255, 51, 51, 0.22); color: #FFFFFF; border-color: #FF3333; 
+        box-shadow: 0 0 16px rgba(255, 51, 51, 0.7), inset 0 0 12px rgba(255, 51, 51, 0.4); text-shadow: 0 0 8px #FF3333;
+    }
+    #draftCountChip { font-family: 'VT323', monospace; font-size: 1.1rem; color: #FFB000 !important; }
 </style>
 <div class="cyber-panel">
     <div class="cyber-panel-header">

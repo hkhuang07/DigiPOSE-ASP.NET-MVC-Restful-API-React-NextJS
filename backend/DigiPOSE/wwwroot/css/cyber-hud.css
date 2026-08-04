@@ -1676,3 +1676,18 @@ div.dataTables_processing {
     transform: rotate(180deg) !important;
 }
 
+/* ====================================================================
+   UNIVERSAL THEME-AWARE BRANDING ENGINE (DRY Single Source of Truth)
+==================================================================== */
+.brand-light { display: none !important; }
+.brand-dark { display: flex !important; }
+
+body.light-theme .brand-dark,
+[data-theme="light"] .brand-dark {
+    display: none !important;
+}
+
+body.light-theme .brand-light,
+[data-theme="light"] .brand-light {
+    display: flex !important;
+}

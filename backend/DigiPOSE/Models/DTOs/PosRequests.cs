@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace DigiPOSE.Models.DTOs
 {
@@ -63,6 +63,8 @@ namespace DigiPOSE.Models.DTOs
         public int? WarehouseId { get; set; }
         public string? BuyerTaxCode { get; set; }
         public string? BuyerLegalName { get; set; }
+        public string? BuyerPhone { get; set; }
+        public string? BuyerCccd { get; set; }
         public string? BuyerAddress { get; set; }
         public string? BuyerEmail { get; set; }
         public string? Notes { get; set; }

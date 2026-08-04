@@ -63,8 +63,8 @@
                                     </td>
                                     <td class="p-3 text-center">
                                         @{
-                                            string badgeColor = ord.OrderStatus?.BadgeColor ?? (ord.StatusId == 3 ? "#00FF66" : ord.StatusId == 4 ? "#FF3333" : "#FFB000");
-                                            string statusText = ord.OrderStatus?.StatusName ?? (ord.StatusId == 1 ? "PENDING" : ord.StatusId == 2 ? "PROCESSING" : ord.StatusId == 3 ? "COMPLETED" : "CANCELLED");
+                                            string badgeColor = ord.OrderStatus?.BadgeColor ?? (ord.StatusId == 8 ? "#00FF66" : ord.StatusId == 12 ? "#FF3333" : ord.StatusId == 1 ? "#6c757d" : "#00E5FF");
+                                            string statusText = ord.OrderStatus?.StatusName ?? (ord.StatusId == 1 ? "DRAFT" : ord.StatusId == 8 ? "COMPLETED" : ord.StatusId == 12 ? "CANCELLED" : $"STATUS #{ord.StatusId}");
                                         }
                                         <span class="badge" style="background: #000; border: 1px solid @badgeColor; color: @badgeColor; font-family: 'Orbitron'; padding: 6px 12px; border-radius: 0; font-size: 0.75rem;">
                                             @statusText.ToUpper()

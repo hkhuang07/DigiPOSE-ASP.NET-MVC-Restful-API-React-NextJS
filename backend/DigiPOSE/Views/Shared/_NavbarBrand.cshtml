@@ -1,0 +1,22 @@
+@* Centralized DRY Navbar Branding Component *@
+<style>
+/* Universal Self-Contained Theme-Aware Brand Display */
+.brand-light { display: none !important; }
+.brand-dark { display: flex !important; }
+body.light-theme .brand-dark, [data-theme="light"] .brand-dark { display: none !important; }
+body.light-theme .brand-light, [data-theme="light"] .brand-light { display: flex !important; }
+</style>
+
+<div class="hud-brand-wrapper d-flex align-items-center gap-2" style="user-select: none;">
+    <!-- Dark Theme Logo Representation -->
+    <span class="brand-dark align-items-center gap-2">
+        <img src="~/images/brand/main_logo_dark.jpg" alt="DigiPOSE Icon" style="height: 32px; width: auto; object-fit: contain; filter: drop-shadow(0 0 4px rgba(0, 229, 255, 0.3));" />
+        <img src="~/images/brand/logo_name_dark.jpg" alt="DigiPOSE Name" style="height: 26px; width: auto; object-fit: contain;" />
+    </span>
+    <!-- Light Theme Logo Representation -->
+    <span class="brand-light align-items-center gap-2" style="display: none;">
+        <img src="~/images/brand/main_logo_light.jpg" alt="DigiPOSE Icon" style="height: 32px; width: auto; object-fit: contain;" />
+        <img src="~/images/brand/logo_name_light.jpg" alt="DigiPOSE Name" style="height: 26px; width: auto; object-fit: contain;" />
+    </span>
+    <span class="hud-badge-ver ms-1" style="font-size: 0.6rem; color: #00E5FF; border: 1px solid rgba(0, 229, 255, 0.4); padding: 1px 4px; border-radius: 2px; font-family: 'Roboto Mono', monospace; font-weight: 400; vertical-align: middle;">v1.0</span>
+</div>

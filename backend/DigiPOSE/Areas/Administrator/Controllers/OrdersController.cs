@@ -59,10 +59,10 @@ namespace DigiPOSE.Areas.Administrator.Controllers
 
                 // Apply draft visibility filter
                 if (!showDraft)
-                    query = query.Where(m => m.StatusId != 4);
+                    query = query.Where(m => m.StatusId != 1);
 
                 // Count drafts for frontend chip badge (always from full set)
-                int draftCount = await _context.Orders.CountAsync(o => o.StatusId == 4);
+                int draftCount = await _context.Orders.CountAsync(o => o.StatusId == 1);
 
                 int totalRecords = query.Count();
 
@@ -86,7 +86,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                 else
                 {
                     // >>> [SORT PRIORITY]: Show drafts last (they are less important), completed orders first
-                    query = query.OrderBy(m => m.StatusId == 4 ? 1 : 0).ThenByDescending(v => v.CreatedAt);
+                    query = query.OrderBy(m => m.StatusId == 1 ? 1 : 0).ThenByDescending(v => v.CreatedAt);
                 }
 
                 // Paging & Mapping
@@ -98,7 +98,7 @@ namespace DigiPOSE.Areas.Administrator.Controllers
                     TotalAmount = m.TotalAmount,
                     CreatedAt = m.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"),
                     // >>> [DRAFT FLAG]: Frontend uses this to apply visual dimming + special badge
-                    IsDraft = m.StatusId == 4
+                    IsDraft = m.StatusId == 1
                 }).ToList();
 
                 return Json(new { draw = draw, recordsFiltered = filterRecords, recordsTotal = totalRecords, draftCount = draftCount, data = dataList });

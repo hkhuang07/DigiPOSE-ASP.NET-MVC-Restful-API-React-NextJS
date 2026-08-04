@@ -5,6 +5,24 @@ DigiPOSE is a robust, high-performance Point of Sale (POS), Enterprise Resource 
 
 ---
 
+## Project Visualize
+
+<p align="center">
+  <img src="assets/login.jpg" alt="Login" width="700"/>
+  <br />
+  <em>Log In Form</em>
+</p>
+
+<p align="center">
+  <img src="assets/signup.jpg" alt="Register" width="700"/>
+  <br />
+  <em>Sign Up Form</em>
+</p>
+
+
+---
+...
+
 ## 🏛 1. System Architecture Overview
 
 DigiPOSE adopts a decoupled domain-driven architecture separating public commerce interfaces from administrative core ledgers:

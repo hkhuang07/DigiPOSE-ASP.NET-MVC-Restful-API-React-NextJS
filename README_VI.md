@@ -1,4 +1,4 @@
-# DigiPOSE - Nền Tảng Quản Trị Hệ Thống POS & ERP Bán Lẻ Doanh Nghiệp
+# DigiPOSE Station - Nền Tảng Quản Trị Hệ Thống POS & ERP Bán Lẻ Doanh Nghiệp
 **Tài Liệu Kiến Trúc & Danh Mục Chức Năng Đã Phát Triển (v1.0.0)**
 
 DigiPOSE là hệ thống quản trị điểm bán lẻ (POS), hoạch định tài nguyên doanh nghiệp (ERP) và thương mại điện tử (E-Commerce) hiện đại, hiệu năng cao, được thiết kế cho các chuỗi bán lẻ quy mô lớn và phân phối phần mềm đám mây B2B (SaaS). Nền tảng hợp nhất hoạt động bán hàng trực tiếp tại quầy với cổng đặt hàng trực tuyến thông qua hệ thống API tiêu chuẩn và trung tâm điều hành quản trị CMS.

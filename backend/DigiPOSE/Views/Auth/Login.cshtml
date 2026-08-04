@@ -9,11 +9,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"]</title>
-    
+    <link rel="icon" type="image/png" href="~/images/brand/logo_dark.jpg" />
     <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/lib/font-awesome/css/all.min.css" />
     <link rel="stylesheet" href="~/css/cyber-hud.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/cyber-auth.css" asp-append-version="true" />
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body class="auth-page auth-login-bg">
 
@@ -22,18 +23,27 @@
             <!-- Left Image Panel -->
             <div class="auth-panel-left login-panel-bg">
                 <div class="auth-panel-left-overlay"></div>
-                <div class="auth-panel-left-content">
-                    <svg class="auth-brand-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <polygon points="50,5 95,27 95,73 50,95 5,73 5,27" stroke="#00E5FF" stroke-width="4" fill="rgba(0, 229, 255, 0.1)"/>
-                        <circle cx="50" cy="50" r="24" stroke="#00E5FF" stroke-width="3" stroke-dasharray="6 4"/>
-                        <circle cx="50" cy="50" r="8" fill="#00E5FF"/>
-                        <line x1="50" y1="15" x2="50" y2="35" stroke="#00E5FF" stroke-width="3"/>
-                        <line x1="50" y1="65" x2="50" y2="85" stroke="#00E5FF" stroke-width="3"/>
-                    </svg>
-                    <div class="auth-brand-title">Digi<span>POSE</span></div>
-                    <div class="auth-brand-slogan">
-                        MULTI-PROVIDER INTEGRATION STATION<br/>
-                        <span style="color:#00E5FF; font-size:0.75rem;">MY CONFIDENCE, YOUR CONVENIENCE</span>
+                <div class="auth-panel-left-content text-center">
+                    <div class="hud-portal-container">
+                        <!-- Kinetic Cyber Portal Ring around White Logo Circle -->
+                        <div class="hud-portal-ring-wrapper">
+                            <div class="hud-ring-outer"></div>
+                            <div class="hud-ring-middle"></div>
+                            <div class="hud-ring-inner"></div>
+                            <div class="hud-logo-white-circle">
+                                <img src="~/images/brand/logo_light.jpg" alt="DigiPOSE Core Emblem" />
+                            </div>
+                        </div>
+                        <!-- Glassmorphic Telemetry Brand Card with CSS Typography -->
+                        <div class="hud-brand-card">
+                            <div class="hud-wordmark-title">
+                                <span class="wm-digi">DIGI</span><span class="wm-pose">POSE</span><span class="wm-station">STATION</span>
+                            </div>
+                            <div class="hud-wordmark-slogan">
+                                Point of Sale and E-commerce Interation Platform<br/>
+                                <span>MY CONFIDENCE, YOUR CONVENIENCE</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -82,7 +92,8 @@
                             <label asp-for="Password">PASSWORD</label>
                             <div class="input-icon-wrapper">
                                 <i class="fa-solid fa-lock"></i>
-                                <input asp-for="Password" type="password" class="form-cyber-input" placeholder="••••••••••••" tabindex="2" />
+                                <input asp-for="Password" type="password" class="form-cyber-input has-toggle" placeholder="••••••••••••" tabindex="2" />
+                                <i class="fa-solid fa-eye password-toggle-icon" onclick="togglePasswordVisibility('Password', this)" title="Show Password"></i>
                             </div>
                             <span asp-validation-for="Password" class="text-danger" style="font-family:'Roboto Mono'; font-size:0.75rem;"></span>
                         </div>
@@ -94,6 +105,13 @@
                             </label>
                             <a asp-action="ForgotPassword" class="link-forgot" tabindex="5">Forgot password?</a>
                         </div>
+
+                        @if (ViewBag.TurnstileEnabled == true)
+                        {
+                            <div class="form-cyber-group text-center my-3 d-flex justify-content-center">
+                                <div class="cf-turnstile" data-sitekey="@ViewBag.TurnstileSiteKey" data-theme="dark"></div>
+                            </div>
+                        }
 
                         <div class="auth-btn-row">
                             <a href="@Url.Content("~/")" class="btn btn-cyber-cancel" tabindex="4">
@@ -206,6 +224,22 @@
                 });
             }
         });
+
+        function togglePasswordVisibility(inputId, iconEl) {
+            const input = document.getElementById(inputId) || document.querySelector(`input[name="${inputId}"]`);
+            if (!input) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                iconEl.classList.remove('fa-eye');
+                iconEl.classList.add('fa-eye-slash', 'active');
+                iconEl.title = "Hide Password";
+            } else {
+                input.type = 'password';
+                iconEl.classList.remove('fa-eye-slash', 'active');
+                iconEl.classList.add('fa-eye');
+                iconEl.title = "Show Password";
+            }
+        }
     </script>
 </body>
 </html>

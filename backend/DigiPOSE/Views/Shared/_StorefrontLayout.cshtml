@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - DigiPOSE Enterprise Ecosystem</title>
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="~/images/brand/logo_dark.jpg" />
+    
     <!-- CSS Dependencies -->
     <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/lib/font-awesome/css/all.min.css" />
@@ -21,19 +24,8 @@
     <nav class="cyber-store-nav">
         <!-- Left: Brand Logo Synced with Administrator HUD (Without Hamburger) -->
         <div class="nav-brand-group">
-            <a href="/Home/Index" title="System Home" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--cyber-cyan);">
-                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 26px; height: 26px; filter: drop-shadow(0 0 6px var(--cyber-cyan));">
-                    <polygon points="50,5 95,27 95,73 50,95 5,73 5,27" stroke="var(--cyber-cyan)" stroke-width="4" fill="rgba(0,229,255,0.1)"/>
-                    <circle cx="50" cy="50" r="24" stroke="var(--cyber-cyan)" stroke-width="3" stroke-dasharray="6 4"/>
-                    <circle cx="50" cy="50" r="8" fill="var(--cyber-emerald)"/>
-                    <line x1="50" y1="15" x2="50" y2="35" stroke="var(--cyber-cyan)" stroke-width="3"/>
-                    <line x1="50" y1="65" x2="50" y2="85" stroke="var(--cyber-cyan)" stroke-width="3"/>
-                    <line x1="15" y1="50" x2="35" y2="50" stroke="var(--cyber-cyan)" stroke-width="3"/>
-                    <line x1="65" y1="50" x2="85" y2="50" stroke="var(--cyber-cyan)" stroke-width="3"/>
-                </svg>
-                <div style="font-family:'Orbitron', 'Rajdhani', sans-serif; font-size:1.05rem; font-weight:800; color:var(--cyber-text); letter-spacing:1.5px; text-transform:uppercase; text-shadow:0 0 8px rgba(0,229,255,0.6); white-space:nowrap;">
-                    Digi<span style="color:var(--cyber-cyan);">POSE</span> HUD <span style="font-size:0.6rem; color:var(--cyber-cyan); border:1px solid var(--cyber-border); background:rgba(0,229,255,0.15); padding:1px 4px; border-radius:2px; font-family:'Roboto Mono',monospace; font-weight:400; text-shadow:none; vertical-align:middle;">v1.0</span>
-                </div>
+            <a href="/Home/Index" title="System Home" class="text-decoration-none">
+                @await Html.PartialAsync("~/Views/Shared/_NavbarBrand.cshtml")
             </a>
         </div>
 

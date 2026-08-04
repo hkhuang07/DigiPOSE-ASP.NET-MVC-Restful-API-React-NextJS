@@ -82,7 +82,7 @@ namespace DigiPOSE.Controllers.Api
                 .AsNoTracking()
                 .Include(o => o.OrderDetails!)
                 .ThenInclude(d => d.Product)
-                .FirstOrDefaultAsync(o => o.OrderId == orderId && o.StatusId == 4);
+                .FirstOrDefaultAsync(o => o.OrderId == orderId && o.StatusId == 1); // 1: Draft
 
             if (order == null)
                 return NotFound(new { Error = "Draft order not found or session expired." });
@@ -121,7 +121,7 @@ namespace DigiPOSE.Controllers.Api
                 TenantId = request.TenantId,
                 ShiftId = request.ShiftId,
                 UserId = request.UserId,
-                StatusId = 4, // 4: Draft
+                StatusId = 1, // 1: Draft
                 CreatedAt = DateTime.Now,
                 GrossAmount = 0,
                 TotalAmount = 0,
@@ -373,7 +373,7 @@ namespace DigiPOSE.Controllers.Api
 
             // Aggregate completed orders in this shift for closing summary
             var shiftSummary = await _context.Orders.AsNoTracking()
-                .Where(o => o.ShiftId == request.ShiftId && o.StatusId == 1)
+                .Where(o => o.ShiftId == request.ShiftId && o.StatusId == 8)
                 .GroupBy(o => o.ShiftId)
                 .Select(g => new { TotalRevenue = g.Sum(o => o.TotalAmount), OrderCount = g.Count() })
                 .FirstOrDefaultAsync();
@@ -421,7 +421,7 @@ namespace DigiPOSE.Controllers.Api
             var completedOrders = await _context.Orders.AsNoTracking()
                 .Include(o => o.OrderDetails!)
                 .Include(o => o.PaymentMethod)
-                .Where(o => o.TenantId == tenantId && o.StatusId == 1
+                .Where(o => o.TenantId == tenantId && o.StatusId == 8
                     && o.CreatedAt >= startRange && o.CreatedAt <= endRange)
                 .ToListAsync();
 
@@ -560,7 +560,7 @@ namespace DigiPOSE.Controllers.Api
             var query = _context.Orders.AsNoTracking()
                 .Include(o => o.PaymentMethod)
                 .Include(o => o.OrderDetails)
-                .Where(o => o.TenantId == tenantId && o.CreatedAt >= today && o.CreatedAt < tomorrow && o.StatusId == 1);
+                .Where(o => o.TenantId == tenantId && o.CreatedAt >= today && o.CreatedAt < tomorrow && o.StatusId != 1);
 
             if (shiftId.HasValue) query = query.Where(o => o.ShiftId == shiftId.Value);
             if (!string.IsNullOrEmpty(invoiceNo)) query = query.Where(o => (o.InvoiceNumber ?? "").Contains(invoiceNo));
@@ -646,7 +646,7 @@ namespace DigiPOSE.Controllers.Api
             var tomorrow = today.AddDays(1);
 
             var ordersQuery = _context.Orders.AsNoTracking()
-                .Where(o => o.TenantId == tenantId && o.CreatedAt >= today && o.CreatedAt < tomorrow && o.StatusId == 1);
+                .Where(o => o.TenantId == tenantId && o.CreatedAt >= today && o.CreatedAt < tomorrow && o.StatusId == 8);
 
             if (shiftId.HasValue) ordersQuery = ordersQuery.Where(o => o.ShiftId == shiftId.Value);
 
@@ -658,7 +658,7 @@ namespace DigiPOSE.Controllers.Api
                 .Include(d => d.Order)
                 .Where(d => d.Order != null && d.Order.TenantId == tenantId
                     && d.Order.CreatedAt >= today && d.Order.CreatedAt < tomorrow
-                    && d.Order.StatusId == 1)
+                    && d.Order.StatusId == 8)
                 .GroupBy(d => new { d.ProductId, d.ProductName })
                 .Select(g => new { g.Key.ProductName, TotalQty = g.Sum(d => d.Quantity), TotalRevenue = g.Sum(d => d.TotalAmount) })
                 .OrderByDescending(x => x.TotalQty)
@@ -683,7 +683,7 @@ namespace DigiPOSE.Controllers.Api
             var cutoff = DateTime.Now.AddHours(-2);
             var staleOrders = await _context.Orders
                 .Include(o => o.OrderDetails)
-                .Where(o => o.StatusId == 4 && o.CreatedAt < cutoff)
+                .Where(o => o.StatusId == 1 && o.CreatedAt < cutoff)
                 .ToListAsync();
 
             if (staleOrders.Any())
@@ -704,7 +704,7 @@ namespace DigiPOSE.Controllers.Api
         {
             var order = await _context.Orders
                 .Include(o => o.OrderDetails)
-                .FirstOrDefaultAsync(o => o.OrderId == orderId && o.StatusId == 4);
+                .FirstOrDefaultAsync(o => o.OrderId == orderId && o.StatusId == 1);
 
             if (order == null)
                 return NotFound(new { Error = "DRAFT_NOT_FOUND", Message = $"Order #{orderId} is not a draft or does not exist." });
@@ -731,7 +731,7 @@ namespace DigiPOSE.Controllers.Api
 
             var order = await _context.Orders
                 .Include(o => o.OrderDetails)
-                .FirstOrDefaultAsync(o => o.OrderId == request.OrderId && o.StatusId == 4);
+                .FirstOrDefaultAsync(o => o.OrderId == request.OrderId && o.StatusId == 1);
 
             if (order == null) return BadRequest(new { Error = "Draft order not found." });
 
@@ -828,7 +828,7 @@ namespace DigiPOSE.Controllers.Api
         {
             var order = await _context.Orders
                 .Include(o => o.OrderDetails)
-                .FirstOrDefaultAsync(o => o.OrderId == request.OrderId && o.StatusId == 4);
+                .FirstOrDefaultAsync(o => o.OrderId == request.OrderId && o.StatusId == 1);
 
             if (order == null) return BadRequest(new { Error = "Draft order not found." });
 
@@ -870,7 +870,7 @@ namespace DigiPOSE.Controllers.Api
 
             var order = await _context.Orders
                 .Include(o => o.OrderDetails!)
-                .FirstOrDefaultAsync(o => o.OrderId == request.OrderId && o.StatusId == 4);
+                .FirstOrDefaultAsync(o => o.OrderId == request.OrderId && o.StatusId == 1);
             
             if (order == null)
             {
@@ -925,7 +925,7 @@ namespace DigiPOSE.Controllers.Api
             using var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
             try
             {
-                order.StatusId = 1; // 1: Completed
+                order.StatusId = 8; // 8: Completed
                 order.PaymentMethodId = request.PaymentMethodId;
                 order.CustomerId = request.CustomerId;
                 order.IdempotencyKey = request.IdempotencyKey;
@@ -935,13 +935,20 @@ namespace DigiPOSE.Controllers.Api
                 // >>> [ENTERPRISE_FISCAL_EXECUTION]: Execute O(1) VAT Rounding & Balancing Engine and settle cashier change amount
                 _vatBalancingEngine.BalanceVatAndCalculateTotal(order, order.OrderDetails!.ToList());
 
-                if (request.CustomerId.HasValue)
+                // >>> [AUTO-CREATE OR UPDATE WALK-IN CUSTOMER TO DB]: Automatically persist customer metadata to CRM ledger
+                if (request.CustomerId.HasValue && request.CustomerId.Value > 0)
                 {
                     var customer = await _context.Customers.Include(c => c.CustomeType).FirstOrDefaultAsync(c => c.CustomerId == request.CustomerId.Value);
                     if (customer != null)
                     {
-                        order.SnapshotCustomerName = customer.FullName;
-                        order.SnapshotCustomerPhone = customer.PhoneNumber;
+                        if (!string.IsNullOrWhiteSpace(request.BuyerTaxCode)) customer.TaxCode = request.BuyerTaxCode.Trim();
+                        if (!string.IsNullOrWhiteSpace(request.BuyerCccd)) customer.IdNo = request.BuyerCccd.Trim();
+                        if (!string.IsNullOrWhiteSpace(request.BuyerAddress) && string.IsNullOrWhiteSpace(customer.Address)) customer.Address = request.BuyerAddress.Trim();
+                        if (!string.IsNullOrWhiteSpace(request.BuyerEmail) && string.IsNullOrWhiteSpace(customer.Email)) customer.Email = request.BuyerEmail.Trim();
+                        if (!string.IsNullOrWhiteSpace(request.BuyerPhone) && string.IsNullOrWhiteSpace(customer.PhoneNumber)) customer.PhoneNumber = request.BuyerPhone.Trim();
+
+                        order.SnapshotCustomerName = !string.IsNullOrWhiteSpace(request.BuyerLegalName) ? request.BuyerLegalName : customer.FullName;
+                        order.SnapshotCustomerPhone = !string.IsNullOrWhiteSpace(request.BuyerPhone) ? request.BuyerPhone : customer.PhoneNumber;
 
                         // >>> [VIP REWARDS EVALUATION & REAL DB POINT CALCULATION]: Calculate loyalty points earned based on TotalAmount
                         int basePoints = (int)(order.TotalAmount / 100000m) * 10; // 1 point per 10,000 VND spent
@@ -950,6 +957,61 @@ namespace DigiPOSE.Controllers.Api
                         customer.RewardPoints += pointsEarned;
                         _context.Customers.Update(customer);
                     }
+                }
+                else if (!string.IsNullOrWhiteSpace(request.BuyerPhone) || !string.IsNullOrWhiteSpace(request.BuyerTaxCode) || !string.IsNullOrWhiteSpace(request.BuyerCccd))
+                {
+                    string? phone = request.BuyerPhone?.Trim();
+                    string? tax = request.BuyerTaxCode?.Trim();
+                    string? cccd = request.BuyerCccd?.Trim();
+
+                    var existingCust = await _context.Customers.FirstOrDefaultAsync(c => 
+                        (!string.IsNullOrEmpty(phone) && c.PhoneNumber == phone) ||
+                        (!string.IsNullOrEmpty(tax) && c.TaxCode == tax) ||
+                        (!string.IsNullOrEmpty(cccd) && c.IdNo == cccd));
+
+                    if (existingCust != null)
+                    {
+                        if (!string.IsNullOrWhiteSpace(request.BuyerTaxCode) && string.IsNullOrWhiteSpace(existingCust.TaxCode)) existingCust.TaxCode = request.BuyerTaxCode.Trim();
+                        if (!string.IsNullOrWhiteSpace(request.BuyerCccd) && string.IsNullOrWhiteSpace(existingCust.IdNo)) existingCust.IdNo = request.BuyerCccd.Trim();
+                        if (!string.IsNullOrWhiteSpace(request.BuyerAddress) && string.IsNullOrWhiteSpace(existingCust.Address)) existingCust.Address = request.BuyerAddress.Trim();
+                        if (!string.IsNullOrWhiteSpace(request.BuyerEmail) && string.IsNullOrWhiteSpace(existingCust.Email)) existingCust.Email = request.BuyerEmail.Trim();
+
+                        int basePoints = (int)(order.TotalAmount / 100000m) * 10;
+                        existingCust.RewardPoints += basePoints;
+                        _context.Customers.Update(existingCust);
+
+                        order.CustomerId = existingCust.CustomerId;
+                        request.CustomerId = existingCust.CustomerId;
+                        order.SnapshotCustomerName = !string.IsNullOrWhiteSpace(request.BuyerLegalName) ? request.BuyerLegalName : existingCust.FullName;
+                        order.SnapshotCustomerPhone = !string.IsNullOrWhiteSpace(request.BuyerPhone) ? request.BuyerPhone : existingCust.PhoneNumber;
+                    }
+                    else
+                    {
+                        var newCust = new Customer
+                        {
+                            CustomeTypeId = 1,
+                            FullName = !string.IsNullOrWhiteSpace(request.BuyerLegalName) ? request.BuyerLegalName.Trim() : (!string.IsNullOrWhiteSpace(phone) ? $"Khách hàng {phone}" : "Walk-in B2B"),
+                            PhoneNumber = phone,
+                            IdNo = cccd,
+                            TaxCode = tax,
+                            Address = request.BuyerAddress?.Trim(),
+                            Email = request.BuyerEmail?.Trim(),
+                            RewardPoints = (int)(order.TotalAmount / 100000m) * 10,
+                            IsActive = true
+                        };
+                        _context.Customers.Add(newCust);
+                        await _context.SaveChangesAsync();
+
+                        order.CustomerId = newCust.CustomerId;
+                        request.CustomerId = newCust.CustomerId;
+                        order.SnapshotCustomerName = newCust.FullName;
+                        order.SnapshotCustomerPhone = newCust.PhoneNumber;
+                    }
+                }
+                else
+                {
+                    order.SnapshotCustomerName = !string.IsNullOrWhiteSpace(request.BuyerLegalName) ? request.BuyerLegalName : "Walk-in Customer";
+                    order.SnapshotCustomerPhone = request.BuyerPhone ?? "";
                 }
 
                 var shift = await _context.Shifts.FirstOrDefaultAsync(s => s.ShiftId == order.ShiftId);

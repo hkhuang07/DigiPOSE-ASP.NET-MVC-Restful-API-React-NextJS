@@ -1,10 +1,12 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using DigiPOSE.Models;
+using DigiPOSE.Services;
 using BC = BCrypt.Net.BCrypt;
 
 namespace DigiPOSE.Controllers
@@ -12,10 +14,23 @@ namespace DigiPOSE.Controllers
     public class AuthController : Controller
     {
         private readonly DigiPoseDbContext _context;
+        private readonly ICloudflareTurnstileService _turnstileService;
+        private readonly TurnstileSettings _turnstileSettings;
 
-        public AuthController(DigiPoseDbContext context)
+        public AuthController(
+            DigiPoseDbContext context, 
+            ICloudflareTurnstileService turnstileService, 
+            IOptions<TurnstileSettings> turnstileSettings)
         {
             _context = context;
+            _turnstileService = turnstileService;
+            _turnstileSettings = turnstileSettings.Value;
+        }
+
+        private void SetTurnstileViewBag()
+        {
+            ViewBag.TurnstileEnabled = _turnstileSettings.IsEnabled;
+            ViewBag.TurnstileSiteKey = _turnstileSettings.SiteKey;
         }
 
         // GET: /Auth/Login
@@ -28,6 +43,7 @@ namespace DigiPOSE.Controllers
             }
 
             ViewBag.ReturnUrl = returnUrl ?? "/Home/DashboardRouter";
+            SetTurnstileViewBag();
             return View();
         }
 
@@ -37,8 +53,22 @@ namespace DigiPOSE.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
+            SetTurnstileViewBag();
             if (ModelState.IsValid)
             {
+                // >>> [ZERO_TRUST_BOT_DEFENSE]: Validate Cloudflare Turnstile token prior to Database access
+                if (_turnstileSettings.IsEnabled)
+                {
+                    string turnstileToken = Request.Form["cf-turnstile-response"].ToString();
+                    string? remoteIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    var (success, errorMsg) = await _turnstileService.VerifyTokenAsync(turnstileToken, remoteIp);
+                    if (!success)
+                    {
+                        TempData["ErrorMessage"] = errorMsg;
+                        return View(model);
+                    }
+                }
+
                 // Kiểm tra tài khoản tồn tại (không xét IsActive ngay ở đây để lấy thông báo chi tiết)
                 var user = await _context.Users
                     .Include(u => u.Role)
@@ -110,6 +140,7 @@ namespace DigiPOSE.Controllers
             {
                 return RedirectToAction("Index", "Home", new { Area = "Administrator" });
             }
+            SetTurnstileViewBag();
             return View();
         }
 
@@ -119,8 +150,22 @@ namespace DigiPOSE.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
+            SetTurnstileViewBag();
             if (ModelState.IsValid)
             {
+                // >>> [ZERO_TRUST_BOT_DEFENSE]: Validate Cloudflare Turnstile token prior to user creation
+                if (_turnstileSettings.IsEnabled)
+                {
+                    string turnstileToken = Request.Form["cf-turnstile-response"].ToString();
+                    string? remoteIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    var (success, errorMsg) = await _turnstileService.VerifyTokenAsync(turnstileToken, remoteIp);
+                    if (!success)
+                    {
+                        TempData["ErrorMessage"] = errorMsg;
+                        return View(model);
+                    }
+                }
+
                 var exists = await _context.Users.AnyAsync(u => u.UserName == model.Username || u.Email == model.Email);
                 if (exists)
                 {
