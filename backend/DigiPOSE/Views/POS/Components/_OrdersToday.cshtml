@@ -1,0 +1,32 @@
+<!-- ==================== VIEW 2: ORDER TODAY OPERATIONAL LEDGER ==================== -->
+<section id="viewOrderToday" class="fullscreen-view">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--pos-border); padding-bottom:10px;">
+        <div>
+            <h3 style="font-family:var(--font-hdr); color:var(--pos-cyan); font-size:1.3rem; font-weight:700; margin:0;"><i class="fa-solid fa-list-check me-2"></i>TODAY'S TRANSACTION LEDGER</h3>
+            <div style="font-size:0.75rem; color:var(--pos-text-secondary); margin-top:2px;">REAL-TIME TRANSACTION AUDIT FOR ACTIVE TENANT TERMINAL</div>
+        </div>
+        <div style="display:flex; gap:8px;">
+            <input type="text" id="txtOrderFilter" class="cyber-search-input" placeholder="FILTER BY INVOICE NO..." style="width:250px;" oninput="loadOrdersToday()" />
+            <button onclick="loadOrdersToday()" class="deck-btn active"><i class="fa-solid fa-rotate me-1"></i> RELOAD</button>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="cart-table w-100" style="background:#080C10; border:1px solid var(--pos-border);">
+            <thead>
+                <tr>
+                    <th>ORDER ID</th>
+                    <th>INVOICE NO</th>
+                    <th>TIMESTAMP</th>
+                    <th>CUSTOMER</th>
+                    <th>PAYMENT METHOD</th>
+                    <th style="text-align:right;">TOTAL AMOUNT</th>
+                    <th>STATUS</th>
+                    <th style="text-align:center;">ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody id="todayOrdersTableBody">
+                <tr><td colspan="8" style="text-align:center; padding:30px; color:var(--pos-text-muted);">INITIALIZING TRANSACTION HISTORY...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>

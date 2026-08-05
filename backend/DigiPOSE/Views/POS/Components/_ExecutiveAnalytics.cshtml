@@ -1,0 +1,85 @@
+<!-- ==================== VIEW 3: EXECUTIVE ANALYTICS TELEMETRY DECK ==================== -->
+<section id="viewAnalytics" class="fullscreen-view">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--pos-border); padding-bottom:10px; flex-wrap:wrap; gap:10px;">
+        <div>
+            <h3 style="font-family:var(--font-hdr); color:var(--pos-cyan); font-size:1.3rem; font-weight:700; margin:0;"><i class="fa-solid fa-chart-pie me-2"></i>EXECUTIVE ANALYTICS MATRIX</h3>
+            <div style="font-size:0.75rem; color:var(--pos-text-secondary); margin-top:2px;">OPERATIONAL PERFORMANCE METRICS & REVENUE TELEMETRY</div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <label style="font-size:0.75rem; color:var(--pos-text-secondary);">FROM:</label>
+            <input type="date" id="dateFrom" class="cyber-search-input" style="width:150px; padding:6px 10px;" />
+            <label style="font-size:0.75rem; color:var(--pos-text-secondary);">TO:</label>
+            <input type="date" id="dateTo" class="cyber-search-input" style="width:150px; padding:6px 10px;" />
+            <button onclick="loadAnalyticsData()" class="deck-btn active"><i class="fa-solid fa-arrows-rotate me-1"></i> REFRESH</button>
+        </div>
+    </div>
+
+    <!-- 8 KPI STATISTICAL TILES IN 4x2 GRID (100% REAL DATABASE METRICS) -->
+    <div class="kpi-grid-4x2" id="analyticsKpiRow">
+        <div class="kpi-tile"><div class="title"><i class="fa-solid fa-sack-dollar me-1"></i>TOTAL REVENUE</div><div class="value" id="kpiRevenue">--</div></div>
+        <div class="kpi-tile" style="border-left-color:var(--pos-emerald);"><div class="title"><i class="fa-solid fa-receipt me-1"></i>ORDERS COMPLETED</div><div class="value" id="kpiOrders">--</div></div>
+        <div class="kpi-tile" style="border-left-color:var(--pos-amber);"><div class="title"><i class="fa-solid fa-boxes-stacked me-1"></i>PRODUCTS DISPATCHED</div><div class="value" id="kpiProducts">--</div></div>
+        <div class="kpi-tile"><div class="title"><i class="fa-solid fa-chart-line me-1"></i>AVG ORDER VALUE (AOV)</div><div class="value" id="kpiAov">--</div></div>
+        <div class="kpi-tile" style="border-left-color:#FF00FF;"><div class="title"><i class="fa-solid fa-fire-flame-curved me-1"></i>TODAY'S REVENUE</div><div class="value" id="kpiTodayRevenue">--</div></div>
+        <div class="kpi-tile" style="border-left-color:var(--pos-emerald);"><div class="title"><i class="fa-solid fa-cart-check me-1"></i>TODAY'S ORDERS</div><div class="value" id="kpiTodayOrders">--</div></div>
+        <div class="kpi-tile" style="border-left-color:var(--pos-amber);"><div class="title"><i class="fa-solid fa-tag me-1"></i>PROMO DISCOUNTS</div><div class="value" id="kpiTotalDiscount">--</div></div>
+        <div class="kpi-tile" style="border-left-color:#00BFFF;"><div class="title"><i class="fa-solid fa-building-columns me-1"></i>VAT TAX COLLECTED</div><div class="value" id="kpiTotalVat">--</div></div>
+    </div>
+
+    <!-- HYBRID RESPONSIVE CHART & LEDGER GRID (Full width for time series & lists; Half width for categorical breakdowns) -->
+    <div class="analytics-hybrid-grid">
+        <!-- 1. Full Width: Daily Revenue & Orders Over Time (Column/Bar Chart) -->
+        <div class="chart-box analytics-full-width">
+            <h5><i class="fa-solid fa-timeline me-2"></i>REVENUE & ORDERS OVER TIME</h5>
+            <div style="position:relative; height:320px; width:100%;">
+                <canvas id="chartDailyRevenue"></canvas>
+            </div>
+        </div>
+
+        <!-- 2. Half Width: Payment Method Breakdown (Horizontal Bar / Pie Chart) -->
+        <div class="chart-box analytics-half-width">
+            <h5><i class="fa-solid fa-layer-group me-2"></i>PAYMENT METHOD BREAKDOWN</h5>
+            <div style="position:relative; height:260px; width:100%;">
+                <canvas id="chartPaymentBreakdown"></canvas>
+            </div>
+        </div>
+
+        <!-- 3. Half Width: Top 10 Best Selling Items (Categorical Chart) -->
+        <div class="chart-box analytics-half-width">
+            <h5><i class="fa-solid fa-ranking-star me-2"></i>TOP 10 BEST SELLING ITEMS</h5>
+            <div style="position:relative; height:260px; width:100%;">
+                <canvas id="chartTopProducts"></canvas>
+            </div>
+        </div>
+
+        <!-- 4. Full Width: Today's Hourly Sales Velocity (Line Chart) -->
+        <div class="chart-box analytics-full-width">
+            <h5><i class="fa-solid fa-clock-rotate-left me-2"></i>TODAY'S HOURLY VELOCITY</h5>
+            <div style="position:relative; height:280px; width:100%;">
+                <canvas id="chartHourlyVelocity"></canvas>
+            </div>
+        </div>
+
+        <!-- 5. Full Width: Top Spending VIP & Corporate Accounts (Table / List) -->
+        <div class="chart-box analytics-full-width" style="display:flex; flex-direction:column;">
+            <h5><i class="fa-solid fa-user-tie me-2"></i>TOP SPENDING CLIENTS & CORPORATE ACCOUNTS</h5>
+            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                <table class="cart-table w-100" style="font-size:0.8rem;">
+                    <thead><tr><th>CUSTOMER / CORPORATION</th><th>CONTACT PHONE</th><th style="text-align:right;">TOTAL SPENT</th></tr></thead>
+                    <tbody id="tblTopCustomers"><tr><td colspan="3" style="text-align:center; padding: 20px;">NO CLIENT TRANSACTION DATA</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 6. Full Width: Top High-Value Transactions (Table / List) -->
+        <div class="chart-box analytics-full-width" style="display:flex; flex-direction:column;">
+            <h5><i class="fa-solid fa-money-bill-wave me-2"></i>TOP HIGH-VALUE TRANSACTIONS</h5>
+            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                <table class="cart-table w-100" style="font-size:0.8rem;">
+                    <thead><tr><th>INVOICE NO</th><th>CUSTOMER</th><th>TIMESTAMP</th><th style="text-align:right;">SETTLED AMOUNT</th></tr></thead>
+                    <tbody id="tblTopOrders"><tr><td colspan="4" style="text-align:center; padding: 20px;">NO TRANSACTION RECORDS FOUND</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>

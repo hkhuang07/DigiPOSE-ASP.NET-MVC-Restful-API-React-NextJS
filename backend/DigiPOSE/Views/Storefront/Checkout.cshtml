@@ -145,12 +145,12 @@
                     {
                         foreach (var item in Model.Cart.Items)
                         {
-                            var img = !string.IsNullOrEmpty(item.Product?.ImageUrl) ? item.Product.ImageUrl : "/demo/products/default_cyber_product.png";
+                            var img = !string.IsNullOrEmpty(item.Product?.ImageUrl) ? item.Product.ImageUrl : "/upload/store_default_product.jpg";
                             <div class="d-flex justify-content-between align-items-center p-1 mb-1" style="background:rgba(255,255,255,0.02); border:1px solid rgba(0,255,102,0.2); font-size: 0.8rem;">
                                 <div class="d-flex align-items-center min-w-0 flex-grow-1">
                                     <div style="width:28px; height:28px; background:#000; border:1px solid var(--cyber-border); flex-shrink:0; display:flex; align-items:center; justify-content:center;">
                                         @if(img.StartsWith("/") || img.StartsWith("http")) {
-                                            <img src="@img" style="max-width:100%; max-height:100%; object-fit:contain;" alt="item"/>
+                                            <img src="@img" onerror="this.onerror=null; this.src='/upload/store_default_product.jpg';" style="max-width:100%; max-height:100%; object-fit:contain;" alt="item"/>
                                         } else {
                                             <i class="fa-solid fa-box text-cyan" style="font-size:0.7rem;"></i>
                                         }

@@ -3,7 +3,7 @@
     Layout = "~/Views/Shared/_StorefrontLayout.cshtml";
     ViewData["Title"] = $"{Model.Product.ProductName} // Technical Asset Specification";
     var p = Model.Product;
-    var pImg = !string.IsNullOrEmpty(p.ImageUrl) ? p.ImageUrl : "/demo/products/default_cyber_product.png";
+    var pImg = !string.IsNullOrEmpty(p.ImageUrl) ? p.ImageUrl : "/upload/store_default_product.jpg";
 }
 
 <div class="container-fluid px-4 px-xl-5 my-4" style="max-width: 1600px;">
@@ -34,7 +34,7 @@
                 <div class="text-center py-5 my-auto d-flex align-items-center justify-content-center" style="min-height: 420px; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.05);">
                     @if (pImg.StartsWith("/") || pImg.StartsWith("http"))
                     {
-                        <img src="@pImg" alt="@p.ProductName" class="img-fluid" style="max-height: 420px; object-fit: contain; filter: drop-shadow(0 0 15px rgba(0,229,255,0.3));" />
+                        <img src="@pImg" alt="@p.ProductName" onerror="this.onerror=null; this.src='/upload/store_default_product.jpg';" class="img-fluid" style="max-height: 420px; object-fit: contain; filter: drop-shadow(0 0 15px rgba(0,229,255,0.3));" />
                     }
                     else
                     {
@@ -182,14 +182,14 @@
             <div class="row row-cols-2 row-cols-md-4 g-4" id="relatedProductsGrid">
                 @foreach (var rel in Model.RelatedProducts)
                 {
-                    var rImg = !string.IsNullOrEmpty(rel.ImageUrl) ? rel.ImageUrl : "/demo/products/default_cyber_product.png";
+                    var rImg = !string.IsNullOrEmpty(rel.ImageUrl) ? rel.ImageUrl : "/upload/store_default_product.jpg";
                     <div class="col related-item-card" data-cat="cat-@rel.CategoryId" data-mfr="mfr-@(rel.ManufacturerId ?? 0)" data-type="type-@rel.ProductTypeId" data-nature="nature-@rel.ItemNatureId">
                         <div class="card cyber-card h-100 d-flex flex-column justify-content-between" style="cursor: pointer;" onclick="if (!event.target.closest('button')) { window.location.href = '/Home/Storefront/Details/@rel.ProductId'; }">
                             <div>
                                 <div class="cyber-card-img-box">
                                     @if (rImg.StartsWith("/") || rImg.StartsWith("http"))
                                     {
-                                        <img src="@rImg" alt="@rel.ProductName" style="max-height: 170px; max-width: 90%; object-fit: contain;" />
+                                        <img src="@rImg" alt="@rel.ProductName" onerror="this.onerror=null; this.src='/upload/store_default_product.jpg';" style="max-height: 170px; max-width: 90%; object-fit: contain;" />
                                     }
                                     else
                                     {

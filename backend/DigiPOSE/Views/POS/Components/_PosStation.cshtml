@@ -1,0 +1,94 @@
+<!-- ==================== VIEW 1: POS STATION OPERATIONAL HUD ==================== -->
+<div id="viewPosStation" style="display:flex; width:100%; height:100%; margin:0; padding:0;">
+    <!-- LEFT PANEL: HIGH-DENSITY BILLING REGISTER LEDGER -->
+    <section class="pos-left-panel">
+        <!-- Attached Customer Banner & B2B Credit Guardrail Monitor -->
+        <div class="customer-banner">
+            <div class="customer-info" id="bannerCustomerInfo">
+                <i class="fa-solid fa-user-tag me-2"></i>
+                <span id="txtCustomerNameDisplay">WALK-IN CONSUMER</span>
+                <span id="txtB2bDebtChip" style="display:none; margin-left:8px; background:#000; border:1px solid var(--pos-amber); color:var(--pos-amber); font-size:0.75rem; padding:1px 6px; border-radius:2px;"></span>
+            </div>
+            <div style="display:flex; gap:6px; flex-shrink: 0;">
+                <button onclick="switchMainView('customers')" class="btn btn-sm" style="background:#000; border:1px solid var(--pos-amber); color:var(--pos-amber); font-size:0.75rem; font-family:var(--font-hdr); white-space:nowrap;"><i class="fa-solid fa-id-card me-1"></i> MEMBER</button>
+                <button id="btnRemoveVip" onclick="removeAttachedVip()" class="btn btn-sm" style="display:none; background:#000; border:1px solid var(--pos-crimson); color:var(--pos-crimson); font-size:0.75rem; font-family:var(--font-hdr);"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+
+        <!-- High-Density Cart Table (Displays 6 to 9 rows without scroll) -->
+        <div class="cart-table-wrapper">
+            <table class="cart-table">
+                <thead>
+                    <tr>
+                        <th style="width: 6%;">#</th>
+                        <th style="width: 36%;">PRODUCT DETAILS</th>
+                        <th style="width: 24%; text-align: center;">QUANTITY</th>
+                        <th style="width: 20%; text-align: right;">PRICE</th>
+                        <th style="width: 14%; text-align: center;">ACT</th>
+                    </tr>
+                </thead>
+                <tbody id="cartTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 35px; color: #555; font-family: var(--font-mono); font-size: 0.85rem;">
+                            <i class="fa-solid fa-cart-shopping fa-2x mb-2" style="display: block; color: #333;"></i>
+                            REGISTER CART IS EMPTY.<br/>SELECT CATALOG ITEMS OR SCAN BARCODE TO INITIATE ORDER.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Financial Reconciliation Footer -->
+        <footer class="cart-summary-footer">
+            <div class="summary-row">
+                <span class="lbl">SUBTOTAL (GROSS):</span>
+                <span class="val" id="lblSubtotal">0 ₫</span>
+            </div>
+            <div class="summary-row">
+                <span class="lbl">DISCOUNT & PROMOTIONS:</span>
+                <span class="val" style="color: var(--pos-amber);" id="lblDiscount">-0 ₫</span>
+            </div>
+            <div class="summary-row">
+                <span class="lbl">INCLUDED VAT TAX:</span>
+                <span class="val" style="color: var(--pos-cyan);" id="lblVat">+0 ₫</span>
+            </div>
+            <div class="summary-row total">
+                <span class="lbl">TOTAL TO SETTLE:</span>
+                <span class="val" id="lblTotalToPay">0 ₫</span>
+            </div>
+            <div class="cart-actions" style="display:grid; grid-template-columns: 1fr 1fr 1.2fr 2fr; gap:6px;">
+                <button onclick="clearDraftCart()" class="btn" style="background:#000; border:1px solid var(--pos-crimson); color:var(--pos-crimson); font-family:var(--font-hdr); font-size:0.75rem; font-weight:700; padding:10px 6px;"><i class="fa-solid fa-trash me-1"></i> CLEAR</button>
+                <button onclick="parkOrder()" class="btn" style="background:#000; border:1px solid var(--pos-amber); color:var(--pos-amber); font-family:var(--font-hdr); font-size:0.75rem; font-weight:700; padding:10px 6px;"><i class="fa-solid fa-pause me-1"></i> PARK</button>
+                <button onclick="openRecallModal()" class="btn" style="background:#000; border:1px solid var(--pos-cyan); color:var(--pos-cyan); font-family:var(--font-hdr); font-size:0.75rem; font-weight:700; padding:10px 6px;" title="Recall Parked Orders"><i class="fa-solid fa-clock-rotate-left me-1"></i> RECALL <span id="lblParkedBadge" style="background:var(--pos-cyan); color:#000; padding:2px 6px; border-radius:10px; font-size:0.7rem; font-weight:bold; margin-left:4px; display:none;">0</span></button>
+                <button onclick="openCheckoutModal()" class="btn-checkout-execute" style="font-size:0.85rem; padding:10px 6px;"><i class="fa-solid fa-money-bill-transfer me-1"></i> PAY (F12)</button>
+            </div>
+        </footer>
+    </section>
+
+    <!-- RIGHT PANEL: PRODUCT CATALOG MATRIX (3x3 / 3x4 DISPLAY) -->
+    <section class="pos-right-panel">
+        <div class="catalog-toolbar">
+            <div class="search-bar-row">
+                <input type="text" id="txtProductSearch" class="cyber-search-input" placeholder="SEARCH PRODUCT BY NAME, SKU, OR LASER SCANNER..." oninput="instantFilterCatalog()" />
+                <button onclick="resetCatalogFilters()" class="deck-btn" style="border-color:var(--pos-amber); color:var(--pos-amber);" title="Clear Search & Filters"><i class="fa-solid fa-filter-circle-xmark me-1"></i> RESET</button>
+                <button onclick="reloadCatalogFromServer()" class="deck-btn" style="border-color:var(--pos-cyan); color:var(--pos-cyan);"><i class="fa-solid fa-arrows-rotate"></i> REFRESH</button>
+            </div>
+            <!-- Tier 1 Dimension Selector -->
+            <div class="filter-buttons-row" id="tier1DimensionBar" style="border-bottom: 1px solid var(--pos-border); padding-bottom: 6px; margin-bottom: 2px;">
+                <button class="filter-chip active" onclick="selectTier1Dimension('all', this)"><i class="fa-solid fa-layer-group me-1"></i> ALL CATALOG</button>
+                <button class="filter-chip" onclick="selectTier1Dimension('category', this)"><i class="fa-solid fa-tags me-1"></i> CATEGORY</button>
+                <button class="filter-chip" onclick="selectTier1Dimension('manufacturer', this)"><i class="fa-solid fa-industry me-1"></i> MANUFACTURER</button>
+                <button class="filter-chip" onclick="selectTier1Dimension('productType', this)"><i class="fa-solid fa-cubes me-1"></i> PRODUCT TYPE</button>
+                <button class="filter-chip" onclick="selectTier1Dimension('itemNature', this)"><i class="fa-solid fa-shapes me-1"></i> ITEM NATURE</button>
+            </div>
+            <!-- Tier 2 Value Chips (Auto-collapsed when unused to maximize inventory catalog visibility) -->
+            <div class="filter-buttons-row" id="tier2FilterBar" style="display:none; min-height:28px;"></div>
+        </div>
+
+        <div class="catalog-grid" id="productGridArea">
+            <div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: var(--pos-cyan); font-family: var(--font-hdr);">
+                <i class="fa-solid fa-circle-notch fa-spin fa-2x me-2"></i> INITIALIZING CATALOG REPOSITORY...
+            </div>
+        </div>
+    </section>
+</div>

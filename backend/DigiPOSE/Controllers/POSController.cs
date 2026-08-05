@@ -30,6 +30,8 @@ namespace DigiPOSE.Controllers
 
             bool isSuperAdmin = (roleClaim == "Super Admin" || roleClaim == "Admin" || roleClaim == "Administrator" || userId == 1);
             ViewBag.IsSuperAdmin = isSuperAdmin;
+            ViewBag.UserRoleName = roleClaim;
+            ViewBag.CurrentUserId = userId;
             ViewBag.AllTenants = new List<Tenant>();
             ViewBag.IsQuarantined = false;
             ViewBag.AuthorizedTenantId = 0;

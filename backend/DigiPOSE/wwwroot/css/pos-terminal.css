@@ -1,0 +1,634 @@
+/* ============================================================================
+   POS TERMINAL UNIFIED STYLESHEET (wwwroot/css/pos-terminal.css)
+   Architecture: High-Density Operational Combat HUD & Zero-Fluff Engineering
+   ============================================================================ */
+
+/* ----------------------------------------------------------------------------
+   SECTION 1: CORE SYSTEM VARIABLES & TOKENS
+   ---------------------------------------------------------------------------- */
+:root {
+    --pos-bg-root: #040608;
+    --pos-bg-panel: #080C10;
+    --pos-bg-surface: #0E141B;
+    --pos-border: #1E2933;
+    --pos-border-focus: #00E5FF;
+    --pos-cyan: #00E5FF;
+    --pos-emerald: #00FF66;
+    --pos-amber: #FFB000;
+    --pos-crimson: #FF3333;
+    --holo-cyan: #00E5FF;
+    --bio-emerald: #00FF66;
+    --amber-warn: #FFB000;
+    --crimson-danger: #FF3333;
+    --pos-text-primary: #FFFFFF;
+    --pos-text-secondary: #AAAAAA;
+    --pos-text-muted: #666666;
+    --font-hdr: 'Orbitron', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-ui: 'Rajdhani', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-data: 'VT323', monospace;
+    --font-mono: 'Roboto Mono', monospace;
+}
+
+/* ----------------------------------------------------------------------------
+   SECTION 2: COMMAND DECK HEADER (STATION TOP BAR)
+   ---------------------------------------------------------------------------- */
+.pos-command-deck {
+    min-height: 44px;
+    background: #080C10;
+    border-bottom: 2px solid var(--pos-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 12px;
+    position: relative;
+    z-index: 50;
+    margin: 0;
+    gap: 12px;
+    white-space: nowrap;
+    overflow-x: auto;
+}
+
+.deck-btn {
+    background: #0A0F14;
+    border: 1px solid var(--pos-border);
+    color: var(--pos-text-primary);
+    font-family: var(--font-hdr);
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 2px;
+}
+.deck-btn:hover {
+    border-color: var(--pos-cyan);
+    background: #111A24;
+}
+.deck-btn.active {
+    border-color: var(--pos-cyan);
+    color: var(--pos-cyan);
+    background: rgba(0, 229, 255, 0.1);
+}
+
+.station-status-panel {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #000;
+    border: 1px solid #1A222B;
+    padding: 4px 10px;
+    border-radius: 2px;
+}
+.status-led {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--pos-emerald);
+}
+
+.station-meta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #06090D;
+    border: 1px solid #151D26;
+    padding: 4px 10px;
+    border-radius: 2px;
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+.station-meta-badge .lbl {
+    color: var(--pos-text-muted);
+    font-family: var(--font-hdr);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+.station-meta-badge .val {
+    color: var(--pos-text-primary);
+    font-weight: 700;
+}
+
+/* ----------------------------------------------------------------------------
+   SECTION 3: MAIN WORKSPACE & ZERO-MARGIN DUAL-PANEL STATION
+   ---------------------------------------------------------------------------- */
+.pos-workspace {
+    display: flex;
+    position: relative;
+    height: calc(100vh - 145px);
+    max-height: calc(100vh - 145px);
+    background: var(--pos-bg-root);
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+}
+
+.pos-left-panel {
+    flex: 0 0 42%;
+    max-width: 42%;
+    display: flex;
+    flex-direction: column;
+    border-right: 2px solid var(--pos-border);
+    background: var(--pos-bg-panel);
+    z-index: 10;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100%;
+    overflow: hidden;
+}
+
+.pos-right-panel {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    background: #06090D;
+    overflow: hidden;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100%;
+    position: relative;
+}
+
+/* Customer & B2B Guardrail Banner */
+.customer-banner {
+    padding: 6px 12px;
+    background: rgba(255, 176, 0, 0.08);
+    border-bottom: 1px solid rgba(255, 176, 0, 0.3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 38px;
+}
+.customer-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--pos-amber);
+    font-weight: 700;
+}
+
+/* High-Density Billing Register Table (Enables 6 to 9 visible rows) */
+.cart-table-wrapper {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.cart-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    color: var(--pos-text-primary);
+}
+.cart-table th {
+    background: #020406;
+    color: var(--pos-text-secondary);
+    font-family: var(--font-ui);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 8px 6px;
+    border-bottom: 1px solid var(--pos-border);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    text-align: left;
+}
+.cart-table td {
+    padding: 6px 6px;
+    border-bottom: 1px solid #111A24;
+    vertical-align: middle;
+}
+.cart-table tr:hover td {
+    background: #0D141C;
+}
+
+.qty-control {
+    display: inline-flex;
+    align-items: center;
+    background: #040608;
+    border: 1px solid var(--pos-border);
+    border-radius: 2px;
+}
+.qty-btn {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    color: var(--pos-cyan);
+    font-weight: bold;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+}
+.qty-val {
+    padding: 0 8px;
+    font-family: var(--font-data);
+    font-size: 1.25rem;
+    color: #FFF;
+    font-weight: bold;
+    min-width: 34px;
+    text-align: center;
+}
+.item-note-chip {
+    display: inline-block;
+    font-size: 0.7rem;
+    color: var(--pos-amber);
+    background: rgba(255,176,0,0.15);
+    padding: 1px 5px;
+    border-radius: 2px;
+}
+
+/* Cart Ledger Footer */
+.cart-summary-footer {
+    padding: 12px;
+    background: #040608;
+    border-top: 2px solid var(--pos-border);
+    flex-shrink: 0;
+}
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    font-size: 0.85rem;
+    color: var(--pos-text-secondary);
+}
+.summary-row.total {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #1E2933;
+}
+.summary-row.total .lbl {
+    font-family: var(--font-hdr);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #FFF;
+}
+.summary-row.total .val {
+    font-family: var(--font-data);
+    font-size: 2.3rem;
+    font-weight: 700;
+    color: var(--pos-emerald);
+    line-height: 1;
+}
+.cart-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+.btn-checkout-execute {
+    flex: 1;
+    height: 44px;
+    background: #020406 !important;
+    border: 2px solid var(--pos-emerald) !important;
+    color: var(--pos-emerald) !important;
+    font-family: var(--font-hdr);
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 2px;
+}
+.btn-checkout-execute:hover {
+    background: var(--pos-emerald) !important;
+    color: #000 !important;
+}
+
+/* ----------------------------------------------------------------------------
+   SECTION 4: PRODUCT CATALOG GRID & TOOLBAR (3x3 / 3x4 DISPLAY MATRIX)
+   ---------------------------------------------------------------------------- */
+.catalog-toolbar {
+    padding: 8px 12px;
+    background: #080C10;
+    border-bottom: 1px solid var(--pos-border);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.search-bar-row {
+    display: flex;
+    gap: 8px;
+}
+.cyber-search-input {
+    flex: 1;
+    background: #020406;
+    border: 1px solid var(--pos-border);
+    color: #FFF;
+    padding: 8px 12px;
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    border-radius: 2px;
+}
+.cyber-search-input:focus {
+    outline: none;
+    border-color: var(--pos-cyan);
+}
+.filter-buttons-row {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+}
+.filter-chip {
+    background: #020406;
+    border: 1px solid #1E2933;
+    color: #999;
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 2px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.filter-chip:hover, .filter-chip.active {
+    border-color: var(--pos-cyan);
+    color: var(--pos-cyan);
+    background: rgba(0, 229, 255, 0.1);
+}
+
+.catalog-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 8px;
+    display: grid;
+    gap: 8px;
+    align-content: flex-start;
+    grid-template-columns: repeat(3, 1fr);
+}
+@media (min-width: 1400px) {
+    .catalog-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+}
+@media (max-width: 1399px) {
+    .catalog-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+.cyber-card {
+    background: #080D12;
+    border: 1px solid var(--pos-border);
+    border-top: 2px solid var(--pos-cyan);
+    border-radius: 3px;
+    padding: 6px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+    height: 190px;
+    transition: border-color 0.15s;
+}
+.cyber-card:hover {
+    border-color: var(--pos-cyan);
+    background: #0E1620;
+}
+.cyber-card .thumb-box {
+    height: 110px;
+    background: #000;
+    border-radius: 2px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+    border: 1px solid #151C24;
+    position: relative;
+}
+.cyber-card .thumb-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.stock-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: #000;
+    border: 1px solid var(--pos-emerald);
+    color: var(--pos-emerald);
+    font-size: 0.65rem;
+    font-family: var(--font-hdr);
+    padding: 2px 5px;
+    border-radius: 2px;
+    font-weight: 700;
+    z-index: 2;
+}
+.stock-badge.out {
+    border-color: var(--pos-crimson);
+    color: var(--pos-crimson);
+}
+.card-meta .p-name {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #FFF;
+    line-height: 1.15;
+    margin-bottom: 2px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.card-meta .p-sku {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--pos-text-muted);
+}
+.card-price {
+    font-family: var(--font-data);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--pos-emerald);
+    text-align: right;
+    margin-top: 2px;
+}
+
+/* ----------------------------------------------------------------------------
+   SECTION 5: EXECUTIVE ANALYTICS MATRIX (8 KPI TILES + HYBRID CHARTS)
+   ---------------------------------------------------------------------------- */
+.fullscreen-view {
+    display: none;
+    width: 100%;
+    height: 100%;
+    min-height: calc(100vh - 110px);
+    overflow-y: auto;
+    padding: 16px 20px;
+    background: var(--pos-bg-root);
+    z-index: 20;
+}
+
+.kpi-grid-4x2 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+@media (max-width: 1199px) {
+    .kpi-grid-4x2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+.kpi-tile {
+    background: #080C10;
+    border: 1px solid var(--pos-border);
+    border-left: 3px solid var(--pos-cyan);
+    padding: 12px 14px;
+    border-radius: 2px;
+}
+.kpi-tile .title {
+    font-family: var(--font-hdr);
+    font-size: 0.68rem;
+    color: var(--pos-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+.kpi-tile .value {
+    font-family: var(--font-data);
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #FFF;
+    line-height: 1;
+}
+
+.analytics-hybrid-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    align-items: start;
+}
+.analytics-full-width {
+    grid-column: 1 / -1;
+    width: 100%;
+}
+.analytics-half-width {
+    grid-column: span 1;
+    width: 100%;
+}
+@media (max-width: 1199px) {
+    .analytics-half-width {
+        grid-column: 1 / -1;
+    }
+}
+
+.chart-box {
+    background: #080C10;
+    border: 1px solid var(--pos-border);
+    padding: 14px;
+    border-radius: 3px;
+    margin-bottom: 0;
+}
+.chart-box h5 {
+    font-family: var(--font-hdr);
+    font-size: 0.82rem;
+    color: var(--pos-cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #151C24;
+    padding-bottom: 6px;
+}
+
+/* ----------------------------------------------------------------------------
+   SECTION 6: MODALS & CENTRIC DRAWER
+   ---------------------------------------------------------------------------- */
+.modal-centric-backdrop {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 2500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.modal-centric-box {
+    background: #080C10;
+    border: 1px solid var(--pos-cyan);
+    width: 100%;
+    max-width: 650px;
+    max-height: 85vh;
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: #EEE;
+}
+.modal-centric-header {
+    padding: 12px 16px;
+    background: #040608;
+    border-bottom: 1px solid var(--pos-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.modal-centric-header h4 {
+    font-family: var(--font-hdr);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--pos-cyan);
+    margin: 0;
+    text-transform: uppercase;
+}
+.btn-close-centric {
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 1.3rem;
+    cursor: pointer;
+}
+.btn-close-centric:hover { color: var(--pos-crimson); }
+.modal-centric-body { padding: 16px; overflow-y: auto; flex: 1; }
+.modal-centric-footer { padding: 12px 16px; background: #040608; border-top: 1px solid var(--pos-border); display: flex; justify-content: flex-end; gap: 10px; }
+
+.payment-methods-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+}
+.pay-option-card {
+    background: #040608;
+    border: 1px solid var(--pos-border);
+    padding: 10px 8px;
+    border-radius: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+}
+.pay-option-card:hover, .pay-option-card.active {
+    border-color: var(--pos-cyan);
+    background: rgba(0,229,255,0.15);
+}
+.pay-option-card .ico { font-size: 1.1rem; color: var(--pos-cyan); width: 22px; text-align: center; }
+.pay-option-card .txt { font-family: var(--font-ui); font-size: 0.85rem; font-weight: 700; color: #EEE; }
+
+/* Form Controls & Utilities */
+.cyber-label { font-family: var(--font-hdr); font-size: 0.72rem; color: #AAA; text-transform: uppercase; margin-bottom: 4px; display: block; }
+.cyber-input, .cyber-select { width: 100%; background: #020406; border: 1px solid var(--pos-border); color: #FFF; padding: 8px 12px; font-family: var(--font-mono); font-size: 0.88rem; border-radius: 2px; }
+.cyber-input:focus, .cyber-select:focus { outline: none; border-color: var(--pos-cyan); }

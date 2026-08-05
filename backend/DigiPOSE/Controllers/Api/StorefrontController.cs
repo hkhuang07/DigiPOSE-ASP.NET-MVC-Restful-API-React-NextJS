@@ -166,7 +166,7 @@ namespace DigiPOSE.Controllers.Api
                 SKU = p.SKU,
                 ProductName = p.ProductName,
                 BasePrice = p.BasePrice,
-                ImageUrl = string.IsNullOrEmpty(p.ImageUrl) ? "/demo/products/default_cyber_product.png" : p.ImageUrl,
+                ImageUrl = string.IsNullOrEmpty(p.ImageUrl) ? "/upload/store_default_product.jpg" : p.ImageUrl,
                 Slug = p.Slug ?? p.ProductName.ToLower().Replace(" ", "-").Replace("/", "-"),
                 CategoryName = p.Category?.CategoryName ?? "General",
                 ManufacturerName = p.Manufacturer?.ManufacturerName ?? "Original Equipment",
@@ -254,7 +254,7 @@ namespace DigiPOSE.Controllers.Api
                     UnitPrice = d.UnitPrice,
                     LineTotal = d.Quantity * d.UnitPrice,
                     LineTax = 0,
-                    ImageUrl = d.Product?.ImageUrl ?? "/demo/products/default_cyber_product.png"
+                    ImageUrl = d.Product?.ImageUrl ?? "/upload/store_default_product.jpg"
                 }).ToList()
             };
 
@@ -560,7 +560,7 @@ namespace DigiPOSE.Controllers.Api
                     TenantId = 1, // HQ Fulfillment tenant for Online Web Orders
                     ShiftId = 1, // Storefront general web fulfillment shift
                     UserId = 1, // Default system web worker
-                    StatusId = 2, // 2: Completed / Processing E-Commerce Order
+                    StatusId = 8, // 8: Completed / Finalized E-Commerce Order per DB schema
                     PaymentMethodId = request.PaymentMethodId,
                     IdempotencyKey = request.IdempotencyKey,
                     CreatedAt = DateTime.Now,

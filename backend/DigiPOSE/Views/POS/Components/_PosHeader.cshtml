@@ -1,0 +1,42 @@
+@model dynamic
+@{
+    var authTenantId = ViewData["AuthTenantId"] ?? "1";
+    var authTenantName = ViewData["AuthTenantName"] ?? "HK.Huang";
+    var userRole = ViewData["UserRole"]?.ToString() ?? "Operator";
+}
+
+<!-- POS TACTICAL STATION HEADER BAR -->
+<div class="pos-command-deck">
+    <!-- Left: Grouped Read-Only Terminal Information Labels -->
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; flex-shrink: 0;">
+        <div class="station-status-panel" title="Live SignalR Inventory Sync Online" style="min-width: 24px;">
+            <div class="status-led"></div>
+        </div>
+        <div class="station-meta-badge">
+            <span class="lbl"><i class="fa-solid fa-building text-cyan me-1"></i>TENANT:</span>
+            <span class="val text-cyan" id="hdrTenantVal">#@authTenantId (@authTenantName)</span>
+        </div>
+        <div class="station-meta-badge">
+            <span class="lbl"><i class="fa-solid fa-desktop me-1" style="color: var(--pos-emerald);"></i>COUNTER:</span>
+            <span class="val" style="color: var(--pos-emerald);" id="hdrCounterVal">UNSET</span>
+        </div>
+        <div class="station-meta-badge">
+            <span class="lbl"><i class="fa-solid fa-warehouse me-1" style="color: var(--pos-amber);"></i>WAREHOUSE:</span>
+            <span class="val" style="color: var(--pos-amber);" id="hdrWarehouseVal">UNSET</span>
+        </div>
+        <div class="station-meta-badge" style="border-color: #222;">
+            <span class="lbl"><i class="fa-solid fa-user-check me-1 text-muted"></i>OPERATOR:</span>
+            <span class="val" style="color: #FFF;">@User.Identity?.Name [@userRole.ToUpper()]</span>
+        </div>
+    </div>
+
+    <!-- Right: Grouped Operational Action Controls -->
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; flex-shrink: 0;">
+        <button type="button" class="deck-btn" onclick="openCalibrationModal(false)" title="Configure Terminal Settings">
+            <i class="fa-solid fa-gears text-cyan"></i> SETTING
+        </button>
+        <button type="button" class="deck-btn" onclick="toggleShiftStatus()" id="btnShiftAction" style="background: #000; border: 1px solid var(--pos-emerald); color: var(--pos-emerald); font-weight: bold;">
+            <i class="fa-solid fa-power-off me-1"></i> OPEN SHIFT
+        </button>
+    </div>
+</div>

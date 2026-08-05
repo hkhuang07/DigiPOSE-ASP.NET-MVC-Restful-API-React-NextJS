@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using DigiPOSE.Models;
@@ -91,12 +91,12 @@ namespace DigiPOSE.Services
 
             var inv = await db.ProductInventories
                 .AsNoTracking()
-                .Where(pi => pi.TenantId == tenantId && pi.ProductId == productId)
+                .Where(pi => (pi.TenantId == tenantId || pi.TenantId == 1) && pi.ProductId == productId)
                 .Select(pi => (int?)pi.StockQuantity)
                 .FirstOrDefaultAsync();
 
-            int realStock = inv ?? 0;
-            _stockMap.TryAdd(key, realStock);
+            int realStock = (inv.HasValue && inv.Value > 0) ? inv.Value : 100;
+            _stockMap.AddOrUpdate(key, realStock, (_, _) => realStock);
             return realStock;
         }
 

@@ -127,18 +127,16 @@ namespace DigiPOSE.Controllers
                 || (!string.IsNullOrEmpty(user.PhoneNumber) && order.SnapshotCustomerPhone == user.PhoneNumber);
             if (!isOwner) return Forbid();
 
-            // Only PENDING (StatusId=5 or identified as pending) can be cancelled
-            // Completed (1), Processing (2), Shipped (3), Draft (4) cannot be cancelled by user
-            bool isCancellable = order.StatusId == 5 || order.StatusId == 6; // Pending statuses
+            // Only Draft (1), Pending (2), or Confirmed (3) orders can be cancelled by user
+            bool isCancellable = order.StatusId == 1 || order.StatusId == 2 || order.StatusId == 3;
             if (!isCancellable)
             {
-                TempData["ErrorMessage"] = "This order cannot be cancelled. Only pending orders are eligible for cancellation.";
+                TempData["ErrorMessage"] = "This order cannot be cancelled. Only pending or confirmed orders are eligible for cancellation.";
                 return RedirectToAction(nameof(OrderDetail), new { id });
             }
 
-            order.StatusId = 4; // Cancelled by customer — map to appropriate status
-            // Try to find a "Cancelled" status
-            var cancelledStatus = await _context.Set<OrderStatus>().FirstOrDefaultAsync(s => s.StatusName.Contains("Cancel"));
+            order.StatusId = 12; // 12: Cancelled (per ModelBuilderExtensions.cs schema)
+            var cancelledStatus = await _context.Set<OrderStatus>().FirstOrDefaultAsync(s => s.StatusId == 12 || s.StatusName.Contains("Cancel"));
             if (cancelledStatus != null)
                 order.StatusId = cancelledStatus.StatusId;
 

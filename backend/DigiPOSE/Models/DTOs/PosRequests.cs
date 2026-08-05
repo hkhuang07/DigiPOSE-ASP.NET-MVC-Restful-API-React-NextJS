@@ -28,7 +28,7 @@ namespace DigiPOSE.Models.DTOs
         
         // >>> [EDGE_SAFETY]: Chống add lặp mặt hàng nếu máy quét barcode bị nảy liên tục trong 50ms
         [Required]
-        public Guid ClientScanId { get; set; } = Guid.NewGuid();
+        public string ClientScanId { get; set; } = Guid.NewGuid().ToString();
     }
 
     public class RemoveItemRequest
@@ -52,6 +52,9 @@ namespace DigiPOSE.Models.DTOs
 
         [Range(0, (double)decimal.MaxValue, ErrorMessage = "Tendered amount must be non-negative")]
         public decimal TenderedAmount { get; set; } = 0;
+
+        [Range(0, int.MaxValue, ErrorMessage = "Redeemed points must be non-negative")]
+        public int RedeemedPoints { get; set; } = 0;
 
         // >>> [CRITICAL_IDEMPOTENCY]: Khóa duy nhất từ máy thu ngân.
         [Required]
@@ -110,5 +113,12 @@ namespace DigiPOSE.Models.DTOs
     public class AddPointsRequest
     {
         [Required] [Range(1, int.MaxValue)] public int Points { get; set; }
+    }
+
+    public class UpdateItemNoteRequest
+    {
+        [Required] public int OrderId { get; set; }
+        [Required] public int ProductId { get; set; }
+        public string? Notes { get; set; }
     }
 }

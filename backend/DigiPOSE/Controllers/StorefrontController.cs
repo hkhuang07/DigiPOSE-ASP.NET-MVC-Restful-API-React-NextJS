@@ -8,10 +8,7 @@ using System.Collections.Generic;
 
 namespace DigiPOSE.Controllers
 {
-    /// <summary>
-    /// Phase 6.2 - MVC Web Controller for Online E-Commerce & SaaS Storefront Portal.
-    /// Strictly guarantees 0% mock data by binding active database records to dynamic Cyber-HUD interfaces.
-    /// </summary>
+  
     [Route("Storefront")]
     [ApiExplorerSettings(IgnoreApi = true)]
     public class StorefrontController : Controller

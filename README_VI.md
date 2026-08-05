@@ -1,312 +1,388 @@
 # DigiPOSE Station - Nền Tảng Quản Trị Hệ Thống POS & ERP Bán Lẻ Doanh Nghiệp
-**Tài Liệu Kiến Trúc & Danh Mục Chức Năng Đã Phát Triển (v1.0.0)**
+**Tài Liệu Kiến Trúc & Danh Mục Chức Năng Chuẩn Hóa Theo Thực Tế (v1.0.0)**
 
-DigiPOSE Station là hệ thống quản trị điểm bán lẻ (POS), hoạch định tài nguyên doanh nghiệp (ERP) và thương mại điện tử (E-Commerce) hiện đại, hiệu năng cao, được thiết kế cho các chuỗi bán lẻ quy mô lớn và phân phối phần mềm đám mây B2B (SaaS). Nền tảng hợp nhất hoạt động bán hàng trực tiếp tại quầy với cổng đặt hàng trực tuyến thông qua hệ thống API tiêu chuẩn và trung tâm điều hành quản trị CMS.
+DigiPOSE Station là hệ thống quản trị điểm bán lẻ (POS), hoạch định tài nguyên doanh nghiệp (ERP) và thương mại điện tử (E-Commerce) hiện đại, hiệu năng cao, được thiết kế cho các chuỗi bán lẻ quy mô lớn và phân phối phần mềm đám mây B2B (SaaS). Nền tảng hợp nhất toàn bộ hoạt động bán hàng trực tiếp tại quầy, cổng đặt hàng trực tuyến và trung tâm điều hành quản trị CMS vào một kiến trúc ứng dụng máy chủ hợp nhất với độ trễ gần như bằng không.
 
 ---
 
 ## 🖥️ Trình Diễn Kiến Trúc & Giao Diện Thực Tế (Project Visuals)
 
-### 1. Cổng Xác Thực & Bảo Mật Hệ Thống (Security & Identity Gateway)
+### 1. Phân Hệ Lõi: Trạm Bán Hàng POS & Bảng Điều Khiển Telemetry
+<details open>
+<summary><strong>🛒 Nhấn để thu ngớt/bỏ mở Giao diện POS Terminal & Báo cáo Ban Quản trị (7 Mô-đun)</strong></summary>
+<br/>
 
 <p align="center">
-  <img src="assets/login.jpg" alt="Cổng Đăng Nhập & Bảo Mật Turnstile" width="850"/>
+  <img src="assets/pos.jpg" alt="Main POS Terminal Station HUD" width="850"/>
   <br />
-  <strong>Cổng Đăng Nhập & Vệ Thần Phòng Chống Bot Tự Động</strong><br />
-  <em>Giao diện Cyber-Cinematic HUD với bộ nền kính tối (Dark Glassmorphism), tiêu chuẩn chữ kỹ thuật (Typography Brand Card) và tích hợp bảo mật Cloudflare Turnstile với thuật toán thử lại tự động Exponential Backoff phía backend.</em>
+  <strong>Giao Diện Lõi Trạm Thu Ngân POS (Main POS Terminal Station HUD)</strong><br />
+  <em>Giao diện bán hàng trực tiếp phong cách Cyber-Cinematic có mật độ hiển thị cao, tích hợp công nghệ trừ kho O(1) trên RAM Cache, chống trôi đúp tín hiệu máy quét mã vạch và tính toán hóa đơn tức thì.</em>
 </p>
+<hr/>
 
 <p align="center">
-  <img src="assets/signup.jpg" alt="Đăng Ký Tài Khoản Hệ Thống" width="850"/>
+  <img src="assets/pos-payment.jpg" alt="POS Transaction Settlement & Loyalty Offset" width="850"/>
   <br />
-  <strong>Cổng Đăng Ký Tài Khoản & Định Danh Nhân Sự Doanh Nghiệp</strong><br />
-  <em>Quy trình tiếp nhận người dùng mới tích hợp kiểm tra tính hợp lệ dữ liệu trực tiếp (Real-time Field Validation), phản hồi trạng thái mật khẩu và ngắt chặn tức thì các nguy cơ tấn công tự động.</em>
+  <strong>Cửa Sổ Thanh Toán & Động Cơ Khấu Trừ Điểm Tích Lũy VIP (Loyalty Point Offset Engine)</strong><br />
+  <em>Cửa sổ chốt đơn tài chính áp đặt cơ chế cấm chi tiền mặt thấp hơn giá trị đơn hàng, tự động làm tròn và cân bằng thuế VAT đến từng đồng, hỗ trợ cấn trừ trực tiếp điểm tích lũy theo định giá 1 PT = 10 ₫.</em>
 </p>
+<hr/>
+
+<p align="center">
+  <img src="assets/pos-vip-customer.jpg" alt="VIP Member Directory & Debt Limit Dashboard" width="850"/>
+  <br />
+  <strong>Danh Mục Đối Tác VIP & Báo Cáo Hạn Mức Tín Dụng Nợ (B2B Debt Limit Dashboard)</strong><br />
+  <em>Theo dõi hạng thẻ khách hàng thời gian thực, hệ số nhân tích lũy điểm thưởng (2x đối với thẻ VIP) và ghi nhận biến động công nợ của các bên hợp tác.</em>
+</p>
+<hr/>
+
+<p align="center">
+  <img src="assets/pos-shift.jpg" alt="Shift Management & Revenue Reconciliation" width="850"/>
+  <br />
+  <strong>Quản Trị Ca Thu Ngân & Đối Soát Sổ Két Chi Bồi (Shift & Revenue Reconciliation)</strong><br />
+  <em>Kiểm duyệt dòng tiền bàn giao đầu ca và cuối ca, ghi nhận sai lệnh số dư tiền mặt thực tế và đối chứng lịch sử truy vết giao dịch thu ngân.</em>
+</p>
+<hr/>
+
+<p align="center">
+  <img src="assets/pos-analysis-01.jpg" alt="Executive Analytics Grid - View 1" width="850"/>
+  <br />
+  <strong>Lưới Đo Lường Ban Quản Trị - Biểu Đồ Doanh Thu & Lưu Lượng (Executive Analytics Grid #1)</strong><br />
+  <em>Trung tâm chỉ huy trực quan phơi sáng chu kỳ doanh thu theo từng khung giờ bán, quy mô khối lượng giao dịch ròng và tốc độ chốt đơn của quầy hàng.</em>
+</p>
+<hr/>
+
+<p align="center">
+  <img src="assets/pos-analysis-02.jpg" alt="Executive Analytics Grid - View 2" width="850"/>
+  <br />
+  <strong>Lưới Đo Lường Ban Quản Trị - Danh Mục Tồn Kho & Lợi Nhuận (Executive Analytics Grid #2)</strong><br />
+  <em>Thống kê chuyên sâu về vận tốc luân chuyển kho bãi, định diện các dòng hàng đem lại biên lợi nhuận cao và cảnh báo mức cận dưới tái xuất đơn bao thầu.</em>
+</p>
+<hr/>
+
+<p align="center">
+  <img src="assets/pos-analysis-03.jpg" alt="Executive Analytics Grid - View 3" width="850"/>
+  <br />
+  <strong>Lưới Đo Lường Ban Quản Trị - Đối Soát Kế Toán & SLA (Executive Analytics Grid #3)</strong><br />
+  <em>Hồ sơ báo cáo kiểm duyệt tuân thủ biểu giá VAT pháp định, minh bạch nhật ký truy thoái hóa đơn và thông số ổn định thời gian phản hồi (SLA Telemetry) toàn chuỗi.</em>
+</p>
+</details>
 
 ---
 
-### 2. Cổng Thương Mại Điện Tử & Bán Lẻ (E-Commerce Retail Storefront)
+### 2. Phân Hệ Lõi: Cổng Thương Mại Điện Tử & Hành Trình Khách Hàng
+<details open>
+<summary><strong>🛍️ Nhấn để thu ngớt/bỏ mở Cổng Thương Mại & Tra Cứu Khách Hàng (8 Mô-đun)</strong></summary>
+<br/>
 
 <p align="center">
-  <img src="assets/store-front.jpg" alt="Trang Chủ Thương Mại Điện Tử" width="850"/>
+  <img src="assets/store-front.jpg" alt="E-Commerce Retail Storefront" width="850"/>
   <br />
-  <strong>Cổng Bán Lẻ & Đặt Hàng B2B Trực Tuyến</strong><br />
-  <em>Giao diện bán hàng trực tuyến có độ trễ cực thấp, hiển thị danh mục sản phẩm động, thẻ thông báo trạng thái tồn kho real-time và hỗ trợ kết xuất Server-Side Rendering (SSR) tối ưu cho tiêu chuẩn SEO.</em>
+  <strong>Cổng Bán Lẻ & Đặt Hàng Thương Mại Điện Tử (Dynamic Storefront Portal)</strong><br />
+  <em>Cổng thương mại trực tuyến độ trễ thấp, trình chiếu các bộ sưu tập động, hiển thị bảng gắn nhãn thực trạng hàng trong kho real-time và tối ưu Server-Side Rendering cho tiêu chuẩn SEO chuẩn doanh nghiệp.</em>
 </p>
+<hr/>
 
 <p align="center">
-  <img src="assets/storefront-search-filter-expert.jpg" alt="Hệ Thống Tìm Kiếm & Lọc Chuyên sâu" width="850"/>
+  <img src="assets/storefront-search-filter-expert.jpg" alt="Advanced Search & Filter Engine" width="850"/>
   <br />
-  <strong>Bộ Động Cơ Tìm Kiếm & Lọc Danh Mục Đa Tầng (Search & Filter Expert)</strong><br />
-  <em>Hệ thống tra cứu thông tin sản phẩm tốc độ cao, cho phép lọc theo cây danh mục kỹ thuật, hãng sản xuất, mức giá và tìm kiếm trọn vẹn từ khóa (Full-Text Query) tức thì mà không cần nạp lại trang.</em>
+  <strong>Bộ Động Cơ Tìm Kiếm & Lọc Danh Mục Đa Tầng (Multi-Tier Expert Search Engine)</strong><br />
+  <em>Hệ thống tra cứu thông tin sản phẩm đa tầng tốc độ siêu cao, lọc tức thì theo cây danh mục kỹ thuật, thương hiệu, mức giá và tra cứu toàn văn (Full-Text) bằng kỹ thuật AJAX không ngắt trang.</em>
 </p>
+<hr/>
+
+<p align="center">
+  <img src="assets/card.jpg" alt="Shopping Cart & Item Management" width="850"/>
+  <br />
+  <strong>Động Cơ Quản Trị Giỏ Hàng & Kiểm Xác Tồn Kho (Reactive Shopping Cart Bridge)</strong><br />
+  <em>Cầu nối quản lý sản phẩm lựa chọn mua sắm, kiểm chứng độ khả dụng số lượng mua trực tiếp với CSDL tồn kho thời gian thực và ước tính chi phí sơ bộ.</em>
+</p>
+<hr/>
+
+<p align="center">
+  <img src="assets/checkout.jpg" alt="Storefront Checkout & GIS Location Selector" width="850"/>
+  <br />
+  <strong>Cổng Đặt Hàng & Hệ Thống Định Danh Hành Chính GIS Việt Nam (Checkout & GIS Engine)</strong><br />
+  <em>Quy trình thanh toán mạch lạc tích hợp cây lựa chọn Tỉnh/Thành - Quận/Huyện - Phường/Xã với hạ tầng lưu đệm đĩa cứng ngoại tuyến (Offline Disk Cache), tiếp nhận dữ liệu hóa đơn doanh nghiệp B2B (Mã số thuế & Tên Cty).</em>
+</p>
+<hr/>
+
+<p align="center">
+  <img src="assets/thanksorder.jpg" alt="Order Confirmation & Thermal Invoice Spooling" width="850"/>
+  <br />
+  <strong>Chứng Nhận Giao Dịch & Khai Xuất Chứng Từ Thuế (Order Confirmation & Receipt Spooling)</strong><br />
+  <em>Phản hồi xác lập đơn đặt hàng thành công mang mã hóa đơn định tính gốc, thỏa ước thời gian giao nhận cam kết và phiếu biên nhận đối kiểm pháp luật.</em>
+</p>
+<hr/>
+
+<p align="center">
+  <img src="assets/my-order.jpg" alt="Customer Order Tracking & ACID Ledger Status" width="850"/>
+  <br />
+  <strong>Cổng Giám Sát Tiến Trình Đơn Hàng & Sổ Trạng Thái ACID (Order Tracking Hub)</strong><br />
+  <em>Bảng thông tin minh bạch cho phép người buôn tiêu theo dõi trọn vẹn quy trình xuất kho, vận tải cũng như cho phép tải lại chứng từ lịch sử kinh doanh.</em>
+</p>
+<hr/>
+
+<p align="center">
+  <img src="assets/per-profile.jpg" alt="Personal Profile & Loyalty Reward Balance" width="850"/>
+  <br />
+  <strong>Hồ Sơ Danh Tính cá Nhân & Số Dư Kho Điểm Thưởng (Personal Profile & Loyalty Ledger)</strong><br />
+  <em>Két định danh cá nhân quản trị danh tính tiêu dùng, thống kê chu kỳ tích lũy điểm thưởng thành viên, lưu trữ sổ địa chỉ giao hàng và thông số tùy biến bảo mật.</em>
+</p>
+<hr/>
+
+<p align="center">
+  <img src="assets/processbar.jpg" alt="Cyber-Cinematic Design System FX & Progress Indicators" width="850"/>
+  <br />
+  <strong>Ngôn Ngữ Thiết Kế Cyber-Cinematic & Thanh Tiến Trình Giao Dịch (Military HUD FX)</strong><br />
+  <em>Thiết kế độc quyền với thanh tiến trình phân đoạn (Segmented Progress Bars), đường vạch tia quét hiển thị mật độ thông tin cao và bảng phối màu huỳnh quang (#00E5FF, #00FF66, #FFB000, #FF3333).</em>
+</p>
+</details>
 
 ---
 
 ### 3. Trung Tâm Quản Trị Hậu Đài & ERP (Enterprise CMS & Operations Hub)
+<details>
+<summary><strong>🏢 Nhấn để thu ngớt/bỏ mở Phân Hệ Quản Trị Trung Tâm CMS & ERP (6 Mô-đun)</strong></summary>
+<br/>
 
 <p align="center">
-  <img src="assets/administrator-role-home.jpg" alt="Bảng Điều Khiển Quản Trị Trung Tâm" width="850"/>
+  <img src="assets/administrator-role-home.jpg" alt="Administrator Telemetry Dashboard" width="850"/>
   <br />
-  <strong>Bảng Điều Khiển Telemetry & Chỉ Số Doanh Nghiệp (Administrator Dashboard)</strong><br />
+  <strong>Bảng Điều Khiển Telemetry & Chỉ Số Doanh Nghiệp (Administrator Command Center)</strong><br />
   <em>Trung tâm chỉ huy dành cho Ban Quản trị, giám sát thời gian thực các chỉ số KPI doanh thu, trạng thái các ca bán hàng đang vận hành và lưới điều hướng nhanh đến toàn bộ phân hệ ERP.</em>
 </p>
+<hr/>
 
 <p align="center">
-  <img src="assets/catalog-manager.jpg" alt="Quản Trị Danh Mục Dữ Liệu Gốc" width="850"/>
+  <img src="assets/catalog-manager.jpg" alt="Master Data Catalog Management" width="850"/>
   <br />
-  <strong>Phân Hệ Quản Trị Dữ Liệu Gốc & Danh Mục Hàng Hóa (Catalog Manager)</strong><br />
+  <strong>Phân Hệ Quản Trị Dữ Liệu Gốc & Danh Mục Hàng Hóa (Master Data Catalog Manager)</strong><br />
   <em>Trung tâm thao tác CRUD toàn diện quản lý hơn 26 thực thể dữ liệu doanh nghiệp, cho phép gán cấu hình mã vạch (Barcode/SKU), quy đổi đơn vị tính và quy hoạch cây danh mục đa cấp.</em>
 </p>
+<hr/>
 
 <p align="center">
-  <img src="assets/inventory-manager.jpg" alt="Quản Trị Kho Vận RAM & Kế Toán" width="850"/>
+  <img src="assets/inventory-manager.jpg" alt="RAM & Physical Inventory Control" width="850"/>
   <br />
-  <strong>Trung Tâm Quản Trị Tồn Kho Biến Động O(1) (Inventory Manager)</strong><br />
+  <strong>Trung Tâm Quản Trị Tồn Kho Biến Động O(1) (Real-Time RAM Inventory Governance)</strong><br />
   <em>Hạ tầng theo dõi mức tồn kho được nạp siêu tốc trên RAM Cache, tự động khôi phục số lượng khi phát sinh lệnh hủy đơn và liên tục đối soát nhật ký kiểm kê bằng chứng từ cơ sở dữ liệu SQL.</em>
 </p>
+<hr/>
 
 <p align="center">
-  <img src="assets/sales-billing-manager.jpg" alt="Quản Trị Giao Dịch & Tài Chính" width="850"/>
+  <img src="assets/sales-billing-manager.jpg" alt="Sales & Billing Operations" width="850"/>
   <br />
   <strong>Phân Hệ Quản Trị Hóa Đơn & Tài Chính Bán Hàng (Sales & Billing Manager)</strong><br />
   <em>Kênh kiểm tra và chứng thực hóa đơn điện tử thời gian thực, trang bị Thuật toán Cân bằng Thuế VAT (VAT Balancing Engine) bảo đảm tổng số tiền đối soát trên sổ sách kế toán trùng khớp tuyệt đối đến từng đồng.</em>
 </p>
+<hr/>
 
 <p align="center">
-  <img src="assets/partners-crm-manager.jpg" alt="Quản Trị Đối Tác & CRM" width="850"/>
+  <img src="assets/partners-crm-manager.jpg" alt="Partners & B2B CRM Directory" width="850"/>
   <br />
-  <strong>Danh Mục Đối Tác Thương Mại & Hệ Thống CRM (Partners CRM Manager)</strong><br />
+  <strong>Danh Mục Đối Tác Thương Mại & Hệ Thống CRM (Partners & B2B CRM Directory)</strong><br />
   <em>Cơ sở dữ liệu quản trị mối quan hệ khách hàng, thiết lập các tệp khách hàng VIP, thông số tuân thủ pháp lý B2B (Mã số thuế & Tên Công ty) cũng như kiểm soát danh sách Nhà cung cấp chuỗi cung ứng.</em>
 </p>
+<hr/>
 
 <p align="center">
-  <img src="assets/system-iam-manager.jpg" alt="Quản Trị Phân Quyền IAM & RBAC" width="850"/>
+  <img src="assets/system-iam-manager.jpg" alt="System IAM & RBAC Governance" width="850"/>
   <br />
-  <strong>Cổng Quản Trị Phân Quyền Bảo Mật IAM & RBAC (System IAM Manager)</strong><br />
+  <strong>Cổng Quản Trị Phân Quyền Bảo Mật IAM & RBAC (Zero-Trust IAM & RBAC Governance)</strong><br />
   <em>Phân hệ quản trị danh tính và kiểm soát truy cập dựa trên vai trò (Role-Based Access Control), cho phép chỉ định quyền hạn thi hành nghiêm ngặt cho từng cấp Thu ngân, Giám sát và Ban điều hành.</em>
 </p>
+</details>
 
 ---
 
-### 4. Hệ Thống Ngôn Ngữ Thiết Kế Cyber-Cinematic (Design System FX)
+### 4. Cổng Xác Thực & Bảo Mật Hệ Thống (Security & Identity Gateway)
+<details>
+<summary><strong>🔐 Nhấn để thu ngớt/bỏ mở Cổng Bảo Mật & Xác Thực Zero-Trust (2 Mô-đun)</strong></summary>
+<br/>
 
 <p align="center">
-  <img src="assets/processbar.jpg" alt="Ngôn Ngữ Thiết Kế Cyber-Cinematic HUD" width="850"/>
+  <img src="assets/login.jpg" alt="System Login & Turnstile Gateway" width="850"/>
   <br />
-  <strong>Đặc Trưng Giao Diện Viễn Trinh & Thể Hiện Trạng Thái Kỹ Thuật (Military HUD FX)</strong><br />
-  <em>Thiết kế độc quyền với thanh tiến trình phân đoạn (Segmented Progress Bars), đường vạch tia quét hiển thị mật độ thông tin cao và bảng phối màu huỳnh quang (#00E5FF, #00FF66, #FFB000, #FF3333) tối ưu hóa tốc độ nhận diện cho nhân sự thao tác.</em>
+  <strong>Cổng Đăng Nhập & Vệ Thần Phòng Chống Bot Tự Động (Login & Turnstile Defense Gateway)</strong><br />
+  <em>Giao diện Cyber-Cinematic HUD với bộ nền kính tối (Dark Glassmorphism), tiêu chuẩn chữ kỹ thuật và tích hợp bảo mật Cloudflare Turnstile với thuật toán thử lại tự động Exponential Backoff phía backend.</em>
 </p>
+<hr/>
+
+<p align="center">
+  <img src="assets/signup.jpg" alt="Account Registration & Enrollment" width="850"/>
+  <br />
+  <strong>Cổng Đăng Ký Tài Khoản & Định Danh Nhân Sự Doanh Nghiệp (Enterprise Enrollment Portal)</strong><br />
+  <em>Quy trình tiếp nhận người dùng mới tích hợp kiểm tra tính hợp lệ dữ liệu trực tiếp (Real-time Field Validation), phản hồi trạng thái mật khẩu và ngắt chặn tức thì các nguy cơ tấn công tự động.</em>
+</p>
+</details>
 
 ---
 
 ## 🏛 1. Tổng Quan Kiến Trúc Hệ Thống
 
-DigiPOSE được xây dựng theo kiến trúc phân tách độc lập (Decoupled Domain-Driven Architecture), tách rời tầng giao dịch người dùng và hạ tầng quản trị kế toán trung tâm:
+DigiPOSE Station được thiết kế theo kiến trúc **ASP.NET Core Decoupled MVC Monolith** (Kiến trúc khối lập phương máy chủ hợp nhất hiệu năng cao). Việc tích hợp liền kề kết xuất giao diện máy chủ (Razor SSR), bộ động cơ phản xã HUD Vanilla JavaScript/jQuery và liên minh WebSockets SignalR trên cùng một tầng máy chủ ứng dụng giúp hệ thống loại bỏ hoàn toàn độ trễ qua lại đường truyền API nhiều nút, duy trì vận tốc xử lý siêu tốc cho bán lẻ có tải lượng lớn:
 
 ```
-               [ ỨNG DỤNG WEB & TRẠM POS THU NGÂN ]
-            (Next.js 15 / React 19 / TypeScript / Tailwind)
-            ├── Cổng Thương Mại Điện Tử ---> http://localhost:3000/
-            ├── Trạm Bán Hàng Tại Quầy ---> http://localhost:3000/pos
-            └── Điều Phối Giỏ Hàng      ---> http://localhost:3000/cart
-                              │
-                (RESTful JSON API / JWT Bearer)
-                              │
-                              ▼
-           [ ASP.NET CORE MVC & CỔNG KẾT NỐI API ]
-                  (http://localhost:5128/)
-         ┌────────────────────┴────────────────────┐
-         ▼                                         ▼
-[ TRUNG TÂM QUẢN TRỊ CMS ]               [ CẢNG WEB API RESTFUL ]
- (ASP.NET Core Razor / Cookie Auth)      (Controllers/Api/ -> JSON Siêu Tốc)
- ├── Quản Lý Dữ Liệu Gốc (30 Controller) ├── Quản Trị Ca & Giao Dịch POS (PosController)
- ├── Báo Cáo Tài Chính & Doanh Thu       ├── Tra Cứu Danh Mục & Thanh Toán (Storefront)
- └── Phân Quyền Vai Trò Người Dùng       └── Kênh Truyền Realtime SignalR (PosRealtimeHub)
-         │                                         │
-         └────────────────────┬────────────────────┘
-                              │
-             [ DỊCH VỤ & TIẾN TRÌNH NỀN ]
-             ├── IInventoryRAMService (Quản Lý Kho RAM O(1))
-             ├── IVatBalancingEngine (Động Cơ Cân Bằng Thuế)
-             ├── ICloudflareTurnstileService (Vệ Thần Chống Bot)
-             ├── InventoryWarmupWorker (Nạp Kho RAM Khi Khởi Chạy)
-             └── ResilientInvoiceWorker (Hàng Đợi Email Hóa Đơn)
-                              │
-                (Entity Framework Core 10)
-                              ▼
-               [ HỆ QUẢN TRỊ CSDL SQL SERVER ]
+               [ GIAO DIỆN HỢP NHẤT WEB & TRẠM POS THU NGÂN ]
+          (ASP.NET Core Razor SSR / Vanilla CSS / jQuery & SignalR)
+          ├── Cổng Thương Mại Điện Tử ---> http://localhost:5128/Home/Storefront
+          ├── Trạm Bán Hàng Tại Quầy ---> http://localhost:5128/POS
+          ├── Điều Phối Giỏ Hàng/Check---> http://localhost:5128/Home/Storefront/Checkout
+          └── Trung Tâm Quản Trị CMS ---> http://localhost:5128/
+                                │
+                 (AJAX / JSON Web API / WebSocket SignalR)
+                                │
+                                ▼
+               [ ASP.NET CORE 10 MVC & CỔNG KẾT NỐI API ]
+                         (http://localhost:5128/)
+         ┌──────────────────────┴──────────────────────┐
+         ▼                                             ▼
+[ TRUNG TÂM QUẢN TRỊ CMS & MVC ]        [ CẢNG WEB API RESTFUL LIỀN KỀ ]
+ (Controllers / Razor Views)            (Controllers/Api/ -> JSON Siêu Tốc)
+ ├── Quản Lý Dữ Liệu Gốc (30 Ctrl)      ├── Quản Trị Ca & Giao Dịch POS (PosController)
+ ├── Báo Cáo Tài Chính & SLA            ├── Cây Hành Chính GIS VN (GisController)
+ └── Phân Quyền Bảo Mật RBAC            └── Kênh Truyền Realtime (PosRealtimeHub)
+         │                                             │
+         └──────────────────────┬──────────────────────┘
+                                │
+              [ DỊCH VỤ NỀN & VỆ THẦN CHỐNG ĐỨT ĐOẠN ]
+              ├── IInventoryRAMService (Quản Lý Kho RAM O(1))
+              ├── IVatBalancingEngine (Cân Bằng Thuế VAT Tới Đồng)
+              ├── IGisResilienceService (Lưu Đệm Đĩa GIS Ngoại Tuyến)
+              ├── ICloudflareTurnstileService (Vệ Thần Chống Bot)
+              ├── InventoryWarmupWorker (Nạp Kho RAM Khi Khởi Chạy)
+              └── ResilientInvoiceWorker (Hàng Đợi Gửi Email Hóa Đơn)
+                                │
+                  (Entity Framework Core 10)
+                                ▼
+                 [ HỆ QUẢN TRỊ CSDL SQL SERVER ]
 ```
 
 ---
 
-## ✨ 2. Danh Mục Các Chức Năng Đã Phát Triển
+## ✨ 2. Danh Mục Các Chức Năng Chuẩn Hóa Theo Thực tế
 
 ### 🛒 A. Phân Hệ Bán Hàng Tại Quầy POS Thu Ngân (`/POS` & `PosController.cs`)
-* **Khấu Trừ Tồn Kho Siêu Tốc O(1)**: Kiểm tra và giữ hàng trực tiếp trên bộ nhớ RAM qua `IInventoryRAMService` (<15ms) trước khi chốt giao dịch CSDL.
+* **Khấu Trừ Tồn Kho Siêu Tốc O(1)**: Kiểm tra và giữ hàng trực tiếp trên bộ nhớ RAM qua `IInventoryRAMService` (<15ms) trước khi chốt giao dịch CSDL SQL.
 * **Chống Nháy Đúp Đầu Đọc Mã Vạch (Hardware Debounce Guard)**: Tích hợp bộ đệm `IMemoryCache` TTL ngăn chặn lỗi quẹt đúp sản phẩm từ tia laser vật lý.
-* **Thuật Toán Cân Bằng Thuế VAT (`VatBalancingEngine.cs`)**: Triển khai thuật toán xử lý chênh lệch thuế làm tròn (`Round(Sum(PreTax) * TaxRate, 2)` so với tổng thuế từng dòng), bơm phần chênh lệch vào dòng sản phẩm chính, bảo đảm kế toán đối soát khớp 100%.
+* **Thuật Toán Cân Bằng Thuế VAT (`VatBalancingEngine.cs`)**: Triển khai thuật toán xử lý chênh lệch thuế làm tròn (`Round(Sum(PreTax) * TaxRate, 2)` so với tổng thuế từng dòng), bơm phần chênh lệch trực tiếp vào dòng sản phẩm chính, bảo đảm kế toán đối soát khớp 100%.
+* **Cơ Chế Cấn Trừ Điểm Tích Lũy VIP (Loyalty Redemption Offset)**: Cho phép thu ngân cấn trừ trực tiếp điểm thưởng của khách vào hóa đơn theo định giá `1 PT = 10 ₫ Chiết khấu`, tự động khóa trần cấn trừ tránh vượt quá số dư trên CSDL và không làm âm đơn.
+* **Hàng Rào Cấm Ghi Nhận Tiền Thiếu (Strict Tender Cash Firewall)**: Kiểm soát nghiêm ngặt từ lớp JavaScript giao diện đến transaction ACID backend, từ chối tuyệt đối mọi khoản tiền thanh toán (Tendered Cash) thấp hơn giá trị cần thu ròng của hóa đơn.
 * **Phòng Hộ Giao Dịch Đa Luồng (Dual-Layer Idempotency)**: Kết hợp bộ đệm RAM Cache và khóa Unique Constraint SQL triệt tiêu hoàn toàn lỗi lặp giao dịch khi mạng chập chờn.
-* **Quản Lý Tiền Khách Trả & Tiền Thối**: Ghi nhận `TenderedAmount` và tự động tính `ChangeAmount` chuẩn xác cho Thu ngân chốt két cuối ca.
-* **Quản Lý Ca Làm Việc & Trạm Thu Ngân**: Khởi tạo ca, chốt ca, đối soát tiền mặt và liên kết máy quầy (`ShiftsController`, `CountersController`).
+* **Quản Lý Tiền Khách Trả & Tiền Thối**: Ghi nhận `TenderedAmount` và tự động tính `ChangeAmount` chuẩn xác cho Thu ngân chốt két cuối ca (`ShiftsController`, `CountersController`).
 
-### 🌐 B. Cổng Thương Mại Điện Tử Trực Tuyến (`/`, `/cart` & `StorefrontController.cs`)
-* **Danh Mục Sản Phẩm Động**: Tìm kiếm, lọc theo danh mục, phân trang siêu tốc và tối ưu hóa SEO SSR Metadata.
-* **Giỏ Hàng Đệm Phi Kế Toán (`cartStore.ts`)**: Quản lý trạng thái giỏ hàng qua Zustand, kiểm tra tồn kho realtime trước khi thanh toán.
-* **Giao Dịch Đặt Hàng Nguyên Tử (Checkout)**: Tính phí vận chuyển (`ShippingFee`), ghi nhận địa chỉ (`ShippingAddress`), ghi chú khách hàng (`OrderNotes`) và đóng khung trong SQL Transaction (`BeginTransactionAsync`).
+### 🌐 B. Cổng Thương Mại Điện Tử (`/Home/Storefront`, `/Checkout` & `StorefrontController.cs`)
+* **Danh Mục Sản Phẩm Động**: Hạ tầng lọc theo thương hiệu, cây danh mục kỹ thuật, mức giá và tìm kiếm trọn vẹn từ khóa tức thì không nạp lại trang bằng kỹ thuật AJAX hiện đại.
+* **Giỏ Hàng Siêu Nhanh (Reactive Cart)**: Khớp nối AJAX trực tiếp với bộ đệm kho, tự động khóa đối soát và cảnh báo khi số lượng mua vượt mức tồn kho CSDL hiện hữu.
+* **Hạ Tầng Hành Chính GIS Việt Nam Siêu Tỉnh (Offline-First GIS Engine)**: Hệ thống tra cứu Tỉnh/Thành - Quận/Huyện - Phường/Xã (`GisController.cs`, `GisResilienceService.cs`) được phòng vệ kép qua đường ống phục hồi **Polly** và cơ chế lưu đệm nhãn đĩa cứng (`wwwroot/data/gis_offline_cache`), giúp quá trình đặt hàng luôn thông suốt ngay cả khi Cổng GIS bên ngoài gặp sự cố cáp quang hay từ chối kết nối.
+* **Chốt Đơn Giao Dịch ACID**: Tính toán phí vận chuyển, thu thập thông số hóa đơn VAT cho đối tác B2B (Tên công ty & Mã số thuế MST), bao bọc toàn vẹn luồng xuất kho trong transaction CSDL an an toàn (`BeginTransactionAsync`).
 
-### 📡 C. Kênh Truyền Dữ Liệu Realtime & SignalR (`PosRealtimeHub.cs`)
-* **Đồng Bộ Tồn Kho Tức Thời**: Phát tín hiệu cập nhật tồn kho (`OnStockChanged`) tới tất cả các trạm POS trong chi nhánh với độ trễ <1ms.
-* **Cảnh Báo Tồn Kho Thấp**: Tự động bắn cảnh báo (`LowStockAlerts <= 5`) cho Thu ngân và Quản trị viên.
-* **Thông Báo Đơn Hàng Mới**: Đẩy thông báo đơn hàng trực tuyến (`WEB_ORDER_CREATED`) lập tức lên màn hình điều hành CMS.
+### 📡 C. Kênh Truyền Thông Số & WebSockets (`PosRealtimeHub.cs`)
+* **Đồng Bộ Tồn Kho Siêu Tốc**: Phát tín hiệu thay đổi số lượng kho (`OnStockChanged`) lập tức tới trọn vẹn các quầy POS và cổng E-Commerce đang hoạt động (<1ms).
+* **Cảnh Báo Tồn Kho Cận Dưới**: Tự động phát dội tín hiệu cảnh báo (`LowStockAlerts <= 5`) trên màn hình HUD của nhân viên quầy và Giám sát kho bãi.
+* **Báo Động Đơn Hàng Mới**: Phát tín hiệu trực tiếp (`WEB_ORDER_CREATED`) thông báo có đơn đặt hàng web mới ngay lên màn hình của nhà quản trị.
 
-### 🛡️ D. Bảo Mật Vững Chắc & Phòng Ngự Chống Bot (`CloudflareTurnstileService.cs`)
-* **Xác Thực Zero-Friction Turnstile**: Tích hợp CAPTCHA thế hệ mới Cloudflare Turnstile bảo vệ các tuyến đường Đăng ký và Đăng nhập khỏi lực lượng cản phá tự động.
-* **Thuật Toán Tự Chữa Lỗi Exponential Backoff**: Xử lý thử lại các cuộc gọi xác thực mây khi phát sinh gián đoạn mạng ngắt quãng mà không làm đổ vỡ trải nghiệm người dùng.
-* **Tiêu Chuẩn Cô Lập Hồ sơ Bảo Mật (SecOps Guardrails)**: Tự động phân tách thông số nhạy cảm qua tệp mẫu `.example` (`appsettings.example.json`) và chặn tường rào bọc lọt qua git (`.gitignore`).
+### 🛡️ D. Vệ Thần Bảo Mật & Phòng Chống Tấn Công Tự Động (`CloudflareTurnstileService.cs`)
+* **Xác Thực Chống Bot Zero-Friction**: Tích hợp nền tảng bảo mật Cloudflare Turnstile, bảo vệ trọn vẹn các luồng Đăng nhập, Đăng ký khỏi thợ săn bot tự động.
+* **Hạ Tầng Thử Lại Exponential Backoff**: Động cơ điều áp tự động thử lại đường truyền khi kết nối mạng đám mây ngoại tuyến gặp rung chấn ngắn hạn.
+* **Cô Lập Hồ Sơ Nhạy Cảm (SecOps Guardrails)**: Niêm phong toàn bộ tệp chứa mật khẩu, chuỗi kết nối và token bảo mật qua luật loại trừ `.gitignore`, thay thế an toàn trên kho chứa git bằng mẫu cấu hình `.example`.
 
-### ⚡ E. Động Cơ Xử Lý Tiến Trình Nền (`Services/Background/`)
-* **`InventoryWarmupWorker`**: Tự động nạp sẵn tồn kho của các chi nhánh hoạt động vào RAM Cache khi hệ thống ASP.NET Core khởi động.
-* **`ResilientInvoiceWorker`**: Hàng đợi xử lý hóa đơn điện tử và gửi email xác nhận qua MailKit SMTP chạy ngầm, không gây nghẽn luồng thanh toán.
+### ⚡ E. Động Cơ Tiến Trình Nền (`Services/Background/`)
+* **`InventoryWarmupWorker`**: Nạp trọn vẹn thông số tồn kho chi nhánh lên bộ nhớ RAM siêu tốc ngay tại khoảnh khắc khởi động máy chủ ứng dụng.
+* **`ResilientInvoiceWorker`**: Tiến trình hàng đợi bất đồng bộ phụ trách sinh lập hóa đơn điện tử và giao vận qua hộp thư SMTP MailKit mà không gây sa lầy tiến trình thanh toán chính của quầy hàng.
 
-### 🏢 F. Trung Tâm Quản Trị Hậu Đài CMS (`/Administrator` & `Areas/Administrator/`)
-* **30 Controller Quản Trị Dữ Liệu Gốc**: Quản lý CRUD toàn diện cho 26 bảng danh mục (Sản phẩm, Tồn kho, Danh mục, Nhà cung cấp, Khách hàng, Hãng sản xuất, Đơn vị tính, Loại thuế, Phương thức thanh toán,...).
-* **Vệ Thần Hoàn Kho Khi Hủy Đơn (`OrdersController.cs`)**: Khi Quản trị viên hủy hoặc xóa đơn hàng, hệ thống tự động hoàn stock về RAM (`RestoreStock`), ghi nhật ký chứng từ kho (`InventoryTransactions`) và phát SignalR báo về quầy POS.
-* **Phân Quyền Vai Trò & Bảo Mật (RBAC)**: Kiểm soát truy cập dựa trên vai trò (`Permissions`, `Roles`, `UserRoles`), mã hóa mật khẩu BCrypt, xác thực Cookie & JWT Bearer API.
-* **Giao Diện Cyber-Cinematic HUD**: Phong cách Military Lab hiện đại với nền tối (`#000000`), các badge trạng thái neon Cyan/Emerald/Amber/Crimson, thanh tiến trình phân đoạn và hiệu ứng scanline kỹ thuật.
+### 🏢 F. Trung Tâm Quản Trị CMS Hậu Đài (`/` & `Areas/Administrator/`)
+* **30 Controller Quản Trị Dữ Liệu Gốc**: Thao tác nghiệp vụ CRUD toàn diện trên 26 thực thể nền tảng CSDL (Sản phẩm, Biến động kho, Danh mục, Khách hàng VIP, Nhà cung cấp, Hãng, Thuế VAT, Két tiền, v.v.).
+* **Bảo Trợ Phục Hồi Kho Bãi (`OrdersController.cs`)**: Hủy hoặc từ chối đơn hàng sẽ tự động khôi phục mức tồn kho trong bộ nhớ RAM (`RestoreStock`), phát lập chứng từ kiểm toán (`InventoryTransactions`) và dội tín hiệu chấnỉnh về các quầy POS qua SignalR.
+* **Phân Quyền Bảo Mật IAM & RBAC**: Hạ tầng kiểm soát danh tính chi tiết theo Vai trò và Thẩm quyền (`Roles`, `Permissions`, `UserRoles`), băm mật khẩu chuẩn BCrypt và quản trị phiên truy cập nghiêm ngặt.
+* **Giao Diện Cyber-Cinematic HUD**: Bộ thiết kế độc quyền với màu nền tối Kính mờ (`#000000`), đèn tín hiệu neon huỳnh quang (`#00E5FF`, `#00FF66`, `#FFB000`, `#FF3333`), thanh tiến trình phân đoạn và hiệu ứng vạch tia quét viễn trinh.
 
 ---
 
-## 📁 3. Cấu Trúc Mã Nguồn Dự Án
+## 📁 3. Cấu Trúc Bố Kí Hồ Sơ Mã Nguồn
 
 ```
 digipose/
-├── backend/                  # Nền tảng Máy chủ & Cổng kết nối (.NET SDK 10.0)
-│   └── DigiPOSE/             # Dự án chính ASP.NET Core MVC & RESTful Web API
-│       ├── Areas/            # Phân vùng Quản trị nội bộ CMS (Administrator Area - 30 Controllers)
-│       ├── Controllers/      # Bộ điều hướng Cổng API (Controllers/Api/ -> PosController, StorefrontController)
-│       ├── Hubs/             # Kênh kết nối WebSocket Realtime (PosRealtimeHub)
-│       ├── Models/           # Thực thể CSDL, DbContext và Định nghĩa DTOs
-│       ├── Services/         # Bộ xử lý nghiệp vụ, quản lý kho RAM, xác thực Turnstile & động cơ cân bằng thuế
-│       │   └── Background/   # Tiến trình nền (InventoryWarmupWorker, ResilientInvoiceWorker)
-│       ├── Views/            # Giao diện SSR Razor và cấu trúc bố cục Cyber-HUD
-│       └── wwwroot/          # Thư viện Stylesheet tĩnh và thư mục chứa tệp truyền thông
-├── frontend/                 # Ứng dụng Giao diện Khách hàng (Node.js v20+)
-│   ├── app/                  # Bố cục routing Next.js 15 (/, /pos, /cart)
-│   ├── components/           # Bộ thành phần giao diện Cyber-HUD (CyberNavbar, CyberSidebar)
-│   ├── services/             # Bộ điều hợp kết nối API và cổng dịch vụ Axios
-│   ├── store/                # Bộ quản lý trạng thái máy khách Zustand (cartStore, authStore)
-│   └── types/                # Hệ thống từ điển cấu trúc DTO TypeScript
-├── docs/                     # Tài liệu thông số kỹ thuật và bản thảo nghiệp vụ hệ thống
-├── assets/                   # Hình ảnh trực quan kiến trúc, biểu tượng thương mại và dữ liệu bổ trợ
-└── demo/                     # Thư mục lưu trữ hình ảnh minh họa và media cô lập
+├── backend/                         # Phân hệ lõi máy chủ hợp nhất (.NET SDK 10.0)
+│   └── DigiPOSE/                    # Ứng dụng ASP.NET Core MVC & RESTful Web API
+│       ├── Areas/                   # Giao diện & Controller quản trị CMS Hậu đài (30 Controller)
+│       ├── Controllers/             # MVC Controllers & Cảng REST API (Controllers/Api/ -> PosController, GisController)
+│       ├── Hubs/                    # Trung tâm kết nối WebSockets (PosRealtimeHub)
+│       ├── Models/                  # Thực thể EF Core, Database Context và các DTO Giao dịch
+│       ├── Services/                # Logic nghiệp vụ, Quản trị kho RAM, Vệ thần GIS, Turnstile & Cân bằng VAT
+│       │   └── Background/          # Các tiến trình nền (InventoryWarmupWorker, ResilientInvoiceWorker)
+│       ├── Views/                   # Hồ sơ kết xuất giao diện Razor SSR (POS terminal, Storefront, Checkout)
+│       └── wwwroot/                 # Tài nguyên CSS, thư viện JS, ảnh hàng hóa và hồ sơ đĩa GIS ngoại tuyến
+├── docs/                            # Tài liệu đặc tả kiến trúc, luồng vận hành & quy hoạch hệ thống
+└── assets/                          # Kho lưu trữ trọn vẹn 23 tài nguyên hình ảnh trực quan cho README
 ```
 
 ---
 
-## 💻 4. Công Nghệ Sử Dụng & Yêu Cầu Môi Trường
+## 💻 4. Hạ Tầng Kỹ Thuật & Yêu Cầu Môi Trường
 
-### Danh sách các công nghệ (Tech Stack)
-* **Nền Tảng Server**: .NET 10.0 SDK, ASP.NET Core MVC, ASP.NET Core Web API, SignalR WebSockets.
-* **Cơ Sở Dữ Liệu**: Microsoft SQL Server 2022+, Entity Framework Core 10, System.Linq.Dynamic.Core.
-* **Nền Tảng Giao Diện**: Node.js v20+, Next.js 15, React 19, TypeScript, Tailwind CSS v4, PostCSS.
-* **Quản Lý Trạng Thái & Kênh Tiếp Cận**: Zustand, TanStack React Query, Axios.
-* **Bảo Mật & Công Cụ**: Cloudflare Turnstile Bot Defense, BCrypt.Net-Next, MailKit SMTP, JWT Bearer Token & HTTP-Only Cookie.
+### Danh Mục Công Nghệ
+* **Nền Tảng Lõi Máy Chủ Hợp Nhất**: .NET 10.0 SDK, ASP.NET Core MVC, ASP.NET Core Web API, SignalR.
+* **Hệ Quản Trị CSDL & ORM**: Microsoft SQL Server 2022+, Entity Framework Core 10, System.Linq.Dynamic.Core.
+* **Giao Diện & Ngôn Ngữ Thiết Kế**: Kết xuất máy chủ Razor (SSR), Vanilla CSS (Hệ thống thiết kế Cyber-Cinematic), jQuery, Vanilla JavaScript AJAX HUDs.
+* **Bộ Đệm & Tiến Trình Phụ Trợ**: Microsoft.Extensions.Caching.Memory (Kho RAM O(1) & Lưu đệm GIS), MailKit (Giao gửi email Hóa đơn).
+* **Bảo Mật & Quản Trị Định Danh**: Cloudflare Turnstile (Cống cản bot tự động), BCrypt.Net-Next (Mã hóa Băm), Quản trị Phân quyền Vai trò RBAC.
 
-### Điều Kiện Môi Trường Hạng Tầng
+### Công Cụ Triển Khai Yêu Cầu
 * [.NET SDK 10.0+](https://dotnet.microsoft.com/download/dotnet/10.0)
-* [Node.js (v20.x hoặc cao hơn) & npm](https://nodejs.org/)
 * [Microsoft SQL Server (2019/2022) hoặc SQL Server Developer/Express](https://www.microsoft.com/en-us/sql-server)
 * [Git Version Control](https://git-scm.com/)
 
 ---
 
-## 🚀 5. Hướng Dẫn Nạp Băng, Tự Động Hóa & Vận Hành
+## 🚀 5. Hướng Dẫn Kích Hoạt & Cài Đặt Thực Tế
 
-### Bước 1: Khai Lấy Mã Nguồn & Tinh Chỉnh Chuỗi Kết Nối
-1. Tải toàn bộ mã nguồn về môi trường:
-   ```bash
-   git clone <repository-url> digipose
+### Bước 1: Tải Hồ Sơ & Cấu Hình Kết Nối CSDL
+1. Tải hồ sơ repository về máy tính:
+   ```powershell
+   git clone <repository_url>
    cd digipose
    ```
-2. Mở tệp `backend/DigiPOSE/appsettings.json` (hoặc khởi tạo từ `appsettings.example.json`) và thiết lập `DefaultConnection`:
+2. Mở tệp `backend/DigiPOSE/appsettings.example.json` (hoặc bản sao chép nội bộ của bạn) và thiết lập thông số truy xuất máy chủ SQL:
    ```json
    "ConnectionStrings": {
-     "DefaultConnection": "Server=localhost;Database=DigiPOSE_DB;Trusted_Connection=True;TrustServerCertificate=True;"
-   },
-   "CloudflareTurnstile": {
-     "SiteKey": "1x00000000000000000000AA",
-     "SecretKey": "1x0000000000000000000000000000000AA"
+     "DefaultConnection": "Server=localhost;Database=DigiPOSE;Integrated Security=True;TrustServerCertificate=True;"
    }
    ```
 
-### Bước 2: Kích Hoạt Gói Bổ Trợ & Thực Thi Tái Cấu Trúc CSDL
-1. Đồng bộ thư viện NuGet:
-   ```powershell
-   cd backend/DigiPOSE
-   dotnet restore
-   ```
-2. Biên dịch xác thực mã nguồn:
-   ```powershell
-   dotnet build --nologo -v q
-   ```
-3. Cập nhật thực thể cơ sở dữ liệu và nạp dữ liệu gốc ban đầu:
-   ```powershell
-   dotnet ef database update
-   ```
+### Bước 2: Nạp Migrations & Cấu Dựng Cơ Sở Dữ Liệu
+Di chuyển vào thư mục ứng dụng backend và thực thi chỉ lệnh khởi trĩ EF Core:
+```powershell
+cd backend/DigiPOSE
+dotnet ef database update
+```
 
-### Bước 3: Kích Hoạt Động Cơ Máy Chủ Backend & API
-Khởi chạy hệ máy chủ ASP.NET Core:
+### Bước 3: Kích Hoạt Máy Chủ Ứng Dụng Hợp Nhất
+Khởi chạy hệ thống máy chủ bằng lệnh Terminal:
 ```powershell
 dotnet run
 ```
-Các tuyến cổng giao tiếp tiêu chuẩn:
-* **Trung Tâm Điều Hành CMS**: `http://localhost:5128/Administrator`
-* **Trạm Thu Ngân Trực Tiếp**: `http://localhost:5128/POS`
-* **Cổng Gateway POS REST API**: `http://localhost:5128/api/v1/pos/products`
-* **Cổng Gateway Storefront REST API**: `http://localhost:5128/api/v1/Storefront/user-identity`
+Danh mục các tuyến đường kết nối trực quan trong thực tế:
+* **Trạm Thu Ngân POS Tại Quầy**: `http://localhost:5128/POS`
+* **Cổng Bán Lẻ Thương Mại Điện Tử**: `http://localhost:5128/Home/Storefront`
+* **Trung Tâm Điều Hành Ban Quản Trị**: `http://localhost:5128/`
+* **Cổng Gateway Tra Cứu API POS**: `http://localhost:5128/api/v1/pos/catalog/products`
 
 ---
 
-### Bước 4: Kích Hoạt Giao Diện Khách Hàng Next.js Frontend
-Mở một Terminal xử lý song ngữ riêng rẽ:
-1. Di chuyển vào thư mục giao diện:
-   ```powershell
-   cd frontend
-   ```
-2. Tải mô-đun thư viện:
-   ```powershell
-   npm install
-   ```
-3. Nạp động cơ ứng dụng phía khách:
-   ```powershell
-   npm run dev
-   ```
-Các tuyến kết nối ứng dụng Web:
-* **Cổng Thương Mại Storefront**: `http://localhost:3000/`
-* **Cổng Bán Lẻ POS Cashier Terminal**: `http://localhost:3000/pos`
-* **Kênh Điều Phối Giỏ Hàng & Chốt Đơn**: `http://localhost:3000/cart`
+## 🏗 6. Đóng Gói Triển Khai Môi Trường Production
 
----
-
-## 🏗 6. Hướng Dẫn Đóng Gói Triển Khai Môi Trường Production
-
-### Đóng Gói Phân Hội Backend Server
+### Lệnh Biên Dịch & Phát Hành Production
+Để nén trọn vẹn nền tảng hợp nhất với tài nguyên web tối ưu và mã phân giải Razor trước biên dịch:
 ```powershell
 cd backend/DigiPOSE
 dotnet publish -c Release -o ./publish
 ```
 
-### Kết Xuất Gói Ứng Dụng Frontend Client
-```powershell
-cd frontend
-npm run build
-npm run start --port 3000
-```
-
 ---
 
-## 🔐 7. Tiêu Chuẩn Bảo Mật & Phòng Hộ An Ninh Dữ Liệu
-* **Cô Lập Mật Khẩu (Secret Isolation)**: Toàn bộ khóa API Turnstile, chuỗi JWT và cấu hình máy chủ SMTP được niêm phong hoàn toàn trong thẻ loại trừ `.gitignore`, thay thế an toàn bằng hồ sơ `.example`.
-* **Phòng Ngự Leo Thang Quyền (IDOR & Tenant Isolation)**: Các tuyến API kiểm chứng chữ ký JWT Bearer Token, chặn tuyệt đối truy cập ngang hàng vi phạm ranh giới đối tác.
-* **Giao Dịch ACID Nguyên Tử**: Luồng thanh toán của khách và chốt sổ POS thi hành trong khối `BeginTransactionAsync`, đi Kèm tự động `Rollback` khi đứt đoạn, bảo đảm 0.00% sai lệch dữ liệu tài chính.
+## 🔐 7. Tiêu Chuẩn Bảo Mật & Bảo Vệ Sổ Sách Tài Chính
+* **Cô Lập Thông Số Mật Kí**: Toàn bộ mật khẩu, khóa Turnstile, chuỗi SQL và cấu hình SMTP được niêm phong nghiêm ngặt qua `.gitignore`, cấu hình riêng qua tệp `.example` và biến môi trường thêu chốt.
+* **Bảo Vệ Thanh Toán Zero-Trust**: Kiểm soát thanh toán được gia cố từ tường lửa JavaScript frontend cho đến lõi controller giao dịch DB, ngắt hủy lập tức và không ghi nhận nợ ngoại lệ đối với tiền thu thực tế thấp hơn thành tiền đơn hàng.
+* **Giao Dịch Tài Chính ACID**: Trọn vẹn chu trình chốt hóa đơn, khấu trừ hàng hóa trong kho và cấn trừ điểm thưởng thẻ VIP đều được thi hành bên trong khối nguyên tử `BeginTransactionAsync`, tự động triệt hạ (`Rollback`) khi xảy ra sai lệch kỹ thuật, bảo vệ 100% tài chính doanh nghiệp.

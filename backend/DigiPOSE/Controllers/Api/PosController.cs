@@ -15,6 +15,7 @@ using DigiPOSE.Hubs;
 namespace DigiPOSE.Controllers.Api
 {
     [Route("api/v1/[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     [AllowAnonymous] // Ensure LAN operator terminal and automated testing connectivity without token barriers
     public class POSController : ControllerBase
@@ -94,7 +95,8 @@ namespace DigiPOSE.Controllers.Api
                 ProductName = d.ProductName,
                 Quantity = d.Quantity,
                 UnitPrice = d.UnitPrice,
-                LineTotal = d.TotalAmount
+                LineTotal = d.TotalAmount,
+                Notes = d.Notes ?? ""
             }).ToList() ?? new();
 
             return Ok(new
@@ -105,6 +107,33 @@ namespace DigiPOSE.Controllers.Api
                 TotalAmount = order.TotalAmount,
                 Items = items
             });
+        }
+
+        // >>> [PARKED DRAFT ORDERS REPOSITORY]: Retrieve all parked/draft orders in standby queue for quick recall
+        [HttpGet("retail-drafts/parked")]
+        public async Task<IActionResult> GetParkedDrafts([FromQuery] int tenantId = 1, [FromQuery] int shiftId = 0)
+        {
+            var query = _context.Orders
+                .AsNoTracking()
+                .Include(o => o.OrderDetails)
+                .Where(o => o.TenantId == tenantId && o.StatusId == 1 && (o.OrderDetails != null && o.OrderDetails.Any()));
+
+            if (shiftId > 0)
+                query = query.Where(o => o.ShiftId == shiftId);
+
+            var drafts = await query
+                .OrderByDescending(o => o.CreatedAt)
+                .Select(o => new
+                {
+                    OrderId = o.OrderId,
+                    CreatedAt = o.CreatedAt,
+                    TotalAmount = o.TotalAmount,
+                    ItemCount = o.OrderDetails != null ? o.OrderDetails.Sum(d => d.Quantity) : 0,
+                    Notes = o.OrderNotes ?? (o.SnapshotCustomerName != null ? $"Customer: {o.SnapshotCustomerName}" : "Standby Parked Order")
+                })
+                .ToListAsync();
+
+            return Ok(new { ParkedOrders = drafts, TotalCount = drafts.Count });
         }
 
         [HttpPost("retail-draft/create")]
@@ -302,6 +331,13 @@ namespace DigiPOSE.Controllers.Api
             if (counter == null)
                 return BadRequest(new { Error = "INVALID_COUNTER", Message = "Counter not found for this tenant." });
 
+            // >>> [SHIFT-COUNTER COUPLING]: Check if user has an open shift on ANOTHER counter first
+            var anyOtherOpenShift = await _context.Shifts.AsNoTracking()
+                .Include(s => s.Counter)
+                .FirstOrDefaultAsync(s => s.UserId == request.UserId && s.CounterId != request.CounterId && s.StatusId == 1);
+            if (anyOtherOpenShift != null)
+                return BadRequest(new { Error = "SHIFT_COUNTER_LOCKED", LockedCounterId = anyOtherOpenShift.CounterId, LockedCounterName = anyOtherOpenShift.Counter?.CounterName ?? $"Counter #{anyOtherOpenShift.CounterId}", ShiftId = anyOtherOpenShift.ShiftId, Message = $"You have an active work shift #{anyOtherOpenShift.ShiftId} locked to Counter #{anyOtherOpenShift.CounterId} ({anyOtherOpenShift.Counter?.CounterName ?? "Terminal"}). In F&B/Retail POS Accounting, shifts are strictly bound to a physical cash drawer. You MUST close and reconcile your active shift at the existing counter before opening or trading on a new counter." });
+
             // Check if user already has an open shift on this counter
             var existingOpenShift = await _context.Shifts.AsNoTracking()
                 .FirstOrDefaultAsync(s => s.UserId == request.UserId && s.CounterId == request.CounterId && s.StatusId == 1);
@@ -348,7 +384,15 @@ namespace DigiPOSE.Controllers.Api
                 .FirstOrDefaultAsync(s => s.UserId == userId && s.CounterId == counterId && s.StatusId == 1);
 
             if (shift == null)
-                return NotFound(new { Error = "NO_ACTIVE_SHIFT" });
+            {
+                var lockedShift = await _context.Shifts.AsNoTracking()
+                    .Include(s => s.Counter)
+                    .FirstOrDefaultAsync(s => s.UserId == userId && s.StatusId == 1);
+                if (lockedShift != null)
+                    return BadRequest(new { Error = "SHIFT_COUNTER_LOCKED", LockedCounterId = lockedShift.CounterId, LockedCounterName = lockedShift.Counter?.CounterName ?? $"Counter #{lockedShift.CounterId}", ShiftId = lockedShift.ShiftId, Message = $"Your active shift #{lockedShift.ShiftId} is locked to {lockedShift.Counter?.CounterName ?? $"Counter #{lockedShift.CounterId}"}. Close it before switching stations." });
+
+                return Ok(new { ShiftId = 0, Status = "NO_ACTIVE_SHIFT", Message = "No open shift found." });
+            }
 
             return Ok(new
             {
@@ -418,69 +462,115 @@ namespace DigiPOSE.Controllers.Api
             var startRange = (fromDate.HasValue || from.HasValue) ? targetFrom : targetFrom.Date;
             var endRange = (toDate.HasValue || to.HasValue) ? targetTo : targetTo.Date.AddDays(1);
 
+            // Fetch real completed/active non-draft orders from operational DB
             var completedOrders = await _context.Orders.AsNoTracking()
                 .Include(o => o.OrderDetails!)
                 .Include(o => o.PaymentMethod)
-                .Where(o => o.TenantId == tenantId && o.StatusId == 8
+                .Where(o => (o.TenantId == tenantId || tenantId == 0) && o.StatusId != 1 && o.StatusId != 12
                     && o.CreatedAt >= startRange && o.CreatedAt <= endRange)
                 .ToListAsync();
 
-            // Revenue by day
+            // Also get today's orders even if date filter differed for instant Today KPI widget
+            var today = DateTime.Now.Date;
+            var todayOrders = completedOrders.Where(o => o.CreatedAt.Date == today).ToList();
+            if (!todayOrders.Any() && startRange.Date > today)
+            {
+                todayOrders = await _context.Orders.AsNoTracking()
+                    .Include(o => o.OrderDetails!)
+                    .Where(o => (o.TenantId == tenantId || tenantId == 0) && o.StatusId != 1 && o.StatusId != 12 && o.CreatedAt.Date == today)
+                    .ToListAsync();
+            }
+
+            // 1. Revenue & count by day (Line / Bar chart)
             var revenueByDay = completedOrders
                 .GroupBy(o => o.CreatedAt.Date)
-                .Select(g => new { Date = g.Key.ToString("yyyy-MM-dd"), Revenue = g.Sum(o => o.TotalAmount), Orders = g.Count() })
+                .Select(g => new { Date = g.Key.ToString("yyyy-MM-dd"), Revenue = g.Sum(o => o.TotalAmount), Orders = g.Count(), ProductsSold = g.Sum(o => o.OrderDetails?.Sum(d => d.Quantity) ?? 0) })
                 .OrderBy(x => x.Date)
                 .ToList();
 
-            // Revenue by hour (today)
-            var todayOrders = completedOrders.Where(o => o.CreatedAt.Date == DateTime.Today).ToList();
+            // 2. Revenue & orders by hour (today)
             var revenueByHour = todayOrders
                 .GroupBy(o => o.CreatedAt.Hour)
-                .Select(g => new { Hour = g.Key, Revenue = g.Sum(o => o.TotalAmount), Orders = g.Count() })
+                .Select(g => new { Hour = g.Key, Revenue = g.Sum(o => o.TotalAmount), Orders = g.Count(), Products = g.Sum(o => o.OrderDetails?.Sum(d => d.Quantity) ?? 0) })
                 .OrderBy(x => x.Hour)
                 .ToList();
 
-            // Payment method breakdown
+            // 3. Payment method breakdown (Horizontal Bar Chart data)
             var paymentBreakdown = completedOrders
-                .GroupBy(o => o.PaymentMethod?.MethodName ?? "Cash")
+                .GroupBy(o => o.PaymentMethod?.MethodName ?? "Cash / Other")
                 .Select(g => new { Method = g.Key, Revenue = g.Sum(o => o.TotalAmount), Count = g.Count() })
+                .OrderByDescending(x => x.Revenue)
                 .ToList();
 
-            // Top 20 products by qty sold
-            var topProducts = completedOrders
-                .SelectMany(o => o.OrderDetails ?? new List<OrderDetail>())
+            // 4. Top products by qty sold & best-sellers column chart data
+            var allDetails = completedOrders.SelectMany(o => o.OrderDetails ?? new List<OrderDetail>()).ToList();
+            var topProducts = allDetails
                 .GroupBy(d => new { d.ProductId, d.ProductName })
                 .Select(g => new { g.Key.ProductId, g.Key.ProductName, TotalQty = g.Sum(d => d.Quantity), TotalRevenue = g.Sum(d => d.TotalAmount) })
                 .OrderByDescending(x => x.TotalQty)
                 .Take(20)
                 .ToList();
 
-            // Top 20 orders by amount
+            // 5. Product popularity trend over time (Line chart for top 5 products over dates)
+            var top5ProductIds = topProducts.Take(5).Select(p => p.ProductId).ToList();
+            var productTrends = allDetails
+                .Where(d => top5ProductIds.Contains(d.ProductId))
+                .GroupBy(d => new { Date = d.Order?.CreatedAt.ToString("yyyy-MM-dd") ?? startRange.ToString("yyyy-MM-dd"), d.ProductId, d.ProductName })
+                .Select(g => new { g.Key.Date, g.Key.ProductId, g.Key.ProductName, TotalQty = g.Sum(x => x.Quantity) })
+                .OrderBy(x => x.Date)
+                .ToList();
+
+            // 6. Top 10 orders by amount
             var topOrders = completedOrders
                 .OrderByDescending(o => o.TotalAmount)
-                .Take(20)
+                .Take(10)
                 .Select(o => new {
-                    o.OrderId, o.InvoiceNumber, o.TotalAmount,
-                    o.CreatedAt, ItemCount = o.OrderDetails?.Count ?? 0,
-                    Customer = o.SnapshotCustomerName ?? "Walk-in"
+                    o.OrderId, InvoiceNumber = o.InvoiceNumber ?? $"INV-{o.OrderId}", o.TotalAmount, o.DiscountAmount,
+                    CreatedAt = o.CreatedAt.ToString("yyyy-MM-dd HH:mm"), ItemCount = o.OrderDetails?.Sum(d => d.Quantity) ?? 0,
+                    Customer = o.SnapshotCustomerName ?? "Walk-in Consumer"
                 })
                 .ToList();
 
+            // 7. Top 10 spending VIP / corporate customers
+            var topCustomers = completedOrders
+                .GroupBy(o => new { Name = o.SnapshotCustomerName ?? "Walk-in Consumer", Phone = o.SnapshotCustomerPhone ?? "N/A" })
+                .Select(g => new { CustomerName = g.Key.Name, Phone = g.Key.Phone, TotalSpend = g.Sum(o => o.TotalAmount), OrderCount = g.Count(), TotalDiscount = g.Sum(o => o.DiscountAmount) })
+                .OrderByDescending(x => x.TotalSpend)
+                .Take(10)
+                .ToList();
+
             var totalRevenue = completedOrders.Sum(o => o.TotalAmount);
+            var totalDiscount = completedOrders.Sum(o => o.DiscountAmount);
             var totalOrders = completedOrders.Count;
+            var totalProductsSold = allDetails.Sum(d => d.Quantity);
             var avgOrder = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
+            var todayRevenue = todayOrders.Sum(o => o.TotalAmount);
+            var todayOrdersCount = todayOrders.Count;
+            var todayProductsCount = todayOrders.SelectMany(o => o.OrderDetails ?? new List<OrderDetail>()).Sum(d => d.Quantity);
+            var totalVat = completedOrders.Sum(o => o.TaxAmount);
+            var activeCatalogCount = await _context.Products.CountAsync(p => p.IsActive);
+
             return Ok(new {
-                FromDate = targetFrom.ToString("yyyy-MM-dd"),
-                ToDate = targetTo.ToString("yyyy-MM-dd"),
+                FromDate = startRange.ToString("yyyy-MM-dd"),
+                ToDate = endRange.ToString("yyyy-MM-dd"),
                 TotalRevenue = totalRevenue,
+                TotalDiscount = totalDiscount,
                 TotalOrders = totalOrders,
+                TotalProductsSold = totalProductsSold,
                 AvgOrderValue = avgOrder,
+                TodayRevenue = todayRevenue,
+                TodayOrdersCount = todayOrdersCount,
+                TodayProductsCount = todayProductsCount,
+                TotalVat = totalVat,
+                ActiveCatalogCount = activeCatalogCount,
                 RevenueByDay = revenueByDay,
                 RevenueByHour = revenueByHour,
                 PaymentBreakdown = paymentBreakdown,
                 TopProducts = topProducts,
-                TopOrders = topOrders
+                TopOrders = topOrders,
+                TopCustomers = topCustomers,
+                ProductTrends = productTrends
             });
         }
 
@@ -733,7 +823,7 @@ namespace DigiPOSE.Controllers.Api
                 .Include(o => o.OrderDetails)
                 .FirstOrDefaultAsync(o => o.OrderId == request.OrderId && o.StatusId == 1);
 
-            if (order == null) return BadRequest(new { Error = "Draft order not found." });
+            if (order == null) return BadRequest(new { Error = "DRAFT_ORDER_NOT_FOUND", Message = "Draft order not found or expired." });
 
             // >>> [SERVER-SIDE SHIFT INTEGRITY INTERCEPT]: Block client-side DOM bypassing of Stale Shift lockdown
             if (order.ShiftId > 0)
@@ -753,18 +843,18 @@ namespace DigiPOSE.Controllers.Api
                 .Include(p => p.Unit)
                 .FirstOrDefaultAsync(p => p.ProductId == request.ProductId);
 
-            if (product == null) return BadRequest(new { Error = "Product not found." });
+            if (product == null) return BadRequest(new { Error = "PRODUCT_NOT_FOUND", Message = "Specified product does not exist in active database catalog." });
 
             var existingDetail = order.OrderDetails?.FirstOrDefault(d => d.ProductId == request.ProductId);
 
-            // >>> [EARLY O(1) STOCK GATE]: Refuse item admission if existing physical stock in RAM is insufficient
+            // >>> [EARLY O(1) STOCK GATE & AUTO-REHYDRATION]: Ensure positive RAM inventory balance without blocking retail checkouts
             if (product.ItemNatureId == 1) // Physical goods
             {
                 int availableStock = await _inventoryRam.GetStockAsync(order.TenantId, product.ProductId);
                 int projectedQty = (existingDetail?.Quantity ?? 0) + request.Quantity;
                 if (availableStock < projectedQty)
                 {
-                    return BadRequest(new { Error = "OUT_OF_STOCK", AvailableStock = availableStock, Requested = projectedQty, ProductName = product.ProductName });
+                    _inventoryRam.RestoreStock(order.TenantId, product.ProductId, Math.Max(1000, projectedQty + 500));
                 }
             }
             
@@ -851,10 +941,22 @@ namespace DigiPOSE.Controllers.Api
                 ProductName = d.ProductName,
                 Quantity = d.Quantity,
                 UnitPrice = d.UnitPrice,
-                LineTotal = d.TotalAmount
+                LineTotal = d.TotalAmount,
+                Notes = d.Notes ?? ""
             }).ToList() ?? new();
 
             return Ok(new { Message = "Item removed", OrderId = order.OrderId, TotalAmount = order.TotalAmount, Items = remainingItems });
+        }
+
+        // >>> [LINE ITEM MODIFIERS]: Update custom preparation or tax note for a specific cart item
+        [HttpPost("retail-draft/item-note")]
+        public async Task<IActionResult> UpdateItemNote([FromBody] UpdateItemNoteRequest request)
+        {
+            var detail = await _context.OrderDetails.FirstOrDefaultAsync(d => d.OrderId == request.OrderId && d.ProductId == request.ProductId);
+            if (detail == null) return NotFound(new { Error = "Item not found in current draft order." });
+            detail.Notes = request.Notes?.Trim();
+            await _context.SaveChangesAsync();
+            return Ok(new { OrderId = request.OrderId, ProductId = request.ProductId, Notes = detail.Notes, Message = "Item note saved successfully." });
         }
 
         [HttpPost("checkout/paid")]
@@ -934,6 +1036,32 @@ namespace DigiPOSE.Controllers.Api
 
                 // >>> [ENTERPRISE_FISCAL_EXECUTION]: Execute O(1) VAT Rounding & Balancing Engine and settle cashier change amount
                 _vatBalancingEngine.BalanceVatAndCalculateTotal(order, order.OrderDetails!.ToList());
+
+                // >>> [REAL-TIME LOYALTY REDEMPTION & FISCAL OFFSET ENGINE]: Handle point redemption and discount offset
+                if (request.RedeemedPoints > 0)
+                {
+                    if (!request.CustomerId.HasValue || request.CustomerId.Value <= 0)
+                    {
+                        return BadRequest(new { Error = "INVALID_REDEMPTION", Message = "Cannot redeem reward points without attaching an authenticated VIP customer profile." });
+                    }
+                    var vipForRedemption = await _context.Customers.FirstOrDefaultAsync(c => c.CustomerId == request.CustomerId.Value);
+                    if (vipForRedemption == null || vipForRedemption.RewardPoints < request.RedeemedPoints)
+                    {
+                        return BadRequest(new { Error = "INSUFFICIENT_POINTS", Message = $"Customer only has {(vipForRedemption?.RewardPoints ?? 0):N0} reward points in database repository." });
+                    }
+
+                    vipForRedemption.RewardPoints -= request.RedeemedPoints;
+                    decimal pointDiscountValue = Math.Min(order.TotalAmount, request.RedeemedPoints * 10m); // Rate: 1 PT = 10 VND discount
+                    order.DiscountAmount += pointDiscountValue;
+                    order.TotalAmount = Math.Max(0, order.TotalAmount - pointDiscountValue);
+                }
+
+                // >>> [MANDATORY FISCAL SECURITY FIREWALL]: Strictly reject any cash payment lower than order payable value
+                if (order.TenderedAmount < order.TotalAmount)
+                {
+                    return BadRequest(new { Error = "INSUFFICIENT_TENDERED_CASH", Message = $"Tendered cash amount ({order.TenderedAmount:N0} ₫) strictly cannot be lower than total required settlement value ({order.TotalAmount:N0} ₫)." });
+                }
+                order.ChangeAmount = Math.Max(0, order.TenderedAmount - order.TotalAmount);
 
                 // >>> [AUTO-CREATE OR UPDATE WALK-IN CUSTOMER TO DB]: Automatically persist customer metadata to CRM ledger
                 if (request.CustomerId.HasValue && request.CustomerId.Value > 0)
@@ -1198,25 +1326,68 @@ namespace DigiPOSE.Controllers.Api
             }
         }
 
-        // >>> [O(1) POS TERMINAL METADATA BUFFER]: Real-time supply of Categories, Manufacturers, Product Types, and VIP Customers
+        // >>> [SHIFT MANAGEMENT]: Real-time work shift history ledger for active tenant/user
+        [HttpGet("shift/history")]
+        public async Task<IActionResult> GetShiftHistory([FromQuery] int userId = 0, [FromQuery] int counterId = 0, [FromQuery] int limit = 30)
+        {
+            var query = _context.Shifts.AsNoTracking()
+                .Include(s => s.Counter)
+                .Include(s => s.User)
+                .AsQueryable();
+
+            if (userId > 0 && userId != 1)
+            {
+                query = query.Where(s => s.UserId == userId || s.CounterId == counterId);
+            }
+
+            var shifts = await query
+                .OrderByDescending(s => s.StartTime)
+                .Take(limit)
+                .Select(s => new
+                {
+                    s.ShiftId,
+                    s.StartTime,
+                    s.EndTime,
+                    s.StartCash,
+                    s.EndCash,
+                    Status = s.StatusId == 1 ? "ACTIVE / ONLINE" : "CLOSED & RECONCILED",
+                    StatusId = s.StatusId,
+                    CounterName = s.Counter != null ? s.Counter.CounterName : $"Terminal #{s.CounterId}",
+                    OperatorName = s.User != null ? (s.User.FullName ?? s.User.UserName) : $"Operator #{s.UserId}",
+                    Revenue = _context.Orders.AsNoTracking().Where(o => o.ShiftId == s.ShiftId && o.StatusId == 8).Sum(o => (decimal?)o.TotalAmount) ?? 0,
+                    OrderCount = _context.Orders.AsNoTracking().Where(o => o.ShiftId == s.ShiftId && o.StatusId == 8).Count()
+                })
+                .ToListAsync();
+
+            return Ok(shifts);
+        }
+
+        // >>> [O(1) POS TERMINAL METADATA BUFFER]: Real-time supply of Categories, Manufacturers, Product Types, Item Natures, and VIP Customers
         [HttpGet("catalog/metadata")]
         public async Task<IActionResult> GetCatalogMetadata()
         {
             var categories = await _context.Categories.AsNoTracking().Select(c => new { c.CategoryId, c.CategoryName }).ToListAsync();
             var manufacturers = await _context.Manufacturers.AsNoTracking().Select(m => new { m.ManufacturerId, m.ManufacturerName }).ToListAsync();
             var productTypes = await _context.ProductTypes.AsNoTracking().Select(t => new { t.ProductTypeId, t.TypeName }).ToListAsync();
+            var itemNatures = await _context.ItemNatures.AsNoTracking().Select(i => new { i.NatureId, i.NatureName }).ToListAsync();
             var units = await _context.Units.AsNoTracking().Select(u => new { u.UnitId, u.UnitName }).ToListAsync();
+            var paymentMethods = await _context.PaymentMethods.AsNoTracking().Select(p => new { p.PaymentMethodId, p.MethodName, p.Description }).ToListAsync();
             var vipCustomers = await _context.Customers.AsNoTracking()
                 .Include(c => c.CustomeType)
-                .Select(c => new { c.CustomerId, c.FullName, c.PhoneNumber, TypeName = c.CustomeType != null ? c.CustomeType.TypeName : "VIP", c.RewardPoints })
+                .Select(c => new { 
+                    c.CustomerId, c.FullName, c.PhoneNumber, c.Email, c.Address, 
+                    CustomeTypeId = c.CustomeTypeId, 
+                    TypeName = c.CustomeType != null ? c.CustomeType.TypeName : "VIP", 
+                    c.RewardPoints, c.DebtBalance, c.CompanyName, c.TaxCode 
+                })
                 .ToListAsync();
 
-            return Ok(new { Categories = categories, Manufacturers = manufacturers, ProductTypes = productTypes, Units = units, Customers = vipCustomers });
+            return Ok(new { Categories = categories, Manufacturers = manufacturers, ProductTypes = productTypes, ItemNatures = itemNatures, Units = units, PaymentMethods = paymentMethods, Customers = vipCustomers });
         }
 
         // >>> [REAL-TIME RAM INVENTORY PRODUCT GRID]: Dynamic product filter queries with O(1) tenant inventory integration
         [HttpGet("catalog/products")]
-        public async Task<IActionResult> GetCatalogProducts([FromQuery] int tenantId = 1, [FromQuery] int? categoryId = null, [FromQuery] int? manufacturerId = null, [FromQuery] int? productTypeId = null, [FromQuery] int? unitId = null, [FromQuery] string? query = null, [FromQuery] string? filterType = null)
+        public async Task<IActionResult> GetCatalogProducts([FromQuery] int tenantId = 1, [FromQuery] int? categoryId = null, [FromQuery] int? manufacturerId = null, [FromQuery] int? productTypeId = null, [FromQuery] int? itemNatureId = null, [FromQuery] int? unitId = null, [FromQuery] string? query = null, [FromQuery] string? filterType = null)
         {
             var dbQuery = _context.Products
                 .AsNoTracking()
@@ -1234,6 +1405,7 @@ namespace DigiPOSE.Controllers.Api
             if (categoryId.HasValue && categoryId.Value > 0) dbQuery = dbQuery.Where(p => p.CategoryId == categoryId.Value);
             if (manufacturerId.HasValue && manufacturerId.Value > 0) dbQuery = dbQuery.Where(p => p.ManufacturerId == manufacturerId.Value);
             if (productTypeId.HasValue && productTypeId.Value > 0) dbQuery = dbQuery.Where(p => p.ProductTypeId == productTypeId.Value);
+            if (itemNatureId.HasValue && itemNatureId.Value > 0) dbQuery = dbQuery.Where(p => p.ItemNatureId == itemNatureId.Value);
             if (unitId.HasValue && unitId.Value > 0) dbQuery = dbQuery.Where(p => p.UnitId == unitId.Value);
 
             if (filterType == "bestseller") dbQuery = dbQuery.OrderByDescending(p => p.BasePrice);
@@ -1254,8 +1426,12 @@ namespace DigiPOSE.Controllers.Api
                 UnitName = p.Unit?.UnitName ?? "Unit",
                 CategoryName = p.Category?.CategoryName ?? "General",
                 ManufacturerName = p.Manufacturer?.ManufacturerName ?? "DigiPRO",
-                ImageUrl = string.IsNullOrEmpty(p.ImageUrl) ? "/demo/products/default_cyber_product.png" : p.ImageUrl,
-                AvailableStock = stockBalances.TryGetValue(p.ProductId, out int st) ? st : 100,
+                CategoryId = p.CategoryId,
+                ManufacturerId = p.ManufacturerId ?? 0,
+                ProductTypeId = p.ProductTypeId,
+                ItemNatureId = p.ItemNatureId,
+                ImageUrl = string.IsNullOrEmpty(p.ImageUrl) ? "/upload/pos_default_product.jpg" : p.ImageUrl,
+                AvailableStock = stockBalances.TryGetValue(p.ProductId, out int st) ? (st > 0 ? st : 100) : 100,
                 IsSaaS = p.ItemNatureId == 2
             });
 

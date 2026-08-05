@@ -1,4 +1,63 @@
 <aside class="hud-sidebar" id="hudSidebar">
+    @{
+        var isPosRoute = (Context.Request.Path.Value?.ToLower() ?? "").StartsWith("/pos");
+    }
+    @if (isPosRoute)
+    {
+        <!-- ====================================================================
+             POS TACTICAL OPERATIONS SIDEBAR (EXCLUSIVE TO /POS)
+             ==================================================================== -->
+        <div class="hud-menu-group">
+            <div class="hud-menu-category-title text-success" style="border-left: 3px solid var(--bio-emerald, #00FF66); padding-left: 10px; white-space: nowrap; overflow: hidden;">
+                <span style="font-family:'Orbitron', sans-serif; font-size:0.78rem; font-weight:700; white-space: nowrap; display: block;"><i class="fa-solid fa-calculator me-2" style="color:var(--bio-emerald, #00FF66);"></i>POS OPERATIONS</span>
+            </div>
+            <ul class="hud-menu-list">
+                <li class="hud-menu-item">
+                    <a class="hud-menu-link pos-side-nav active" href="javascript:void(0)" id="sidebarNavPos" onclick="switchMainView('pos', this)" style="border-left: 2px solid var(--holo-cyan, #00E5FF); display: flex; align-items: center; gap: 12px; padding: 12px 14px; white-space: nowrap;">
+                        <i class="fa-solid fa-cash-register" style="color:#00E5FF; font-size:1.05rem; flex-shrink: 0;"></i>
+                        <span class="hud-menu-text" style="font-family:'Orbitron', sans-serif; font-size:0.82rem; font-weight:bold; color:#FFF; white-space: nowrap;">POS STATION</span>
+                    </a>
+                </li>
+                <li class="hud-menu-item">
+                    <a class="hud-menu-link pos-side-nav" href="javascript:void(0)" id="sidebarNavToday" onclick="switchMainView('today', this)" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; white-space: nowrap;">
+                        <i class="fa-solid fa-list-check" style="color:#FFB000; font-size:1.05rem; flex-shrink: 0;"></i>
+                        <span class="hud-menu-text" style="font-family:'Orbitron', sans-serif; font-size:0.82rem; font-weight:bold; white-space: nowrap;">ORDERS TODAY</span>
+                    </a>
+                </li>
+                <li class="hud-menu-item">
+                    <a class="hud-menu-link pos-side-nav" href="javascript:void(0)" id="sidebarNavAnalytics" onclick="switchMainView('analytics', this)" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; white-space: nowrap;">
+                        <i class="fa-solid fa-chart-line" style="color:#00FF66; font-size:1.05rem; flex-shrink: 0;"></i>
+                        <span class="hud-menu-text" style="font-family:'Orbitron', sans-serif; font-size:0.82rem; font-weight:bold; white-space: nowrap;">ANALYTICS</span>
+                    </a>
+                </li>
+                <li class="hud-menu-item">
+                    <a class="hud-menu-link pos-side-nav" href="javascript:void(0)" id="sidebarNavCustomers" onclick="switchMainView('customers', this)" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; white-space: nowrap;">
+                        <i class="fa-solid fa-user-shield" style="color:#0088FF; font-size:1.05rem; flex-shrink: 0;"></i>
+                        <span class="hud-menu-text" style="font-family:'Orbitron', sans-serif; font-size:0.82rem; font-weight:bold; white-space: nowrap;">VIP CUSTOMERS</span>
+                    </a>
+                </li>
+                <li class="hud-menu-item">
+                    <a class="hud-menu-link pos-side-nav" href="javascript:void(0)" id="sidebarNavShift" onclick="switchMainView('shift', this)" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; white-space: nowrap;">
+                        <i class="fa-solid fa-clock" style="color:#FFB000; font-size:1.05rem; flex-shrink: 0;" id="sidebarShiftIcon"></i>
+                        <span class="hud-menu-text" id="sidebarShiftText" style="font-family:'Orbitron', sans-serif; font-size:0.82rem; font-weight:bold; white-space: nowrap;">SHIFT WORKFLOW</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="hud-menu-group" style="margin-top:20px; padding-top:16px; border-top:1px dashed #222;">
+            <ul class="hud-menu-list">
+                <li class="hud-menu-item">
+                    <a class="hud-menu-link" href="/Home/DashboardRouter" style="border-left: 3px solid #FF3333; background: rgba(255, 51, 51, 0.04); display: flex; align-items: center; gap: 12px; padding: 12px 14px; white-space: nowrap;">
+                        <i class="fa-solid fa-door-open" style="color:#FF3333; font-size:1.05rem; flex-shrink: 0;"></i>
+                        <span class="hud-menu-text" style="color:#FF3333; font-family:'Orbitron', sans-serif; font-size:0.82rem; font-weight:bold; white-space: nowrap;">EXIT TO PORTAL</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    }
+    else
+    {
     <!-- MODULE 1: SYSTEM & IAM -->
     @if (User.HasClaim("Permission", "System.Config.Manage") || User.HasClaim("Permission", "System.Tenant.Manage") || User.HasClaim("Permission", "System.Role.Manage") || User.HasClaim("Permission", "System.User.Manage") || User.HasClaim("Permission", "POS.Shift.Open"))
     {
@@ -352,5 +411,6 @@
             </li>
         </ul>
     </div>
+    }
     }
 </aside>

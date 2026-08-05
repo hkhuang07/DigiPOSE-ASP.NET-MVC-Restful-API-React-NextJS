@@ -343,7 +343,7 @@
 
             let html = '';
             data.items.forEach(item => {
-                const img = item.imageUrl || '/demo/products/default_cyber_product.png';
+                const img = item.imageUrl || '/upload/store_default_product.jpg';
                 const itemTotal = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.lineTotal || item.subtotal || (item.unitPrice * item.quantity));
                 html += `
                 <div class="d-flex align-items-center mb-3 p-2" style="background: rgba(0, 229, 255, 0.03); border: 1px solid rgba(0, 229, 255, 0.2);">
